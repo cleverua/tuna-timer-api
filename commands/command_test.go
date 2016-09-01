@@ -1,10 +1,10 @@
-package command
+package commands
 
 import (
 	"testing"
 )
 
-func TestGet(t *testing.T) {
+func TestGetUnknownCommand(t *testing.T) {
 	_, err := Get("unknown")
 
 	if err == nil {

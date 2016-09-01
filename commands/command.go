@@ -1,4 +1,4 @@
-package command
+package commands
 
 import (
 	"fmt"
@@ -13,7 +13,7 @@ type Command interface {
 // Get - looks up specific implementation of Command that matches user input
 func Get(userInput string) (Command, error) {
 	if strings.HasPrefix(userInput, "start") {
-		return StartCommand{}, nil
+		return Start{}, nil
 	}
 	return nil, fmt.Errorf("Failed to look up a command for `%s` name", userInput)
 }
