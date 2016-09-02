@@ -7,7 +7,12 @@ import (
 
 // Command - public interface
 type Command interface {
-	Execute() string
+	Execute() CommandResult
+}
+
+// CommandResult - is what command's Execute method returns
+type CommandResult struct {
+	data map[string] interface{}
 }
 
 // Get - looks up specific implementation of Command that matches user input
