@@ -4,7 +4,18 @@
 
 It leverages a custom [slash command](https://api.slack.com/slash-commands) for Slack. It helps team members to track times they spend on tasks.
 
+## Features
+
+* Start and stop timer on a task
+* Resume the timer on the last stopped task
+* See what tasks you and other team member are working on currently
+* Flexible reporting:
+    * Get aggregated report for given team member for given time frame (this week, last week, this month, last month etc) as a message in a Slack channel
+    * Generate a CSV or XLSS report file and post its link to Slack so you can click to download the report
+
 ## Quick tour
+
+#### Start a timer on task
 
 Suppose you post a message like below in **_#my-project_** Slack channel:
 
@@ -14,6 +25,7 @@ Suppose you post a message like below in **_#my-project_** Slack channel:
 
 This will create a new task called "Create HDPI variant of the logotype" in **_my-project_** project and start timer on it.
 
+#### What of my tasks has the timer on?
 
 Then later you would like to see what task your timer in on currently:
 
@@ -27,6 +39,8 @@ will reply you with this (_todo: put a actual image from Slack channel_)
 Project: my-project     Task: Create HDPI variant of the logotype       Task ID: e4f96c7
 User: pavlo             Status: in progress                             Time Spent: 25 minutes
 ```
+
+#### Stop timer on task
 
 Then later you finsh the task by either starting a new one - "Slack Time" will automatically stop the other one if any - or explicitly stop it like this:
 
@@ -42,15 +56,7 @@ User: pavlo             Status: completed                               Time Spe
 ```
 
 
-## Features
-
-* Start and stop timer on a task
-* Resume the timer on the last stopped task
-* See what tasks you and other team member are working on currently
-* Flexible reporting:
-    * Get aggregated report for given team member for given time frame (this week, last week, this month, last month etc) as a message in a Slack channel
-    * Generate a CSV or XLSS report file and post its link to Slack so you can click to download the report
-    
+  
 ## Assumptions and defaults
 
 A team member can only do **ONE** task at a time. If you start a new one that would stop the one you had a timer on previously. 

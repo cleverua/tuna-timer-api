@@ -2,12 +2,10 @@ package commands
 
 import (
 	"testing"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestGetUnknownCommand(t *testing.T) {
 	_, err := Get("unknown")
-
-	if err == nil {
-		t.Error("Expected to get an error because command not found")
-	}
+	assert.Error(t, err)
 }
