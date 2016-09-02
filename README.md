@@ -1,8 +1,6 @@
 # Slack Time
 
-"Slack Time" a simple time tracker for [Slack](https:www.slack.com) . Using the tool you and your team members can track time spent on tasks as well as get exhaustive reports.
-
-
+"Slack Time" a simple time tracker for teams that use [Slack](https:www.slack.com) as their office. Using the tool you and your team members can track time spent on tasks as well as get exhaustive reports.
 
 It leverages a custom [slash command](https://api.slack.com/slash-commands) for Slack. It helps team members to track times they spend on tasks.
 
