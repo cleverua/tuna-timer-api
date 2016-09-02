@@ -1,0 +1,14 @@
+production:
+  database:
+    host: localhost
+    port: 5432
+    name: slack_time
+    user: postgres
+    pass:
+test:
+  database:
+    host: localhost
+    port: 5432
+    name: slack_time_test
+    user: postgres
+    pass:
