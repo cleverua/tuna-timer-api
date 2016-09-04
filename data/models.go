@@ -2,12 +2,10 @@ package data
 
 import (
 	"time"
-	"github.com/jinzhu/gorm"
 )
 
 type Team struct {
-	gorm.Model
-
+	Id int64
 	SlackTeamId string
 	CreatedAt time.Time
 }
@@ -15,35 +13,41 @@ type Team struct {
 // not going to call it User because we may want to have admin users
 // to administer stuff via UI etc
 type TeamUser struct {
-	gorm.Model
+	Id int64
 
-	Email string `sql:"size:128"`
-	Team Team
-	SlackUserId string `sql:"size:32"`
+	Email string
+	Team Team `gorm:"ForeignKey:TeamId"`
+	TeamId int64
+	SlackUserId string
 
 	Tasks []Task
 }
 
 type Project struct {
-	gorm.Model
 
-	Name string `sql:"size:32"`
+	Id int64
+
+	Name string `sql:"size:64"`
 	SlackChannelId string `sql:"size:32"`
 	SlackChannelName string `sql:"size:64"`
 
-	Team Team
+	Team Team `gorm:"ForeignKey:TeamId"`
+	TeamId int64
+
 	Tasks []Task
 }
 
 type Task struct {
-	gorm.Model
+	Id int64
 
 	Name string `sql:"size:128"`
 	Hash string `sql:"size:12"`
 
-	Team Team
-	User TeamUser
-	Project Project
+	Team Team `gorm:"ForeignKey:TeamId"`
+	TeamId int64
+
+	Project Project `gorm:"ForeignKey:ProjectId"`
+	ProjectId int64
 
 	TotalMinutes int
 
@@ -51,17 +55,18 @@ type Task struct {
 }
 
 type Timer struct {
-	gorm.Model
-
 	Id int64
 
-	Task Task `gorm:"ForeignKey:TaskId"`
+	//User TeamUser `gorm:"ForeignKey:TeamUserId"`
+	TeamUserId int64
+
+	//Task Task `gorm:"ForeignKey:TaskId"`
 	TaskId int64
 
 	StartedAt time.Time
 	FinishedAt time.Time
 
-	TotalMinutes int
+	Minutes int
 
 	DeletedAt time.Time
 }

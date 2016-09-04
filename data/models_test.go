@@ -2,36 +2,50 @@ package data
 
 
 import (
-	//"github.com/jinzhu/gorm"
-	_ "github.com/jinzhu/gorm/dialects/postgres"
-
-	//"testing"
-	//"github.com/stretchr/testify/assert"
-
-	//"github.com/pavlo/slack-time/config"
-	//"fmt"
+	"testing"
+	. "gopkg.in/check.v1"
+	"github.com/pavlo/slack-time/utils"
+	"log"
 )
 
+// Hook up gocheck into the "go test" runner.
+func Test(t *testing.T) { TestingT(t) }
 
+type ModelsTestSuite struct{
+	env *utils.Environment
+}
 
-//func main() {
-//	db, err := gorm.Open("postgres", "host=myhost user=gorm dbname=gorm sslmode=disable password=mypassword")
-//	defer db.Close()
-//}
+var _ = Suite(&ModelsTestSuite{})
 
-//func TestFoo(t *testing.T) {
-//
-//	c := config.SetupTestEnvironemnt()
-//	assert.Equal(t, "slack_time_test", c.DB.Name)
-//
-//	//fmt.Printf("%s", c.DB.Host)
-//
-//	//cmd, err := ("start Convert the logotype to PNG")
-//	//assert.NoError(t, err)
-//	//
-//	//commandType := fmt.Sprintf("%T", cmd)
-//	//assert.Equal(t, "commands.Start", commandType)
-//	//
-//	//start := cmd.(Start)
-//	//assert.Equal(t, "Convert the logotype to PNG", start.arguments["main"])
-//}
+func (s *ModelsTestSuite) SetUpSuite(c *C) {
+
+	e, err := utils.NewEnvironment(utils.TestEnv);
+
+	if err != nil {
+		c.Error(err)
+	}
+
+	s.env = e
+
+	err = s.env.MigrateDatabase()
+	if err != nil {
+		c.Error(err)
+	}
+}
+
+func (s *ModelsTestSuite) TearDownSuite(c *C) {
+	s.env.ReleaseResources()
+}
+
+func (s *ModelsTestSuite) TestFoo(c *C) {
+	log.Println("TestFoo")
+	//s.env.OrmDB.AutoMigrate(
+		//&Team{},
+		//&TeamUser{},
+		//&Project{},
+		//&Task{},
+		//&Timer{},
+	//)
+
+	c.Assert(1, Equals, 2)
+}
