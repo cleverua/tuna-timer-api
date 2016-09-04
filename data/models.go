@@ -4,66 +4,68 @@ import (
 	"time"
 )
 
+// Team represents a Slack team
 type Team struct {
-	Id int64
-	SlackTeamId string
-	CreatedAt time.Time
+	ID          int64
+	SlackTeamID string //todo: should be unique
+	TeamUsers   []TeamUser
+	Projects    []Project
+	CreatedAt   time.Time
 }
 
-// not going to call it User because we may want to have admin users
-// to administer stuff via UI etc
+// TeamUser represents a Slack user that belongs to a team.
+// We not going to call it `User` because we may want to have admin users to administer stuff via UI etc
 type TeamUser struct {
-	Id int64
-
-	Email string
-	Team Team `gorm:"ForeignKey:TeamId"`
-	TeamId int64
-	SlackUserId string
-
-	Tasks []Task
+	ID          int64
+	Name        string
+	Team        Team `gorm:"ForeignKey:TeamID"`
+	TeamID      int64
+	SlackUserID string
 }
 
+// Project - is a project you can associate tasks with and tracks their time
 type Project struct {
+	ID int64
 
-	Id int64
-
-	Name string `sql:"size:64"`
-	SlackChannelId string `sql:"size:32"`
+	Name             string `sql:"size:64"`
+	SlackChannelID   string `sql:"size:32"`
 	SlackChannelName string `sql:"size:64"`
 
-	Team Team `gorm:"ForeignKey:TeamId"`
-	TeamId int64
+	Team   Team `gorm:"ForeignKey:TeamID"`
+	TeamID int64
 
 	Tasks []Task
 }
 
+// Task - a task that belongs to a project and a user, contains a collection of timers
 type Task struct {
-	Id int64
+	ID int64
 
 	Name string `sql:"size:128"`
 	Hash string `sql:"size:12"`
 
-	Team Team `gorm:"ForeignKey:TeamId"`
-	TeamId int64
+	Team   Team `gorm:"ForeignKey:TeamID"`
+	TeamID int64
 
-	Project Project `gorm:"ForeignKey:ProjectId"`
-	ProjectId int64
+	Project   Project `gorm:"ForeignKey:ProjectID"`
+	ProjectID int64
 
 	TotalMinutes int
 
 	Timers []Timer
 }
 
+// Timer - a time record that has start and finish dates. Belongs to a slack user and a task
 type Timer struct {
-	Id int64
+	ID int64
 
-	//User TeamUser `gorm:"ForeignKey:TeamUserId"`
-	TeamUserId int64
+	TeamUser   TeamUser `gorm:"ForeignKey:TeamUserID"`
+	TeamUserID int64
 
-	//Task Task `gorm:"ForeignKey:TaskId"`
-	TaskId int64
+	Task   Task `gorm:"ForeignKey:TaskID"`
+	TaskID int64
 
-	StartedAt time.Time
+	StartedAt  time.Time
 	FinishedAt time.Time
 
 	Minutes int
