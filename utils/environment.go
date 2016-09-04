@@ -49,7 +49,6 @@ func NewEnvironment(environment string) (*Environment, error) {
 }
 
 func (env *Environment) ReleaseResources() {
-	log.Println("*********************** ReleaseResources")
 	env.OrmDB.Close()
 }
 
