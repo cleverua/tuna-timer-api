@@ -27,7 +27,6 @@ func (s *DaoTestSuite) TestCreateTimer(c *C) {
 	project := s.dao.FindOrCreateProjectBySlackChannelID(team, "slack-channel-id")
 	user := s.dao.FindOrCreateTeamUserBySlackUserID(team, "test-user")
 	task := s.dao.FindOrCreateTaskByName(team, project, "task-name")
-
 	timer := s.dao.CreateTimer(user, task)
 
 	c.Assert(timer, NotNil)

@@ -78,6 +78,39 @@ func (s *TestStartCommandSuite) TestSimpleStartCommand(c *C) {
 	c.Assert(timer.FinishedAt, IsNil)
 }
 
+func (s *TestStartCommandSuite) TestSimpleStartCommandShouldFinishPreviousTimerForUser(c *C) {
+	slackCmd := data.SlackCommand{
+		ChannelID:   "slack-channel-id",
+		ChannelName: "slack-channel-id",
+		Command:     "timer",
+		ResponseURL: "http://www.disney.com",
+		TeamDomain:  "cleverua.com",
+		TeamID:      "slack-team-id",
+		Text:        "start task-name",
+		Token:       "123e4567-e89b-12d3-a456-426655440000",
+		UserID:      "test-user",
+		UserName:    "test-user",
+	}
+
+	team := s.dao.FindOrCreateTeamBySlackTeamID("slack-team-id")
+	project := s.dao.FindOrCreateProjectBySlackChannelID(team, "slack-channel-id")
+	user := s.dao.FindOrCreateTeamUserBySlackUserID(team, "test-user")
+	task := s.dao.FindOrCreateTaskByName(team, project, "task-name")
+	timer := s.dao.CreateTimer(user, task)
+	c.Assert(timer.FinishedAt, IsNil)
+
+	cmd, err := Get(slackCmd)
+	c.Assert(err, IsNil)
+
+	result := cmd.Execute(s.env)
+	c.Assert(result, NotNil)
+
+	existingTimer := data.Timer{}
+	s.env.OrmDB.First(&existingTimer, timer.ID)
+	c.Assert(existingTimer, NotNil)
+	c.Assert(existingTimer.FinishedAt, NotNil)
+}
+
 // let some code duplicate stay here...
 func (s *TestStartCommandSuite) TestGetSimpleStartCommand(c *C) {
 	slackCmd := data.SlackCommand{
