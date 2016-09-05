@@ -11,6 +11,7 @@ type Dao struct {
 	DB *gorm.DB
 }
 
+// CreateTimer - method name is self-descriptive
 func (dao *Dao) CreateTimer(user *TeamUser, task *Task) *Timer {
 	result := &Timer{
 		StartedAt:  time.Now(),
@@ -21,6 +22,7 @@ func (dao *Dao) CreateTimer(user *TeamUser, task *Task) *Timer {
 	return result
 }
 
+// FindNotFinishedTimerForUser - method name is self-descriptive
 func (dao *Dao) FindNotFinishedTimerForUser(user *TeamUser) *Timer {
 	result := &Timer{}
 	request := dao.DB.Where("team_user_id = ? and finished_at is null and deleted_at is null", user.ID).First(&result)

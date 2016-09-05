@@ -26,6 +26,9 @@ const (
 
 	// MigrationsFolder - the folder to look migration SQLs in
 	MigrationsFolder string = "../data/migrations/"
+
+	// gormLogSQL - Whether GORM SQL logging is enabled or not
+	gormLogSQL bool = false
 )
 
 // Environment is a thing that holds env. specific stuff
@@ -49,6 +52,8 @@ func NewEnvironment(environment string) (*Environment, error) {
 		return nil, err
 	}
 	env.OrmDB = connection
+	env.OrmDB.LogMode(gormLogSQL)
+
 	env.RawDB = env.OrmDB.DB()
 	return env, nil
 }

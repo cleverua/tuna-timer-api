@@ -1,8 +1,8 @@
 package data
 
 import (
-	"fmt"
 	"testing"
+	"time"
 
 	. "gopkg.in/check.v1"
 
@@ -18,6 +18,62 @@ type DaoTestSuite struct {
 }
 
 var _ = Suite(&DaoTestSuite{})
+
+// ========================================================================
+// CreateTimer tests
+// ========================================================================
+func (s *DaoTestSuite) TestCreateTimer(c *C) {
+	team := s.dao.FindOrCreateTeamBySlackTeamID("slack-team-id")
+	project := s.dao.FindOrCreateProjectBySlackChannelID(team, "slack-channel-id")
+	user := s.dao.FindOrCreateTeamUserBySlackUserID(team, "test-user")
+	task := s.dao.FindOrCreateTaskByName(team, project, "task-name")
+
+	timer := s.dao.CreateTimer(user, task)
+
+	c.Assert(timer, NotNil)
+	c.Assert(timer.DeletedAt, IsNil)
+	c.Assert(timer.FinishedAt, IsNil)
+	c.Assert(timer.Minutes, Equals, 0)
+	c.Assert(timer.TaskID, Equals, task.ID)
+	c.Assert(timer.TeamUserID, Equals, user.ID)
+}
+
+// ========================================================================
+// FindNotFinishedTimerForUser tests
+// ========================================================================
+func (s *DaoTestSuite) TestFindNotFinishedTimerForUserNotExists(c *C) {
+	team := s.dao.FindOrCreateTeamBySlackTeamID("slack-team-id")
+	user := s.dao.FindOrCreateTeamUserBySlackUserID(team, "test-user")
+	c.Assert(s.dao.FindNotFinishedTimerForUser(user), IsNil)
+}
+
+func (s *DaoTestSuite) TestFindNotFinishedTimerForUserExists(c *C) {
+	team := s.dao.FindOrCreateTeamBySlackTeamID("slack-team-id")
+	project := s.dao.FindOrCreateProjectBySlackChannelID(team, "slack-channel-id")
+	user := s.dao.FindOrCreateTeamUserBySlackUserID(team, "test-user")
+	task := s.dao.FindOrCreateTaskByName(team, project, "task-name")
+	_ = s.env.OrmDB.Create(&Timer{TeamUserID: user.ID, TaskID: task.ID, StartedAt: time.Now()})
+
+	timer := s.dao.FindNotFinishedTimerForUser(user)
+	c.Assert(timer, NotNil)
+
+	c.Assert(timer.DeletedAt, IsNil)
+	c.Assert(timer.FinishedAt, IsNil)
+	c.Assert(timer.Minutes, Equals, 0)
+	c.Assert(timer.TaskID, Equals, task.ID)
+	c.Assert(timer.TeamUserID, Equals, user.ID)
+}
+
+func (s *DaoTestSuite) TestFindNotFinishedTimerForUserExistsButDeleter(c *C) {
+	team := s.dao.FindOrCreateTeamBySlackTeamID("slack-team-id")
+	project := s.dao.FindOrCreateProjectBySlackChannelID(team, "slack-channel-id")
+	user := s.dao.FindOrCreateTeamUserBySlackUserID(team, "test-user")
+	task := s.dao.FindOrCreateTaskByName(team, project, "task-name")
+	now := time.Now()
+	_ = s.env.OrmDB.Create(&Timer{TeamUserID: user.ID, TaskID: task.ID, StartedAt: time.Now(), DeletedAt: &now})
+
+	c.Assert(s.dao.FindNotFinishedTimerForUser(user), IsNil)
+}
 
 // ========================================================================
 // FindOrCreateTaskByName tests
@@ -150,7 +206,6 @@ func (s *DaoTestSuite) TestFindOrCreateProjectBySlackChannelIDExisting(c *C) {
 
 // Suite lifecycle and callbacks
 func (s *DaoTestSuite) SetUpSuite(c *C) {
-	fmt.Println("SetUpSuite!!!!")
 	e, err := utils.NewEnvironment(utils.TestEnv)
 	if err != nil {
 		c.Error(err)
@@ -159,7 +214,6 @@ func (s *DaoTestSuite) SetUpSuite(c *C) {
 
 	s.env = e
 	s.dao = &Dao{DB: s.env.OrmDB}
-	s.env.OrmDB.LogMode(true)
 }
 
 func (s *DaoTestSuite) TearDownSuite(c *C) {

@@ -120,7 +120,6 @@ func (s *TestStartCommandSuite) SetUpSuite(c *C) {
 
 	s.env = e
 	s.dao = &data.Dao{DB: s.env.OrmDB}
-	s.env.OrmDB.LogMode(true)
 }
 
 func (s *TestStartCommandSuite) TearDownSuite(c *C) {

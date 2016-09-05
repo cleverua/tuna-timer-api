@@ -26,3 +26,4 @@ _testmain.go
 .idea
 .vscode
 config.yml
+coverage.txt
