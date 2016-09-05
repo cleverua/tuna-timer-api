@@ -1,15 +1,14 @@
 package utils
 
 import (
+	"fmt"
+	"log"
 	"database/sql"
-
-	"github.com/jinzhu/gorm"
+	
 	"github.com/olebedev/config"
 
-	"fmt"
-	// a DB package
+	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
-	"log"
 	"github.com/tanel/dbmigrate"
 )
 

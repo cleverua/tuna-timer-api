@@ -1,29 +1,58 @@
 package data
 
-import "github.com/jinzhu/gorm"
+import (
+	"github.com/jinzhu/gorm"
+	"time"
+)
 
-// Dao - a tool for accessing persisten data
+// Dao - a tool for accessing persistent data
 type Dao struct {
-	db *gorm.DB
+	DB *gorm.DB
+}
+
+func (dao *Dao) CreateTimer(user *TeamUser, task *Task) *Timer {
+	result := &Timer{
+		StartedAt: time.Now(),
+		TaskID: task.ID,
+		TeamUserID: user.ID,
+	}
+	dao.DB.Save(&result)
+	return result
+}
+
+func (dao *Dao) FindNotFinishedTimerForUser(user *TeamUser) *Timer {
+	result := &Timer{}
+	request := dao.DB.Where("team_user_id = ? and finished_at is null and deleted_at is null", user.ID).First(&result)
+	if !request.RecordNotFound() {
+		return result
+	}
+	return nil
+}
+
+func (dao *Dao) FindOrCreateTaskByName(team *Team, project *Project, taskName string) *Task {
+	result := &Task{}
+	dao.DB.FirstOrCreate(&result,
+		Task{ProjectID: project.ID, Name: taskName, TeamID:team.ID})
+	return result
 }
 
 // FindOrCreateProjectBySlackChannelID - method name is self-descriptive
 func (dao *Dao) FindOrCreateProjectBySlackChannelID(team *Team, slackChannelID string) *Project {
 	result := &Project{}
-	dao.db.FirstOrCreate(&result, Project{TeamID: team.ID, SlackChannelID: slackChannelID})
+	dao.DB.FirstOrCreate(&result, Project{TeamID: team.ID, SlackChannelID: slackChannelID})
 	return result
 }
 
 // FindOrCreateTeamUserBySlackUserID - method name is self-descriptive
 func (dao *Dao) FindOrCreateTeamUserBySlackUserID(team *Team, slackUserID string) *TeamUser {
 	result := &TeamUser{}
-	dao.db.FirstOrCreate(&result, TeamUser{TeamID: team.ID, SlackUserID: slackUserID})
+	dao.DB.FirstOrCreate(&result, TeamUser{TeamID: team.ID, SlackUserID: slackUserID})
 	return result
 }
 
 // FindOrCreateTeamBySlackTeamID - method name is self-descriptive
 func (dao *Dao) FindOrCreateTeamBySlackTeamID(slackTeamID string) *Team {
 	result := &Team{}
-	dao.db.FirstOrCreate(&result, Team{SlackTeamID: slackTeamID})
+	dao.DB.FirstOrCreate(&result, Team{SlackTeamID: slackTeamID})
 	return result
 }

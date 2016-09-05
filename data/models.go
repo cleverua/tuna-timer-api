@@ -57,6 +57,7 @@ type Task struct {
 
 // Timer - a time record that has start and finish dates. Belongs to a slack user and a task
 type Timer struct {
+
 	ID int64
 
 	TeamUser   TeamUser `gorm:"ForeignKey:TeamUserID"`
@@ -66,9 +67,25 @@ type Timer struct {
 	TaskID int64
 
 	StartedAt  time.Time
-	FinishedAt time.Time
+	FinishedAt *time.Time
 
 	Minutes int
 
-	DeletedAt time.Time
+	DeletedAt *time.Time
+}
+
+// SlackCommand - a raw command that came from Slack
+type SlackCommand struct {
+	ID          int64
+	Token       string
+	TeamID      string `json:"team_id"`
+	TeamDomain  string `json:"team_domain"`
+	ChannelID   string `json:"channel_id"`
+	ChannelName string `json:"channel_name"`
+	UserID      string `json:"user_id"`
+	UserName    string `json:"user_name"`
+	Command     string `json:"command"`
+	Text        string `json:"text"`
+	ResponseURL string `json:"response_url"`
+	CreatedAt   time.Time
 }
