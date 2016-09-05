@@ -4,6 +4,7 @@
 
 It leverages a custom [slash command](https://api.slack.com/slash-commands) for Slack. It helps team members to track times they spend on tasks.
 
+
 ## Features
 
 * Start and stop timer on a task
