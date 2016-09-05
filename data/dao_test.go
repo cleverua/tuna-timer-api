@@ -1,7 +1,9 @@
 package data
 
 import (
+	"fmt"
 	"testing"
+
 	. "gopkg.in/check.v1"
 
 	"github.com/pavlo/slack-time/utils"
@@ -16,6 +18,41 @@ type DaoTestSuite struct {
 }
 
 var _ = Suite(&DaoTestSuite{})
+
+// ========================================================================
+// FindOrCreateTaskByName tests
+// ========================================================================
+func (s *DaoTestSuite) TestFindOrCreateTaskByNameNew(c *C) {
+	team := s.dao.FindOrCreateTeamBySlackTeamID("slack-team-id")
+	project := s.dao.FindOrCreateProjectBySlackChannelID(team, "test-channel")
+
+	c.Assert(0, Equals, utils.Count(s.env, Task{}))
+	t := s.dao.FindOrCreateTaskByName(team, project, "my task")
+	c.Assert(1, Equals, utils.Count(s.env, Task{}))
+
+	c.Assert(t, NotNil)
+	c.Assert(t.ID, NotNil)
+	c.Assert(t.Name, Equals, "my task")
+	c.Assert(t.ProjectID, Equals, project.ID)
+	c.Assert(t.TeamID, Equals, team.ID)
+}
+
+func (s *DaoTestSuite) TestFindOrCreateTaskByNameExisting(c *C) {
+	team := s.dao.FindOrCreateTeamBySlackTeamID("slack-team-id")
+	project := s.dao.FindOrCreateProjectBySlackChannelID(team, "test-channel")
+
+	_ = s.env.OrmDB.Create(&Task{ProjectID: project.ID, TeamID: team.ID, Name: "my task"})
+	c.Assert(1, Equals, utils.Count(s.env, Task{}))
+
+	t := s.dao.FindOrCreateTaskByName(team, project, "my task")
+	c.Assert(1, Equals, utils.Count(s.env, Task{}))
+
+	c.Assert(t, NotNil)
+	c.Assert(t.ID, NotNil)
+	c.Assert(t.Name, Equals, "my task")
+	c.Assert(t.ProjectID, Equals, project.ID)
+	c.Assert(t.TeamID, Equals, team.ID)
+}
 
 // ========================================================================
 // FindOrCreateTeamBySlackTeamID tests
@@ -47,7 +84,7 @@ func (s *DaoTestSuite) TestFindOrCreateTeamBySlackTeamIDExisting(c *C) {
 }
 
 // ========================================================================
-// FindOrCreateTeamBySlackTeamID tests
+// FindOrCreateTeamUserBySlackUserID tests
 // ========================================================================
 func (s *DaoTestSuite) TestFindOrCreateTeamUserBySlackUserIDNew(c *C) {
 	team := s.dao.FindOrCreateTeamBySlackTeamID("slack-team-id")
@@ -113,10 +150,12 @@ func (s *DaoTestSuite) TestFindOrCreateProjectBySlackChannelIDExisting(c *C) {
 
 // Suite lifecycle and callbacks
 func (s *DaoTestSuite) SetUpSuite(c *C) {
+	fmt.Println("SetUpSuite!!!!")
 	e, err := utils.NewEnvironment(utils.TestEnv)
 	if err != nil {
 		c.Error(err)
 	}
+	e.MigrateDatabase()
 
 	s.env = e
 	s.dao = &Dao{DB: s.env.OrmDB}

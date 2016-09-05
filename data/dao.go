@@ -1,8 +1,9 @@
 package data
 
 import (
-	"github.com/jinzhu/gorm"
 	"time"
+
+	"github.com/jinzhu/gorm"
 )
 
 // Dao - a tool for accessing persistent data
@@ -12,8 +13,8 @@ type Dao struct {
 
 func (dao *Dao) CreateTimer(user *TeamUser, task *Task) *Timer {
 	result := &Timer{
-		StartedAt: time.Now(),
-		TaskID: task.ID,
+		StartedAt:  time.Now(),
+		TaskID:     task.ID,
 		TeamUserID: user.ID,
 	}
 	dao.DB.Save(&result)
@@ -29,10 +30,11 @@ func (dao *Dao) FindNotFinishedTimerForUser(user *TeamUser) *Timer {
 	return nil
 }
 
+// FindOrCreateTaskByName - method name is self-descriptive
 func (dao *Dao) FindOrCreateTaskByName(team *Team, project *Project, taskName string) *Task {
 	result := &Task{}
 	dao.DB.FirstOrCreate(&result,
-		Task{ProjectID: project.ID, Name: taskName, TeamID:team.ID})
+		Task{ProjectID: project.ID, Name: taskName, TeamID: team.ID})
 	return result
 }
 

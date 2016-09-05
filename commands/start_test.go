@@ -3,6 +3,7 @@ package commands
 import (
 	"fmt"
 	"testing"
+
 	. "gopkg.in/check.v1"
 
 	"github.com/pavlo/slack-time/data"
@@ -21,16 +22,16 @@ var _ = Suite(&TestStartCommandSuite{})
 
 func (s *TestStartCommandSuite) TestSimpleStartCommand(c *C) {
 	slackCmd := data.SlackCommand{
-		ChannelID: "channelId",
+		ChannelID:   "channelId",
 		ChannelName: "ACME",
-		Command: "timer",
+		Command:     "timer",
 		ResponseURL: "http://www.disney.com",
-		TeamDomain: "cleverua.com",
-		TeamID: "teamId",
-		Text: "start Convert the logotype to PNG",
-		Token: "123e4567-e89b-12d3-a456-426655440000",
-		UserID: "userId",
-		UserName: "pavlo",
+		TeamDomain:  "cleverua.com",
+		TeamID:      "teamId",
+		Text:        "start Convert the logotype to PNG",
+		Token:       "123e4567-e89b-12d3-a456-426655440000",
+		UserID:      "userId",
+		UserName:    "pavlo",
 	}
 
 	cmd, err := Get(slackCmd)
@@ -115,6 +116,7 @@ func (s *TestStartCommandSuite) SetUpSuite(c *C) {
 	if err != nil {
 		c.Error(err)
 	}
+	e.MigrateDatabase()
 
 	s.env = e
 	s.dao = &data.Dao{DB: s.env.OrmDB}

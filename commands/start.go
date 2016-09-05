@@ -1,9 +1,10 @@
 package commands
 
 import (
+	"time"
+
 	"github.com/pavlo/slack-time/data"
 	"github.com/pavlo/slack-time/utils"
-	"time"
 )
 
 // Start - starts timer for specific task
@@ -12,6 +13,7 @@ type Start struct {
 	CommandArguments
 }
 
+// Execute - implementation of Command interface
 func (c Start) Execute(env *utils.Environment) *CommandResult {
 
 	dao := &data.Dao{DB: env.OrmDB}
@@ -39,12 +41,12 @@ func (c Start) Execute(env *utils.Environment) *CommandResult {
 	timer := dao.CreateTimer(user, task)
 
 	m := make(map[string]interface{})
-	m["team"] 		= team
-	m["user"]		= user
-	m["project"]		= project
-	m["task"]		= task
-	m["finishedTimer"] 	= finishedTimer
-	m["startedTimer"]	= timer
+	m["team"] = team
+	m["user"] = user
+	m["project"] = project
+	m["task"] = task
+	m["finishedTimer"] = finishedTimer
+	m["startedTimer"] = timer
 
 	result := CommandResult{
 		data: m,

@@ -1,24 +1,30 @@
 package utils
 
 import (
+	"database/sql"
 	"fmt"
 	"log"
-	"database/sql"
-	
+
 	"github.com/olebedev/config"
 
 	"github.com/jinzhu/gorm"
+	// PosgreSQL driver
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 	"github.com/tanel/dbmigrate"
 )
 
 const (
-	ProductionEnv		= "production"
-	TestEnv			= "test"
+	// ProductionEnv - a value that indicates about production env
+	ProductionEnv = "production"
+	// TestEnv - a value that indicates about test env
+	TestEnv = "test"
 )
 
 const (
-	ConfigFile string 	= "../config.yml"
+	// ConfigFile - path to YML config file
+	ConfigFile string = "../config.yml"
+
+	// MigrationsFolder - the folder to look migration SQLs in
 	MigrationsFolder string = "../data/migrations/"
 )
 
@@ -47,10 +53,12 @@ func NewEnvironment(environment string) (*Environment, error) {
 	return env, nil
 }
 
+// ReleaseResources - supposed to be called in the end of application/test suite lifecycle
 func (env *Environment) ReleaseResources() {
 	env.OrmDB.Close()
 }
 
+// MigrateDatabase - performs database migrations
 func (env *Environment) MigrateDatabase() error {
 	log.Println("Migrating database...")
 
