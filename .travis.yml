@@ -7,4 +7,6 @@ go:
     - 1.7
 script: 
     - cp ./config.travis.yml ./config.yml
-    - go test -p 1 ./...
+    - bash ./codecov-run-tests.sh
+after_success:
+  - bash <(curl -s https://codecov.io/bash)
