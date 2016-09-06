@@ -35,11 +35,10 @@ func Get(slackCommand data.SlackCommand) (Command, error) {
 	} else if strings.HasPrefix(userInput, "stop") {
 		cmd := Stop{CommandArguments: createCommandArguments(slackCommand, "stop")}
 		return cmd, nil
+	} else if strings.HasPrefix(userInput, "status") {
+		cmd := Status{CommandArguments: createCommandArguments(slackCommand, "status")}
+		return cmd, nil
 	}
-	// else if strings.HasPrefix(userInput, "status") {
-	// 	cmd := Status{CommandArguments: createCommandArguments(slackCommand, "status")}
-	// 	return cmd, nil
-	// }
 	return nil, fmt.Errorf("Failed to look up a command for `%s` name", userInput)
 }
 
@@ -49,9 +48,8 @@ func Get(slackCommand data.SlackCommand) (Command, error) {
 // Note, it does not update objects in DB!
 func MarkTimerAsFinished(task *data.Task, t *data.Timer) {
 	now := time.Now()
-	duration := time.Since(t.StartedAt)
 	t.FinishedAt = &now
-	t.Minutes = int(math.Floor(duration.Minutes()))
+	t.Minutes = GetMinutesTimerRun(t)
 	task.TotalMinutes = task.TotalMinutes + t.Minutes
 }
 
@@ -62,6 +60,11 @@ func CreateMainEntitiesIfNeeded(env *utils.Environment, slackCommand data.SlackC
 	user := dao.FindOrCreateTeamUserBySlackUserID(team, slackCommand.UserID)
 	project := dao.FindOrCreateProjectBySlackChannelID(team, slackCommand.ChannelID)
 	return team, user, project
+}
+
+func GetMinutesTimerRun(t *data.Timer) int {
+	duration := time.Since(t.StartedAt)
+	return int(math.Floor(duration.Minutes()))
 }
 
 func stripCommandNameFromUserInput(commandName, userInput string) string {

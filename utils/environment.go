@@ -28,7 +28,7 @@ const (
 	MigrationsFolder string = "../data/migrations/"
 
 	// gormLogSQL - Whether GORM SQL logging is enabled or not
-	gormLogSQL bool = true
+	gormLogSQL bool = false
 )
 
 // Environment is a thing that holds env. specific stuff
