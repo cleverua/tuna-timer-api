@@ -35,10 +35,11 @@ func Get(slackCommand data.SlackCommand) (Command, error) {
 	} else if strings.HasPrefix(userInput, "stop") {
 		cmd := Stop{CommandArguments: createCommandArguments(slackCommand, "stop")}
 		return cmd, nil
-	} else if strings.HasPrefix(userInput, "status") {
-		cmd := Status{CommandArguments: createCommandArguments(slackCommand, "status")}
-		return cmd, nil
 	}
+	// else if strings.HasPrefix(userInput, "status") {
+	// 	cmd := Status{CommandArguments: createCommandArguments(slackCommand, "status")}
+	// 	return cmd, nil
+	// }
 	return nil, fmt.Errorf("Failed to look up a command for `%s` name", userInput)
 }
 
