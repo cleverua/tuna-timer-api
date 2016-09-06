@@ -1,6 +1,8 @@
 package data
 
 import (
+	"crypto/sha256"
+	"fmt"
 	"time"
 
 	"github.com/jinzhu/gorm"
@@ -35,8 +37,10 @@ func (dao *Dao) FindNotFinishedTimerForUser(user *TeamUser) *Timer {
 // FindOrCreateTaskByName - method name is self-descriptive
 func (dao *Dao) FindOrCreateTaskByName(team *Team, project *Project, taskName string) *Task {
 	result := &Task{}
-	dao.DB.FirstOrCreate(&result,
-		Task{ProjectID: project.ID, Name: taskName, TeamID: team.ID})
+	dao.DB.FirstOrCreate(&result, Task{ProjectID: project.ID, Name: taskName, TeamID: team.ID})
+	if result.Hash == nil {
+		dao.DB.Model(&result).Update("hash", taskSHA256(team, project, taskName))
+	}
 	return result
 }
 
@@ -59,4 +63,9 @@ func (dao *Dao) FindOrCreateTeamBySlackTeamID(slackTeamID string) *Team {
 	result := &Team{}
 	dao.DB.FirstOrCreate(&result, Team{SlackTeamID: slackTeamID})
 	return result
+}
+
+func taskSHA256(team *Team, project *Project, taskName string) string {
+	hashSeed := fmt.Sprintf("%s%s%s", taskName, team.ID, project.ID)
+	return fmt.Sprintf("%x", sha256.Sum256([]byte(hashSeed)))[0:8]
 }

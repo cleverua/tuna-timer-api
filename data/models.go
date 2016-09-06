@@ -1,8 +1,6 @@
 package data
 
-import (
-	"time"
-)
+import "time"
 
 // Team represents a Slack team
 type Team struct {
@@ -41,8 +39,8 @@ type Project struct {
 type Task struct {
 	ID int64
 
-	Name string `sql:"size:128"`
-	Hash string `sql:"size:12"`
+	Name string  `sql:"size:128"`
+	Hash *string `sql:"size:12"`
 
 	Team   Team `gorm:"ForeignKey:TeamID"`
 	TeamID int64
@@ -57,7 +55,6 @@ type Task struct {
 
 // Timer - a time record that has start and finish dates. Belongs to a slack user and a task
 type Timer struct {
-
 	ID int64
 
 	TeamUser   TeamUser `gorm:"ForeignKey:TeamUserID"`

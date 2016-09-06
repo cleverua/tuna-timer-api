@@ -2,6 +2,7 @@ package commands
 
 import (
 	"testing"
+	"time"
 
 	"github.com/pavlo/slack-time/data"
 
@@ -32,4 +33,18 @@ func (s *TestCommandSuite) TestUnknownCommand(c *C) {
 
 	_, err := Get(slackCmd)
 	c.Assert(err, NotNil)
+}
+
+func (s *TestCommandSuite) TestMarkTimerAsFinished(c *C) {
+	now := time.Now()
+	duration, _ := time.ParseDuration("1h25m")
+
+	startedAt := now.Add(duration * -1)
+	timer := &data.Timer{StartedAt: startedAt}
+	task := &data.Task{TotalMinutes: 3}
+
+	MarkTimerAsFinished(task, timer)
+	c.Assert(timer.FinishedAt, NotNil)
+	c.Assert(timer.Minutes, Equals, 60+25)
+	c.Assert(task.TotalMinutes, Equals, 3+60+25)
 }

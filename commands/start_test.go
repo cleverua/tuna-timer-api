@@ -37,6 +37,9 @@ func (s *TestStartCommandSuite) TestSimpleStartCommand(c *C) {
 	cmd, err := Get(slackCmd)
 	c.Assert(err, IsNil)
 
+	cmdType := fmt.Sprintf("%T", cmd)
+	c.Assert(cmdType, Equals, "commands.Start")
+
 	result := cmd.Execute(s.env)
 	c.Assert(result, NotNil)
 
@@ -101,6 +104,8 @@ func (s *TestStartCommandSuite) TestSimpleStartCommandShouldFinishPreviousTimerF
 
 	cmd, err := Get(slackCmd)
 	c.Assert(err, IsNil)
+	cmdType := fmt.Sprintf("%T", cmd)
+	c.Assert(cmdType, Equals, "commands.Start")
 
 	result := cmd.Execute(s.env)
 	c.Assert(result, NotNil)

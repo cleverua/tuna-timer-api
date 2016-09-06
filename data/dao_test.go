@@ -87,6 +87,9 @@ func (s *DaoTestSuite) TestFindOrCreateTaskByNameNew(c *C) {
 
 	c.Assert(t, NotNil)
 	c.Assert(t.ID, NotNil)
+
+	c.Assert(t.Hash, NotNil)
+	c.Assert(8, Equals, len(*t.Hash))
 	c.Assert(t.Name, Equals, "my task")
 	c.Assert(t.ProjectID, Equals, project.ID)
 	c.Assert(t.TeamID, Equals, team.ID)
