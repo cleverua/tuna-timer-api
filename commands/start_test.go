@@ -150,10 +150,7 @@ func (s *TestStartCommandSuite) TestGetSimpleStartCommandWithUnicodeArgument(c *
 
 // Suite lifecycle and callbacks
 func (s *TestStartCommandSuite) SetUpSuite(c *C) {
-	e, err := utils.NewEnvironment(utils.TestEnv)
-	if err != nil {
-		c.Error(err)
-	}
+	e := utils.NewEnvironment(utils.TestEnv, "1.0.0")
 	e.MigrateDatabase()
 
 	s.env = e

@@ -31,6 +31,16 @@
 			"Rev": "d9eb7a3d35ec988b8585d4a0068e462c27d28380"
 		},
 		{
+			"ImportPath": "github.com/gorilla/handlers",
+			"Comment": "v1.1-11-ga577578",
+			"Rev": "a5775781a543af3c6b9f5baf10995e4d14168950"
+		},
+		{
+			"ImportPath": "github.com/gorilla/mux",
+			"Comment": "v1.1-25-g0a192a1",
+			"Rev": "0a192a193177452756c362c20087ddafcf6829c4"
+		},
+		{
 			"ImportPath": "github.com/hailocab/go-hostpool",
 			"Rev": "e80d13ce29ede4452c43dea11e79b9bc8a15b478"
 		},
@@ -47,6 +57,11 @@
 		{
 			"ImportPath": "github.com/jinzhu/inflection",
 			"Rev": "74387dc39a75e970e7a3ae6a3386b5bd2e5c5cff"
+		},
+		{
+			"ImportPath": "github.com/justinas/alice",
+			"Comment": "1.0.0-14-g20ab232",
+			"Rev": "20ab2325b829575b43d6d8d3a6f6933356b19e95"
 		},
 		{
 			"ImportPath": "github.com/lib/pq",

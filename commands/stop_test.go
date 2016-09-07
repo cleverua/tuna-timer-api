@@ -110,10 +110,7 @@ func (s *TestStopCommandSuite) TestSimpleStopCommand(c *C) {
 
 // Suite lifecycle and callbacks
 func (s *TestStopCommandSuite) SetUpSuite(c *C) {
-	e, err := utils.NewEnvironment(utils.TestEnv)
-	if err != nil {
-		c.Error(err)
-	}
+	e := utils.NewEnvironment(utils.TestEnv, "1.0.0")
 	e.MigrateDatabase()
 
 	s.env = e

@@ -62,6 +62,7 @@ func CreateMainEntitiesIfNeeded(env *utils.Environment, slackCommand data.SlackC
 	return team, user, project
 }
 
+// GetMinutesTimerRun calculates and returns the number of minutes a timer is/was running
 func GetMinutesTimerRun(t *data.Timer) int {
 	duration := time.Since(t.StartedAt)
 	return int(math.Floor(duration.Minutes()))

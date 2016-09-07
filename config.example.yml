@@ -12,3 +12,10 @@ test:
     name: slack_time_test
     user: postgres
     pass:
+development:
+  database:
+    host: localhost
+    port: 5432
+    name: slack_time_dev
+    user: postgres
+    pass:
