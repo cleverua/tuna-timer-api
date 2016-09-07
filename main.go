@@ -18,6 +18,9 @@ var environment *utils.Environment
 
 func main() {
 	environment = utils.NewEnvironment(utils.DevelopmentEnv, version)
+	// defer environment.ReleaseResources()
+	environment.MigrateDatabase() //todo: check config option or env variable before doing this
+
 	handlers := web.NewHandlers(environment)
 
 	router := mux.NewRouter().StrictSlash(true)
@@ -25,8 +28,8 @@ func main() {
 	router.HandleFunc("/health", handlers.Health).Methods("GET")
 	router.HandleFunc("/api/v1/timer", handlers.Timer).Methods("POST")
 
-	// Slack will sometimes call the API method with a GET request
-	// to check SSL certificate so we reply with a status handler here
+	// Slack will sometimes call the API method using a GET request
+	// to check SSL certificate - so we reply with a status handler here
 	router.HandleFunc("/api/v1/timer", handlers.Health).Methods("GET")
 
 	defaultMiddleware := alice.New(

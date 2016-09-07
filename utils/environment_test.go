@@ -18,7 +18,6 @@ var _ = Suite(&EnvironmentTestSuite{})
 func (s *EnvironmentTestSuite) TestNewEnvironment(c *C) {
 	env := NewEnvironment(TestEnv, "1")
 	c.Assert(env.OrmDB, NotNil)
-	c.Assert(env.RawDB, NotNil)
 	c.Assert(env.AppVersion, Equals, "1")
 	c.Assert(env.CreatedAt, NotNil)
 }
