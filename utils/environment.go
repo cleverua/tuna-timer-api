@@ -82,14 +82,6 @@ func (env *Environment) MigrateDatabase() error {
 }
 
 func connectToDatabase(cfg *config.Config) (*gorm.DB, error) {
-
-	log.Println("Connecting to database:")
-	log.Printf("database.name: %s", cfg.UString("database.name"))
-	log.Printf("database.host: %s", cfg.UString("database.host"))
-	log.Printf("database.port: %s", cfg.UString("database.port"))
-	log.Printf("database.user: %s", cfg.UString("database.user"))
-	log.Print("database.pass: ***********")
-
 	db, err := gorm.Open(
 		"postgres",
 		fmt.Sprintf("sslmode=disable dbname=%s host=%s port=%s user=%s password=%s",
@@ -101,12 +93,8 @@ func connectToDatabase(cfg *config.Config) (*gorm.DB, error) {
 		))
 
 	if err != nil {
-		log.Println("Failed to connect!!")
-		log.Fatal(err)
 		return nil, err
 	}
-
-	log.Println("Connected successfully!")
 	return db, nil
 }
 

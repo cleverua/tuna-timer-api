@@ -17,8 +17,10 @@ var status = map[string]string{"version": version}
 var environment *utils.Environment
 
 func main() {
+
 	environment = utils.NewEnvironment(utils.DevelopmentEnv, version)
-	// defer environment.ReleaseResources()
+	utils.PrintBanner(environment)
+
 	environment.MigrateDatabase() //todo: check config option or env variable before doing this
 
 	handlers := web.NewHandlers(environment)
