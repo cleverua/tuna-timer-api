@@ -1,0 +1,27 @@
+version: '2'
+services:
+  app:
+    image: pavlikus/slack-time:latest
+    environment:
+      SLACK_TIME_ENV: 'production'
+      DATABASE_USER: 'slack_time_user'
+      DATABASE_PASS: '`"T,h6rk3/Z7g=w4'
+      DATABASE_NAME: 'slack_time'
+      DATABASE_HOST: 'db'
+    depends_on:
+      - db
+    entrypoint: ['/wait-for-it.sh', 'db:5432', '--strict', '--', '/slack-time-linux-amd64']
+  db:
+    image: postgres:9.5
+    environment:
+      POSTGRES_USER: 'slack_time_user'
+      POSTGRES_PASSWORD: '`"T,h6rk3/Z7g=w4'
+      POSTGRES_DB: 'slack_time' 
+  proxy:
+    image: abiosoft/caddy
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./Caddyfile:/etc/Caddyfile
+    depends_on:
+      - app

@@ -1,0 +1,6 @@
+0.0.0.0:9090
+
+proxy / app:8080 {
+    health_check /health
+    health_check_interval 10s
+}

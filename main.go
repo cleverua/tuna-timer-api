@@ -2,6 +2,7 @@ package main
 
 import (
 	"net/http"
+	"os"
 
 	"log"
 
@@ -17,8 +18,7 @@ var status = map[string]string{"version": version}
 var environment *utils.Environment
 
 func main() {
-
-	environment = utils.NewEnvironment(utils.DevelopmentEnv, version)
+	environment = utils.NewEnvironment(getEnvironmentName(), version)
 	utils.PrintBanner(environment)
 
 	environment.MigrateDatabase() //todo: check config option or env variable before doing this
@@ -40,4 +40,12 @@ func main() {
 	)
 
 	log.Fatal(http.ListenAndServe(":8080", defaultMiddleware.Then(router)))
+}
+
+func getEnvironmentName() string {
+	env := os.Getenv("SLACK_TIME_ENV")
+	if env == "" {
+		env = utils.DevelopmentEnv
+	}
+	return env
 }
