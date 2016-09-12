@@ -65,3 +65,13 @@ User: pavlo             Status: completed                               Time Spe
 A team member can only do **ONE** task at a time. If you start a new one that would stop the one you had a timer on previously. 
 
 # Basic syntax
+
+# How to run the app on your server
+
+It is recommended to use Docker images to run the application. 
+
+* `DATABASE_USER`
+* `DATABASE_PASS`
+* `DATABASE_HOST`
+* `DATABASE_PORT`
+* `DATABASE_NAME`

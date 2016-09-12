@@ -47,8 +47,9 @@ func NewEnvironment(environment string, appVersion string) *Environment {
 	if err != nil {
 		log.Fatal(err) //no way to launch the app without an Environment, fatal!
 	}
-	cfg.Env() // test this out!
+
 	cfg, err = cfg.Get(environment)
+	cfg.Env() // test this out!
 
 	env := &Environment{Name: environment, AppVersion: appVersion, CreatedAt: time.Now()}
 	connection, err := connectToDatabase(cfg)
@@ -74,6 +75,7 @@ func (env *Environment) MigrateDatabase() error {
 
 	err := dbmigrate.Run(env.OrmDB.DB(), adjustPath(env.Name, MigrationsFolder))
 	if err != nil {
+		log.Printf("Failed to migrate database! Error was: %s\n", err)
 		return err
 	}
 

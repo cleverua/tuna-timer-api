@@ -27,3 +27,4 @@ _testmain.go
 .vscode
 config.yml
 coverage.txt
+slack-time-linux-amd64
