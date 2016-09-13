@@ -16,6 +16,11 @@ It leverages a custom [slash command](https://api.slack.com/slash-commands) for 
     * Get aggregated report for given team member for given time frame (this week, last week, this month, last month etc) as a message in a Slack channel
     * Generate a CSV or XLSS report file and post its link to Slack so you can click to download the report
 
+
+## Look and feel
+
+![ScreenShot](docs/images/sample_messages.png)
+
 ## Quick tour
 
 #### Start a timer on task
