@@ -80,3 +80,4 @@ It is recommended to use Docker images to run the application.
 * `DATABASE_HOST`
 * `DATABASE_PORT`
 * `DATABASE_NAME`
+
