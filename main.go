@@ -34,6 +34,8 @@ func main() {
 	// to check SSL certificate - so we reply with a status handler here
 	router.HandleFunc("/api/v1/timer", handlers.Health).Methods("GET")
 
+	router.HandleFunc("/dump_slack_command", handlers.DumpSlackCommand).Methods("POST")
+
 	defaultMiddleware := alice.New(
 		web.LoggingMiddleware,
 		web.RecoveryMiddleware,

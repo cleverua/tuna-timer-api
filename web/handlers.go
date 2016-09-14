@@ -48,6 +48,35 @@ func (h *Handlers) Timer(w http.ResponseWriter, r *http.Request) {
 
 	cmd, _ := h.commandLookupFunction(slackCommand)
 	cmd.Execute(h.env)
+
+}
+
+func (h *Handlers) DumpSlackCommand(w http.ResponseWriter, r *http.Request) {
+
+	slackCommand := data.SlackCommand{
+		ChannelID:   r.PostFormValue("channel_id"),
+		ChannelName: r.PostFormValue("channel_name"),
+		Command:     r.PostFormValue("command"),
+		ResponseURL: r.PostFormValue("response_url"),
+		TeamDomain:  r.PostFormValue("team_domain"),
+		TeamID:      r.PostFormValue("team_id"),
+		Text:        r.PostFormValue("text"),
+		Token:       r.PostFormValue("token"),
+		UserID:      r.PostFormValue("user_id"),
+		UserName:    r.PostFormValue("user_name"),
+	}
+
+	log.Println("-----------------------------------------------")
+	log.Printf("%+v\n", slackCommand)
+	log.Println("-----------------------------------------------")
+	dumpRequest(r)
+	log.Println("-----------------------------------------------")
+
+	text := map[string]string{
+		"text": slackCommand.Text,
+	}
+
+	json.NewEncoder(w).Encode(text)
 }
 
 // Health handles a call for app health request
