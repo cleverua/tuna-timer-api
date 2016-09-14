@@ -1,0 +1,9 @@
+test:
+  database:
+    host: localhost
+    port: 5432
+    name: travis_ci_test
+    user: runner
+    pass: semaphoredb
+  slack:
+    token: 123e4567-e89b-12d3-a456-426655440000
