@@ -2,7 +2,7 @@ test:
   database:
     host: localhost
     port: 5432
-    name: travis_ci_test
+    name: ci_test
     user: runner
     pass: semaphoredb
   slack:
