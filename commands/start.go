@@ -22,7 +22,7 @@ func (c Start) Execute(env *utils.Environment) *CommandResult {
 
 	dao := &data.Dao{DB: env.OrmDB}
 	task := dao.FindOrCreateTaskByName(team, project, c.rawCommand)
-	result.data["task"] = task
+	result.AffectedTask = task
 
 	timerToFinish := dao.FindNotFinishedTimerForUser(user)
 	if timerToFinish != nil {
@@ -37,4 +37,9 @@ func (c Start) Execute(env *utils.Environment) *CommandResult {
 	result.data["startedTimer"] = timer
 
 	return result
+}
+
+// GetName return the name of this command
+func (c Start) GetName() string {
+	return CommandNameStart
 }

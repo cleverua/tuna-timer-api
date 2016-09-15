@@ -43,6 +43,7 @@ func (s *TestStatusCommandSuite) TestSimpleStatusCommandNoTimerFound(c *C) {
 
 	cmdType := fmt.Sprintf("%T", cmd)
 	c.Assert(cmdType, Equals, "commands.Status")
+	c.Assert(cmd.GetName(), Equals, CommandNameStatus)
 
 	result := cmd.Execute(s.env)
 	c.Assert(result, NotNil)

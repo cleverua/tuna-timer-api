@@ -73,6 +73,10 @@ func (cmd *mockCommand) Execute(env *utils.Environment) *commands.CommandResult 
 	return nil
 }
 
+func (cmd *mockCommand) GetName() string {
+	return "mockCmd"
+}
+
 // Suite lifecycle and callbacks
 func (s *TestHandlersSuite) SetUpSuite(c *C) {
 	e := utils.NewEnvironment(utils.TestEnv, "1.0.0")

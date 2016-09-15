@@ -35,3 +35,8 @@ func (c Status) Execute(env *utils.Environment) *CommandResult {
 
 	return result
 }
+
+// GetName return the name of this command
+func (c Status) GetName() string {
+	return CommandNameStatus
+}

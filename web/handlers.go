@@ -51,6 +51,7 @@ func (h *Handlers) Timer(w http.ResponseWriter, r *http.Request) {
 
 }
 
+// DumpSlackCommand is a helper that logs an incoming POST from Slack. It is a temporary piece
 func (h *Handlers) DumpSlackCommand(w http.ResponseWriter, r *http.Request) {
 
 	slackCommand := data.SlackCommand{
@@ -76,6 +77,7 @@ func (h *Handlers) DumpSlackCommand(w http.ResponseWriter, r *http.Request) {
 		"text": slackCommand.Text,
 	}
 
+	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(text)
 }
 

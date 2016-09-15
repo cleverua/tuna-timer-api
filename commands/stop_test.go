@@ -39,6 +39,7 @@ func (s *TestStopCommandSuite) TestSimpleStopCommandNoTimerFound(c *C) {
 
 	cmdType := fmt.Sprintf("%T", cmd)
 	c.Assert(cmdType, Equals, "commands.Stop")
+	c.Assert(cmd.GetName(), Equals, CommandNameStop)
 
 	result := cmd.Execute(s.env)
 	c.Assert(result, NotNil)
@@ -91,6 +92,7 @@ func (s *TestStopCommandSuite) TestSimpleStopCommand(c *C) {
 
 	cmd, err := Get(slackCmd)
 	c.Assert(err, IsNil)
+	c.Assert(cmd.GetName(), Equals, CommandNameStop)
 
 	cmdType := fmt.Sprintf("%T", cmd)
 	c.Assert(cmdType, Equals, "commands.Stop")

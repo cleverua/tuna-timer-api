@@ -39,6 +39,7 @@ func (s *TestStartCommandSuite) TestSimpleStartCommand(c *C) {
 
 	cmdType := fmt.Sprintf("%T", cmd)
 	c.Assert(cmdType, Equals, "commands.Start")
+	c.Assert(cmd.GetName(), Equals, CommandNameStart)
 
 	result := cmd.Execute(s.env)
 	c.Assert(result, NotNil)
@@ -64,12 +65,17 @@ func (s *TestStartCommandSuite) TestSimpleStartCommand(c *C) {
 	c.Assert("channelId", Equals, project.SlackChannelID)
 
 	// Tasks
+
+	affectedTask := result.AffectedTask
+	c.Assert(affectedTask, NotNil)
+
 	c.Assert(1, Equals, s.env.OrmDB.Model(&project).Association("Tasks").Count())
 	tasks := []data.Task{}
 	s.env.OrmDB.Model(&project).Association("Tasks").Find(&tasks)
 	task := tasks[0]
 	c.Assert("Convert the logotype to PNG", Equals, task.Name)
 	c.Assert(0, Equals, task.TotalMinutes)
+	c.Assert(affectedTask.ID, Equals, task.ID)
 
 	// Timers
 	c.Assert(1, Equals, s.env.OrmDB.Model(&task).Association("Timers").Count())

@@ -12,7 +12,7 @@ import (
 	"github.com/pavlo/slack-time/web"
 )
 
-const version = "0.0.1"
+const version = "0.1.0"
 
 var status = map[string]string{"version": version}
 var environment *utils.Environment

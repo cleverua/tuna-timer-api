@@ -38,3 +38,8 @@ func (c Stop) Execute(env *utils.Environment) *CommandResult {
 
 	return result
 }
+
+// GetName return the name of this command
+func (c Stop) GetName() string {
+	return CommandNameStop
+}

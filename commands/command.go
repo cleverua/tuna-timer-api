@@ -10,9 +10,21 @@ import (
 	"github.com/pavlo/slack-time/utils"
 )
 
+const (
+	// CommandNameStart hodls the name of 'start' command
+	CommandNameStart = "start"
+
+	// CommandNameStop hodls the name of 'stop' command
+	CommandNameStop = "stop"
+
+	// CommandNameStatus hodls the name of 'status' command
+	CommandNameStatus = "status"
+)
+
 // Command - public interface
 type Command interface {
 	Execute(env *utils.Environment) *CommandResult
+	GetName() string
 }
 
 // CommandArguments - this is what a Command needs to operate
@@ -23,20 +35,21 @@ type CommandArguments struct {
 
 // CommandResult - is what command's Execute method returns
 type CommandResult struct {
-	data map[string]interface{}
+	AffectedTask *data.Task
+	data         map[string]interface{}
 }
 
 // Get - looks up a Command that would serve the corresponding Slack Command
 func Get(slackCommand data.SlackCommand) (Command, error) {
 	userInput := slackCommand.Text
-	if strings.HasPrefix(userInput, "start") {
-		cmd := Start{CommandArguments: createCommandArguments(slackCommand, "start")}
+	if strings.HasPrefix(userInput, CommandNameStart) {
+		cmd := Start{CommandArguments: createCommandArguments(slackCommand, CommandNameStart)}
 		return cmd, nil
-	} else if strings.HasPrefix(userInput, "stop") {
-		cmd := Stop{CommandArguments: createCommandArguments(slackCommand, "stop")}
+	} else if strings.HasPrefix(userInput, CommandNameStop) {
+		cmd := Stop{CommandArguments: createCommandArguments(slackCommand, CommandNameStop)}
 		return cmd, nil
-	} else if strings.HasPrefix(userInput, "status") {
-		cmd := Status{CommandArguments: createCommandArguments(slackCommand, "status")}
+	} else if strings.HasPrefix(userInput, CommandNameStatus) {
+		cmd := Status{CommandArguments: createCommandArguments(slackCommand, CommandNameStatus)}
 		return cmd, nil
 	}
 	return nil, fmt.Errorf("Failed to look up a command for `%s` name", userInput)
