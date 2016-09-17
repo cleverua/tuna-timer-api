@@ -28,7 +28,7 @@ const (
 	ConfigFile string = "config.yml"
 
 	// MigrationsFolder - the folder to look migration SQLs in
-	MigrationsFolder string = "data/migrations/"
+	MigrationsFolder string = "models/migrations/"
 
 	// gormLogSQL - Whether GORM SQL logging is enabled or not
 	gormLogSQL bool = false
