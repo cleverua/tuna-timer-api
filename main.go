@@ -7,6 +7,7 @@ import (
 	"log"
 
 	"github.com/gorilla/mux"
+	"github.com/jinzhu/gorm"
 	"github.com/justinas/alice"
 	"github.com/pavlo/slack-time/utils"
 	"github.com/pavlo/slack-time/web"
@@ -14,16 +15,16 @@ import (
 
 const version = "0.1.0"
 
-var status = map[string]string{"version": version}
 var environment *utils.Environment
+var connection *gorm.DB
 
 func main() {
-	environment = utils.NewEnvironment(getEnvironmentName(), version)
+	environment, connection = utils.NewEnvironment(getEnvironmentName(), version)
 	utils.PrintBanner(environment)
 
-	environment.MigrateDatabase() //todo: check config option or env variable before doing this
+	environment.MigrateDatabase(connection.DB()) //todo: check config option or env variable before doing this
 
-	handlers := web.NewHandlers(environment)
+	handlers := web.NewHandlers(environment, connection)
 
 	router := mux.NewRouter().StrictSlash(true)
 	router.HandleFunc("/", handlers.Health).Methods("GET")
@@ -33,8 +34,6 @@ func main() {
 	// Slack will sometimes call the API method using a GET request
 	// to check SSL certificate - so we reply with a status handler here
 	router.HandleFunc("/api/v1/timer", handlers.Health).Methods("GET")
-
-	router.HandleFunc("/dump_slack_command", handlers.DumpSlackCommand).Methods("POST")
 
 	defaultMiddleware := alice.New(
 		web.LoggingMiddleware,

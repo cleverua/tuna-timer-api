@@ -1,4 +1,4 @@
-package data
+package models
 
 import "time"
 
@@ -23,58 +23,45 @@ type TeamUser struct {
 
 // Project - is a project you can associate tasks with and tracks their time
 type Project struct {
-	ID int64
-
+	ID               int64
 	Name             string `sql:"size:64"`
 	SlackChannelID   string `sql:"size:32"`
 	SlackChannelName string `sql:"size:64"`
-
-	Team   Team `gorm:"ForeignKey:TeamID"`
-	TeamID int64
-
-	Tasks []Task
+	Team             Team   `gorm:"ForeignKey:TeamID"`
+	TeamID           int64
+	Tasks            []Task
 }
 
 // Task - a task that belongs to a project and a user, contains a collection of timers
 type Task struct {
-	ID int64
-
-	Name string  `sql:"size:128"`
-	Hash *string `sql:"size:12"`
-
-	Team   Team `gorm:"ForeignKey:TeamID"`
-	TeamID int64
-
-	Project   Project `gorm:"ForeignKey:ProjectID"`
-	ProjectID int64
-
+	ID           int64
+	Name         string  `sql:"size:128"`
+	Hash         *string `sql:"size:12"`
+	Team         Team    `gorm:"ForeignKey:TeamID"`
+	TeamID       int64
+	Project      Project `gorm:"ForeignKey:ProjectID"`
+	ProjectID    int64
 	TotalMinutes int
-
-	Timers []Timer
+	Timers       []Timer
 }
 
 // Timer - a time record that has start and finish dates. Belongs to a slack user and a task
 type Timer struct {
-	ID int64
-
+	ID         int64
 	TeamUser   TeamUser `gorm:"ForeignKey:TeamUserID"`
 	TeamUserID int64
-
-	Task   Task `gorm:"ForeignKey:TaskID"`
-	TaskID int64
-
+	Task       Task `gorm:"ForeignKey:TaskID"`
+	TaskID     int64
 	StartedAt  time.Time
 	FinishedAt *time.Time
-
-	Minutes int
-
-	DeletedAt *time.Time
+	Minutes    int
+	DeletedAt  *time.Time
 }
 
-// SlackCommand - a raw command that came from Slack
-type SlackCommand struct {
+// SlackCustomCommand todo
+type SlackCustomCommand struct {
 	ID          int64
-	Token       string
+	Token       string `json:"token"`
 	TeamID      string `json:"team_id"`
 	TeamDomain  string `json:"team_domain"`
 	ChannelID   string `json:"channel_id"`

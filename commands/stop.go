@@ -1,45 +1,30 @@
 package commands
 
 import (
+	"context"
+	"log"
+
 	"github.com/pavlo/slack-time/data"
+	"github.com/pavlo/slack-time/models"
 	"github.com/pavlo/slack-time/utils"
 )
 
-// Stop - starts timer for specific task
-// If there is an other started task then it will be stopped
+//Stop - handles the '/timer stop` command received from Slack
 type Stop struct {
-	CommandArguments
 }
 
-// Execute - implementation of Command interface
-func (c Stop) Execute(env *utils.Environment) *CommandResult {
-	result := &CommandResult{data: make(map[string]interface{})}
+// cases:
+// 1. Successfully stopped a timer
+// 2. No currently ticking timer existed
+// 3. Any other errors
 
-	team, user, project := CreateMainEntitiesIfNeeded(env, c.slackCommand)
-	result.data["team"] = team
-	result.data["user"] = user
-	result.data["project"] = project
+// Handle - SlackCustomCommandHandler interface
+func (c *Stop) Handle(ctx context.Context, slackCommand models.SlackCustomCommand) *SlackCustomCommandHandlerResult {
 
-	dao := &data.Dao{DB: env.OrmDB}
-	timerToFinish := dao.FindNotFinishedTimerForUser(user)
+	dataService := data.CreateDataService()
+	db := utils.GetDBTransactionFromContext(ctx)
+	team, user, project := dataService.CreateTeamAndUserAndProject(db, slackCommand)
 
-	if timerToFinish != nil {
-		tasks := []data.Task{}
-		env.OrmDB.Model(&timerToFinish).Association("Task").Find(&tasks)
-		task := &tasks[0]
-
-		MarkTimerAsFinished(task, timerToFinish)
-		dao.DB.Save(&timerToFinish)
-		dao.DB.Save(&task)
-
-		result.data["finishedTimer"] = timerToFinish
-		result.data["task"] = task
-	}
-
-	return result
-}
-
-// GetName return the name of this command
-func (c Stop) GetName() string {
-	return CommandNameStop
+	log.Printf("%v %v %v", team, user, project)
+	return nil
 }

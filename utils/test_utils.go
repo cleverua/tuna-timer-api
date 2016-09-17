@@ -2,19 +2,21 @@ package utils
 
 import (
 	"fmt"
+
+	"github.com/jinzhu/gorm"
 )
 
 // Count - returns the number of persistence entiries
-func Count(env *Environment, aType interface{}) int {
+func Count(db *gorm.DB, aType interface{}) int {
 	count := 0
-	env.OrmDB.Model(aType).Count(&count)
+	db.Model(aType).Count(&count)
 	return count
 }
 
 // TruncateTables - clears database tables, supposed to be run in test's setup method
-func TruncateTables(env *Environment) {
+func TruncateTables(db *gorm.DB) {
 	tablesToTruncate := []string{"projects", "team_users", "teams", "tasks", "timers", "slack_commands"}
 	for _, tableName := range tablesToTruncate {
-		env.OrmDB.Exec(fmt.Sprintf("truncate table %s cascade", tableName))
+		db.Exec(fmt.Sprintf("truncate table %s cascade", tableName))
 	}
 }

@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"database/sql"
 	"fmt"
 	"log"
 	"time"
@@ -38,11 +39,10 @@ type Environment struct {
 	AppVersion string
 	Name       string
 	CreatedAt  time.Time
-	OrmDB      *gorm.DB
 }
 
 // NewEnvironment creates a new environment
-func NewEnvironment(environment string, appVersion string) *Environment {
+func NewEnvironment(environment string, appVersion string) (*Environment, *gorm.DB) {
 	cfg, err := readConfig(environment)
 	if err != nil {
 		log.Fatal(err) //no way to launch the app without an Environment, fatal!
@@ -56,24 +56,16 @@ func NewEnvironment(environment string, appVersion string) *Environment {
 	if err != nil {
 		log.Fatal(err) //no way to launch the app without a DB, fatal!
 	}
-	env.OrmDB = connection
-	env.OrmDB.LogMode(gormLogSQL)
 
-	return env
-}
-
-// ReleaseResources - supposed to be called in the end of application/test suite lifecycle
-func (env *Environment) ReleaseResources() {
-	log.Println("Releasing resources...")
-	env.OrmDB.Close()
-	log.Println("Done releasing resources")
+	connection.LogMode(gormLogSQL)
+	return env, connection
 }
 
 // MigrateDatabase - performs database migrations
-func (env *Environment) MigrateDatabase() error {
+func (env *Environment) MigrateDatabase(db *sql.DB) error {
 	log.Println("Migrating database...")
 
-	err := dbmigrate.Run(env.OrmDB.DB(), adjustPath(env.Name, MigrationsFolder))
+	err := dbmigrate.Run(db, adjustPath(env.Name, MigrationsFolder))
 	if err != nil {
 		log.Printf("Failed to migrate database! Error was: %s\n", err)
 		return err
