@@ -2,24 +2,31 @@ package web
 
 import (
 	"bytes"
+
 	"encoding/json"
 	"errors"
+
+	"context"
+	"log"
+
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"testing"
 
 	"github.com/pavlo/slack-time/commands"
-	"github.com/pavlo/slack-time/data"
+	"github.com/pavlo/slack-time/models"
 	"github.com/pavlo/slack-time/utils"
 
 	. "gopkg.in/check.v1"
+	"gopkg.in/mgo.v2"
 )
 
 func TestHandlers(t *testing.T) { TestingT(t) }
 
 type TestHandlersSuite struct {
-	env *utils.Environment
+	env     *utils.Environment
+	session *mgo.Session
 }
 
 var _ = Suite(&TestHandlersSuite{})
@@ -44,8 +51,9 @@ func (s *TestHandlersSuite) TestTimer(c *C) {
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded;")
 
 	mockCmd := &mockCommand{executed: false}
-	handlers := NewHandlers(s.env)
-	handlers.commandLookupFunction = func(slackCommand data.SlackCommand) (commands.Command, error) {
+	h := NewHandlers(s.env, s.session)
+
+	h.commandLookupFunction = func(slackCommand models.SlackCustomCommand) (commands.SlackCustomCommandHandler, error) {
 		c.Assert(slackCommand.ChannelID, Equals, "C2147483705")
 		c.Assert(slackCommand.ChannelName, Equals, "test")
 		c.Assert(slackCommand.Command, Equals, "/timer")
@@ -60,7 +68,7 @@ func (s *TestHandlersSuite) TestTimer(c *C) {
 	}
 
 	recorder := httptest.NewRecorder()
-	handler := http.HandlerFunc(handlers.Timer)
+	handler := http.HandlerFunc(h.Timer)
 
 	handler.ServeHTTP(recorder, req)
 	c.Assert(mockCmd.executed, Equals, true)
@@ -124,23 +132,34 @@ type mockCommand struct {
 	executed bool
 }
 
-func (cmd *mockCommand) Execute(env *utils.Environment) *commands.CommandResult {
+func (cmd *mockCommand) Handle(ctx context.Context, slackCommand models.SlackCustomCommand) *commands.SlackCustomCommandHandlerResult {
 	cmd.executed = true
-	return nil
+	return &commands.SlackCustomCommandHandlerResult{
+		Body: []byte("OK"),
+	}
+}
+
+func (cmd *mockCommand) GetName() string {
+	return "mockCmd"
 }
 
 // Suite lifecycle and callbacks
 func (s *TestHandlersSuite) SetUpSuite(c *C) {
 	e := utils.NewEnvironment(utils.TestEnv, "1.0.0")
-	e.MigrateDatabase()
+	session, err := utils.ConnectToDatabase(e.Config)
+	if err != nil {
+		log.Fatal("Failed to connect to DB!")
+	}
 
+	e.MigrateDatabase(session)
 	s.env = e
+	s.session = session.Clone()
 }
 
 func (s *TestHandlersSuite) TearDownSuite(c *C) {
-	s.env.ReleaseResources()
+	s.session.Close()
 }
 
 func (s *TestHandlersSuite) SetUpTest(c *C) {
-	utils.TruncateTables(s.env)
+	utils.TruncateTables(s.session)
 }

@@ -6,33 +6,37 @@ import (
 	"net/http"
 	"time"
 
+	"gopkg.in/mgo.v2"
+
 	"github.com/pavlo/slack-time/commands"
-	"github.com/pavlo/slack-time/data"
+	"github.com/pavlo/slack-time/models"
 	"github.com/pavlo/slack-time/utils"
 )
 
 // Handlers is a collection of net/http handlers to serve the API
 type Handlers struct {
 	env                   *utils.Environment
+	mongoSession          *mgo.Session
 	status                map[string]string
-	commandLookupFunction func(slackCommand data.SlackCommand) (commands.Command, error)
+	commandLookupFunction func(slackCommand models.SlackCustomCommand) (commands.SlackCustomCommandHandler, error)
 }
 
 // NewHandlers constructs a Handlers collection
-func NewHandlers(env *utils.Environment) *Handlers {
+func NewHandlers(env *utils.Environment, mongoSession *mgo.Session) *Handlers {
 	return &Handlers{
-		env: env,
+		env:          env,
+		mongoSession: mongoSession,
 		status: map[string]string{
 			"env":     env.Name,
 			"version": env.AppVersion,
 		},
-		commandLookupFunction: commands.Get,
+		commandLookupFunction: commands.LookupHandler,
 	}
 }
 
 // Timer handles Slack /timer command
 func (h *Handlers) Timer(w http.ResponseWriter, r *http.Request) {
-	slackCommand := data.SlackCommand{
+	slackCommand := models.SlackCustomCommand{
 		ChannelID:   r.PostFormValue("channel_id"),
 		ChannelName: r.PostFormValue("channel_name"),
 		Command:     r.PostFormValue("command"),
