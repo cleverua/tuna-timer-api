@@ -8,7 +8,7 @@ import (
 // TeamService todo
 type TeamService struct {
 	session    *mgo.Session
-	repository *TeamRepository
+	repository TeamRepositoryInterface
 }
 
 // NewTeamService todo

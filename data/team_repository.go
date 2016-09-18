@@ -16,6 +16,16 @@ type TeamRepository struct {
 	collection *mgo.Collection
 }
 
+// TeamRepositoryInterface describes the functionality this repo provides.
+// It has two implementations `TeamRepository` and `testTeamRepository`.
+// The latter used to mimic/test error cases
+type TeamRepositoryInterface interface {
+	findByExternalID(externalTeamID string) (*models.Team, error)
+	createTeam(externalID, externalName string) (*models.Team, error)
+	addProject(team *models.Team, externalProjectID, externalProjectName string) error
+	addUser(team *models.Team, externalUserID, externalUserName string) error
+}
+
 // NewTeamRepository is a factory method
 func NewTeamRepository(session *mgo.Session) *TeamRepository {
 	return &TeamRepository{

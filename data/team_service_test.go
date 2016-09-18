@@ -4,6 +4,8 @@ import (
 	"log"
 	"testing"
 
+	"errors"
+
 	"github.com/pavlo/slack-time/models"
 	"github.com/pavlo/slack-time/utils"
 	. "gopkg.in/check.v1"
@@ -58,6 +60,45 @@ func (s *TeamServiceTestSuite) TestEnsureTeamExistsWhenTeamAndUserAndProjectExis
 	c.Assert(existingTeam.ID, Equals, team.ID)
 }
 
+func (s *TeamServiceTestSuite) TestEnsureTeamExistsFailureOnFindTeam(c *C) {
+	modifiedRepository := &testTeamRepositoryImpl{
+		findByExternalIDSuccess: false,
+		createTeamSuccess:       true,
+		addProjectSuccess:       true,
+		addUserSuccess:          true,
+		repository:              s.repository,
+	}
+
+	s.service.repository = modifiedRepository
+	defer func() {
+		s.service.repository = s.repository
+	}()
+
+	cmd := getSlackCustomCommand()
+
+	// - FindTeam failure case
+	_, _, _, err := s.service.EnsureTeamSetUp(cmd)
+	c.Assert(err, NotNil)
+
+	// - Create team failure case
+	modifiedRepository.findByExternalIDSuccess = true
+	modifiedRepository.createTeamSuccess = false
+	_, _, _, err = s.service.EnsureTeamSetUp(cmd)
+	c.Assert(err, NotNil)
+
+	// - Add project failure case
+	modifiedRepository.createTeamSuccess = true
+	modifiedRepository.addProjectSuccess = false
+	_, _, _, err = s.service.EnsureTeamSetUp(cmd)
+	c.Assert(err, NotNil)
+
+	// - Add user failure case
+	modifiedRepository.addProjectSuccess = true
+	modifiedRepository.addUserSuccess = false
+	_, _, _, err = s.service.EnsureTeamSetUp(cmd)
+	c.Assert(err, NotNil)
+}
+
 func getSlackCustomCommand() *models.SlackCustomCommand {
 	return &models.SlackCustomCommand{
 		ChannelID:   "channel-id",
@@ -102,6 +143,43 @@ func assertUser(c *C, user *models.TeamUser) {
 	c.Assert(user.CreatedAt, NotNil)
 }
 
+// testTeamRepositoryImpl allows is a TeamRepositoryInterface that is able to simulate returned errors
+type testTeamRepositoryImpl struct {
+	repository              TeamRepositoryInterface
+	findByExternalIDSuccess bool
+	createTeamSuccess       bool
+	addProjectSuccess       bool
+	addUserSuccess          bool
+}
+
+func (r *testTeamRepositoryImpl) findByExternalID(externalTeamID string) (*models.Team, error) {
+	if !r.findByExternalIDSuccess {
+		return nil, errors.New("TestTeamRepositoryImpl error")
+	}
+	return r.repository.findByExternalID(externalTeamID)
+}
+
+func (r *testTeamRepositoryImpl) createTeam(externalID, externalName string) (*models.Team, error) {
+	if !r.createTeamSuccess {
+		return nil, errors.New("TestTeamRepositoryImpl error")
+	}
+	return r.repository.createTeam(externalID, externalName)
+}
+
+func (r *testTeamRepositoryImpl) addProject(team *models.Team, externalProjectID, externalProjectName string) error {
+	if !r.addProjectSuccess {
+		return errors.New("TestTeamRepositoryImpl error")
+	}
+	return r.repository.addProject(team, externalProjectID, externalProjectName)
+}
+
+func (r *testTeamRepositoryImpl) addUser(team *models.Team, externalUserID, externalUserName string) error {
+	if !r.addUserSuccess {
+		return errors.New("TestTeamRepositoryImpl error")
+	}
+	return r.repository.addUser(team, externalUserID, externalUserName)
+}
+
 // Suite lifecycle and callbacks
 func (s *TeamServiceTestSuite) SetUpSuite(c *C) {
 	e := utils.NewEnvironment(utils.TestEnv, "1.0.0")
@@ -133,7 +211,7 @@ type TeamServiceTestSuite struct {
 	env        *utils.Environment
 	session    *mgo.Session
 	service    *TeamService
-	repository *TeamRepository
+	repository TeamRepositoryInterface
 }
 
 var _ = Suite(&TeamServiceTestSuite{})
