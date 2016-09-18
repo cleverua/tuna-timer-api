@@ -2,6 +2,8 @@ package web
 
 import (
 	"bytes"
+	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -62,6 +64,60 @@ func (s *TestHandlersSuite) TestTimer(c *C) {
 
 	handler.ServeHTTP(recorder, req)
 	c.Assert(mockCmd.executed, Equals, true)
+}
+
+func (s *TestHandlersSuite) TestTimerCommandLookupFailure(c *C) {
+	v := url.Values{}
+	v.Set("text", "foobar")
+	v.Set("token", "gIkuvaNzQIHg97ATvDxqgjtO")
+	v.Set("team_id", "T0001")
+	v.Set("team_domain", "example")
+	v.Set("channel_id", "C2147483705")
+	v.Set("channel_name", "test")
+	v.Set("user_id", "U2147483697")
+	v.Set("user_name", "Steve")
+	v.Set("command", "/timer")
+	v.Set("response_url", "https://hooks.slack.com/commands/1234/5678")
+
+	req, err := http.NewRequest("POST", "/timer", bytes.NewBufferString(v.Encode()))
+	if err != nil {
+		c.Fatal(err)
+	}
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded;")
+	h := NewHandlers(s.env, s.session)
+
+	h.commandLookupFunction = func(slackCommand models.SlackCustomCommand) (commands.SlackCustomCommandHandler, error) {
+		return nil, errors.New("Simulated failure")
+	}
+
+	recorder := httptest.NewRecorder()
+	handler := http.HandlerFunc(h.Timer)
+
+	handler.ServeHTTP(recorder, req)
+
+	c.Assert(recorder.Body.String(), Equals, "Unknown command: foobar!")
+}
+
+func (s *TestHandlersSuite) TestHealth(c *C) {
+	req, err := http.NewRequest("GET", "/health", nil)
+	if err != nil {
+		c.Fatal(err)
+	}
+
+	h := NewHandlers(s.env, s.session)
+	recorder := httptest.NewRecorder()
+	handler := http.HandlerFunc(h.Health)
+	handler.ServeHTTP(recorder, req)
+
+	data := make(map[string]interface{})
+	err = json.Unmarshal(recorder.Body.Bytes(), &data)
+	if err != nil {
+		c.Fatal(err)
+	}
+
+	c.Assert(data["env"].(string), Equals, utils.TestEnv)
+	c.Assert(data["uptime"].(string), NotNil)
+	c.Assert(data["version"].(string), Equals, s.env.AppVersion)
 }
 
 type mockCommand struct {

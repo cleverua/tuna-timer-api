@@ -2,9 +2,8 @@ package web
 
 import (
 	"encoding/json"
-	"log"
+	"fmt"
 	"net/http"
-	"net/http/httputil"
 	"time"
 
 	"github.com/pavlo/slack-time/commands"
@@ -46,37 +45,22 @@ func (h *Handlers) Timer(w http.ResponseWriter, r *http.Request) {
 		UserName:    r.PostFormValue("user_name"),
 	}
 
-	cmd, _ := h.commandLookupFunction(slackCommand)
-	cmd.Execute(h.env)
+	w.Header().Set("Content-Type", "application/json")
 
-}
-
-func (h *Handlers) DumpSlackCommand(w http.ResponseWriter, r *http.Request) {
-
-	slackCommand := data.SlackCommand{
-		ChannelID:   r.PostFormValue("channel_id"),
-		ChannelName: r.PostFormValue("channel_name"),
-		Command:     r.PostFormValue("command"),
-		ResponseURL: r.PostFormValue("response_url"),
-		TeamDomain:  r.PostFormValue("team_domain"),
-		TeamID:      r.PostFormValue("team_id"),
-		Text:        r.PostFormValue("text"),
-		Token:       r.PostFormValue("token"),
-		UserID:      r.PostFormValue("user_id"),
-		UserName:    r.PostFormValue("user_name"),
+	command, err := h.commandLookupFunction(slackCommand)
+	if err != nil { //todo it is going to be a nicely formatted slack message sent back to user
+		w.Write([]byte(fmt.Sprintf("Unknown command: %s!", slackCommand.Text)))
+		return
 	}
 
-	log.Println("-----------------------------------------------")
-	log.Printf("%+v\n", slackCommand)
-	log.Println("-----------------------------------------------")
-	dumpRequest(r)
-	log.Println("-----------------------------------------------")
+	session := h.mongoSession.Clone()
+	defer session.Close()
 
-	text := map[string]string{
-		"text": slackCommand.Text,
-	}
+	ctx := utils.PutMongoSessionInContext(r.Context(), session)
+	result := command.Handle(ctx, slackCommand)
 
-	json.NewEncoder(w).Encode(text)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(result.Body)
 }
 
 // Health handles a call for app health request
@@ -84,13 +68,4 @@ func (h *Handlers) Health(w http.ResponseWriter, r *http.Request) {
 	uptime := time.Since(h.env.CreatedAt)
 	h.status["uptime"] = uptime.String() //is it good or not if I modify the map here?
 	json.NewEncoder(w).Encode(h.status)
-}
-
-func dumpRequest(r *http.Request) {
-	dump, err := httputil.DumpRequest(r, true)
-	if err != nil {
-		log.Println("Fail to dump the request!")
-	}
-	log.Println("Dumping the request:")
-	log.Printf("%q", dump)
 }
