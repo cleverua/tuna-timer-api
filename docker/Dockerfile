@@ -4,7 +4,7 @@ FROM alpine:latest
 RUN apk add --no-cache bash
 
 ADD slack-time-linux-amd64 /
-ADD data/migrations /data/migrations
+ADD models/migrations /models/migrations
 ADD config.example.yml /config.yml
 ADD docker/wait-for-it.sh /wait-for-it.sh
 

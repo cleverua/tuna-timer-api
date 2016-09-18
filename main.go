@@ -12,18 +12,19 @@ import (
 	"github.com/pavlo/slack-time/web"
 )
 
-const version = "0.0.1"
-
-var status = map[string]string{"version": version}
-var environment *utils.Environment
+const version = "0.1.0"
 
 func main() {
-	environment = utils.NewEnvironment(getEnvironmentName(), version)
+	environment := utils.NewEnvironment(getEnvironmentName(), version)
 	utils.PrintBanner(environment)
 
-	environment.MigrateDatabase() //todo: check config option or env variable before doing this
+	session, err := utils.ConnectToDatabase(environment.Config)
+	if err != nil {
+		log.Fatalf("Failed to connect to Database: %s", err)
+	}
 
-	handlers := web.NewHandlers(environment)
+	environment.MigrateDatabase(session)
+	handlers := web.NewHandlers(environment, session)
 
 	router := mux.NewRouter().StrictSlash(true)
 	router.HandleFunc("/", handlers.Health).Methods("GET")
@@ -33,8 +34,6 @@ func main() {
 	// Slack will sometimes call the API method using a GET request
 	// to check SSL certificate - so we reply with a status handler here
 	router.HandleFunc("/api/v1/timer", handlers.Health).Methods("GET")
-
-	router.HandleFunc("/dump_slack_command", handlers.DumpSlackCommand).Methods("POST")
 
 	defaultMiddleware := alice.New(
 		web.LoggingMiddleware,
