@@ -3,20 +3,20 @@ package utils
 import (
 	"context"
 
-	"github.com/jinzhu/gorm"
+	"gopkg.in/mgo.v2"
 )
 
 const (
-	// ContextKeyDBTransaction is a key under which a request-scoped DB transaction is stored in Context
-	ContextKeyDBTransaction = "dbTransaction"
+	// ContextKeyMongoSession is a key under which a request-scoped mongodb session is stored on Context
+	ContextKeyMongoSession = "mongoSession"
 )
 
-// GetDBTransactionFromContext returns request-scoped DB transaction from the context
-func GetDBTransactionFromContext(ctx context.Context) *gorm.DB {
-	return ctx.Value(ContextKeyDBTransaction).(*gorm.DB)
+// GetMongoSessionFromContext returns request-scoped DB transaction from the context
+func GetMongoSessionFromContext(ctx context.Context) *mgo.Session {
+	return ctx.Value(ContextKeyMongoSession).(*mgo.Session)
 }
 
-// SetDBTransactionInContext saves request-scoped DB transaction in context
-func SetDBTransactionInContext(parentContext context.Context, dbTransaction *gorm.DB) context.Context {
-	return context.WithValue(parentContext, ContextKeyDBTransaction, dbTransaction)
+// PutMongoSessionInContext saves request-scoped mongo session in context
+func PutMongoSessionInContext(parentContext context.Context, session *mgo.Session) context.Context {
+	return context.WithValue(parentContext, ContextKeyMongoSession, session)
 }

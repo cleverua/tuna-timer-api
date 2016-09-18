@@ -3,25 +3,25 @@ package web
 import (
 	"bytes"
 	"context"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"testing"
 
-	"github.com/jinzhu/gorm"
 	"github.com/pavlo/slack-time/commands"
 	"github.com/pavlo/slack-time/models"
 	"github.com/pavlo/slack-time/utils"
 
 	. "gopkg.in/check.v1"
+	"gopkg.in/mgo.v2"
 )
 
 func TestHandlers(t *testing.T) { TestingT(t) }
 
 type TestHandlersSuite struct {
-	env *utils.Environment
-	// ctx          context.Context
-	dbConnection *gorm.DB
+	env     *utils.Environment
+	session *mgo.Session
 }
 
 var _ = Suite(&TestHandlersSuite{})
@@ -46,7 +46,7 @@ func (s *TestHandlersSuite) TestTimer(c *C) {
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded;")
 
 	mockCmd := &mockCommand{executed: false}
-	h := NewHandlers(s.env, s.dbConnection)
+	h := NewHandlers(s.env, s.session)
 
 	h.commandLookupFunction = func(slackCommand models.SlackCustomCommand) (commands.SlackCustomCommandHandler, error) {
 		c.Assert(slackCommand.ChannelID, Equals, "C2147483705")
@@ -86,16 +86,21 @@ func (cmd *mockCommand) GetName() string {
 
 // Suite lifecycle and callbacks
 func (s *TestHandlersSuite) SetUpSuite(c *C) {
-	e, conn := utils.NewEnvironment(utils.TestEnv, "1.0.0")
-	e.MigrateDatabase(conn.DB())
+	e := utils.NewEnvironment(utils.TestEnv, "1.0.0")
+	session, err := utils.ConnectToDatabase(e.Config)
+	if err != nil {
+		log.Fatal("Failed to connect to DB!")
+	}
+
+	e.MigrateDatabase(session)
 	s.env = e
-	s.dbConnection = conn
+	s.session = session.Clone()
 }
 
 func (s *TestHandlersSuite) TearDownSuite(c *C) {
-	// s.env.ReleaseResources()
+	s.session.Close()
 }
 
 func (s *TestHandlersSuite) SetUpTest(c *C) {
-	utils.TruncateTables(s.dbConnection)
+	utils.TruncateTables(s.session)
 }

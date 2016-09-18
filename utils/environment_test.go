@@ -16,8 +16,7 @@ type EnvironmentTestSuite struct {
 var _ = Suite(&EnvironmentTestSuite{})
 
 func (s *EnvironmentTestSuite) TestNewEnvironment(c *C) {
-	env, conn := NewEnvironment(TestEnv, "1")
-	c.Assert(conn, NotNil)
+	env := NewEnvironment(TestEnv, "1")
 	c.Assert(env.AppVersion, Equals, "1")
 	c.Assert(env.CreatedAt, NotNil)
 }

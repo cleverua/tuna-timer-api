@@ -1,21 +1,10 @@
-production:
-  database:
-    host: localhost
-    port: 5432
-    name: slack_time
-    user: postgres
-    pass:
-test:
-  database:
-    host: localhost
-    port: 5432
-    name: slack_time_test
-    user: postgres
-    pass:
 development:
   database:
-    host: localhost
-    port: 5432
-    name: slack_time_dev
-    user: postgres
-    pass:
+    url: mongodb://localhost:27017/tuna_timer_prod
+development:
+  database:
+    url: mongodb://localhost:27017/tuna_timer_dev
+test:
+  database:
+    url: mongodb://localhost:27017/tuna_timer_test
+

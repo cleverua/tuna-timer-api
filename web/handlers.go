@@ -7,7 +7,8 @@ import (
 	"net/http/httputil"
 	"time"
 
-	"github.com/jinzhu/gorm"
+	"gopkg.in/mgo.v2"
+
 	"github.com/pavlo/slack-time/commands"
 	"github.com/pavlo/slack-time/models"
 	"github.com/pavlo/slack-time/utils"
@@ -16,16 +17,16 @@ import (
 // Handlers is a collection of net/http handlers to serve the API
 type Handlers struct {
 	env                   *utils.Environment
-	connection            *gorm.DB
+	mongoSession          *mgo.Session
 	status                map[string]string
 	commandLookupFunction func(slackCommand models.SlackCustomCommand) (commands.SlackCustomCommandHandler, error)
 }
 
 // NewHandlers constructs a Handlers collection
-func NewHandlers(env *utils.Environment, connection *gorm.DB) *Handlers {
+func NewHandlers(env *utils.Environment, mongoSession *mgo.Session) *Handlers {
 	return &Handlers{
-		env:        env,
-		connection: connection,
+		env:          env,
+		mongoSession: mongoSession,
 		status: map[string]string{
 			"env":     env.Name,
 			"version": env.AppVersion,
@@ -54,9 +55,10 @@ func (h *Handlers) Timer(w http.ResponseWriter, r *http.Request) {
 		log.Fatal("Failed to look up handler!")
 	}
 
-	dbTransaction := h.connection.Begin() // start transaction
-	defer dbTransaction.Commit()
-	ctx := utils.SetDBTransactionInContext(r.Context(), dbTransaction)
+	session := h.mongoSession.Clone()
+	defer session.Close()
+
+	ctx := utils.PutMongoSessionInContext(r.Context(), session)
 	result := command.Handle(ctx, slackCommand)
 
 	w.Header().Set("Content-Type", "application/json")

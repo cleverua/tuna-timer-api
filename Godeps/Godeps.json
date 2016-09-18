@@ -7,30 +7,6 @@
 	],
 	"Deps": [
 		{
-			"ImportPath": "github.com/gocql/gocql",
-			"Comment": "pre-node-events-362-g3ac1aab",
-			"Rev": "3ac1aabebaf2705c6f695d4ef2c25ab6239e88b3"
-		},
-		{
-			"ImportPath": "github.com/gocql/gocql/internal/lru",
-			"Comment": "pre-node-events-362-g3ac1aab",
-			"Rev": "3ac1aabebaf2705c6f695d4ef2c25ab6239e88b3"
-		},
-		{
-			"ImportPath": "github.com/gocql/gocql/internal/murmur",
-			"Comment": "pre-node-events-362-g3ac1aab",
-			"Rev": "3ac1aabebaf2705c6f695d4ef2c25ab6239e88b3"
-		},
-		{
-			"ImportPath": "github.com/gocql/gocql/internal/streams",
-			"Comment": "pre-node-events-362-g3ac1aab",
-			"Rev": "3ac1aabebaf2705c6f695d4ef2c25ab6239e88b3"
-		},
-		{
-			"ImportPath": "github.com/golang/snappy",
-			"Rev": "d9eb7a3d35ec988b8585d4a0068e462c27d28380"
-		},
-		{
 			"ImportPath": "github.com/gorilla/handlers",
 			"Comment": "v1.1-11-ga577578",
 			"Rev": "a5775781a543af3c6b9f5baf10995e4d14168950"
@@ -41,16 +17,7 @@
 			"Rev": "0a192a193177452756c362c20087ddafcf6829c4"
 		},
 		{
-			"ImportPath": "github.com/hailocab/go-hostpool",
-			"Rev": "e80d13ce29ede4452c43dea11e79b9bc8a15b478"
-		},
-		{
 			"ImportPath": "github.com/jinzhu/gorm",
-			"Comment": "v1.0-64-gf26fa24",
-			"Rev": "f26fa242cc1bf884f9a4f98849f70fb8e73f441f"
-		},
-		{
-			"ImportPath": "github.com/jinzhu/gorm/dialects/postgres",
 			"Comment": "v1.0-64-gf26fa24",
 			"Rev": "f26fa242cc1bf884f9a4f98849f70fb8e73f441f"
 		},
@@ -64,30 +31,16 @@
 			"Rev": "20ab2325b829575b43d6d8d3a6f6933356b19e95"
 		},
 		{
-			"ImportPath": "github.com/lib/pq",
-			"Comment": "go1.0-cutoff-101-g55196ec",
-			"Rev": "55196ec83d60d789e27b2627549bf00974a70084"
-		},
-		{
-			"ImportPath": "github.com/lib/pq/hstore",
-			"Comment": "go1.0-cutoff-101-g55196ec",
-			"Rev": "55196ec83d60d789e27b2627549bf00974a70084"
-		},
-		{
-			"ImportPath": "github.com/lib/pq/oid",
-			"Comment": "go1.0-cutoff-101-g55196ec",
-			"Rev": "55196ec83d60d789e27b2627549bf00974a70084"
+			"ImportPath": "github.com/nlopes/slack",
+			"Comment": "v0.0.1-124-gdb68538",
+			"Rev": "db68538b374a5f052bf6befea117ac74760f4e8e"
 		},
 		{
 			"ImportPath": "github.com/olebedev/config",
 			"Rev": "dd1049a3738432dfc49417e2ae5bd97e132ecac6"
 		},
 		{
-			"ImportPath": "github.com/tanel/dbmigrate",
-			"Rev": "f82f2962f891db9d5b17248742b6d9932e7c1b9b"
-		},
-		{
-			"ImportPath": "golang.org/x/net/context",
+			"ImportPath": "golang.org/x/net/websocket",
 			"Rev": "1358eff22f0dd0c54fc521042cc607f6ff4b531a"
 		},
 		{
@@ -95,9 +48,29 @@
 			"Rev": "4f90aeace3a26ad7021961c297b22c42160c7b25"
 		},
 		{
-			"ImportPath": "gopkg.in/inf.v0",
-			"Comment": "v0.9.0",
-			"Rev": "3887ee99ecf07df5b447e9b00d9c0b2adaa9f3e4"
+			"ImportPath": "gopkg.in/mgo.v2",
+			"Comment": "r2016.08.01-5-g3f83fa5",
+			"Rev": "3f83fa5005286a7fe593b055f0d7771a7dce4655"
+		},
+		{
+			"ImportPath": "gopkg.in/mgo.v2/bson",
+			"Comment": "r2016.08.01-5-g3f83fa5",
+			"Rev": "3f83fa5005286a7fe593b055f0d7771a7dce4655"
+		},
+		{
+			"ImportPath": "gopkg.in/mgo.v2/internal/json",
+			"Comment": "r2016.08.01-5-g3f83fa5",
+			"Rev": "3f83fa5005286a7fe593b055f0d7771a7dce4655"
+		},
+		{
+			"ImportPath": "gopkg.in/mgo.v2/internal/sasl",
+			"Comment": "r2016.08.01-5-g3f83fa5",
+			"Rev": "3f83fa5005286a7fe593b055f0d7771a7dce4655"
+		},
+		{
+			"ImportPath": "gopkg.in/mgo.v2/internal/scram",
+			"Comment": "r2016.08.01-5-g3f83fa5",
+			"Rev": "3f83fa5005286a7fe593b055f0d7771a7dce4655"
 		},
 		{
 			"ImportPath": "gopkg.in/yaml.v2",

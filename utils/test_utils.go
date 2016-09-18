@@ -1,7 +1,9 @@
 package utils
 
 import (
-	"fmt"
+	"log"
+
+	"gopkg.in/mgo.v2"
 
 	"github.com/jinzhu/gorm"
 )
@@ -14,9 +16,10 @@ func Count(db *gorm.DB, aType interface{}) int {
 }
 
 // TruncateTables - clears database tables, supposed to be run in test's setup method
-func TruncateTables(db *gorm.DB) {
-	tablesToTruncate := []string{"projects", "team_users", "teams", "tasks", "timers", "slack_commands"}
+func TruncateTables(session *mgo.Session) {
+	tablesToTruncate := []string{"teams", "timers"}
 	for _, tableName := range tablesToTruncate {
-		db.Exec(fmt.Sprintf("truncate table %s cascade", tableName))
+		log.Printf("Truncating table: %s", tableName)
+		session.DB("").C(tableName).RemoveAll(nil)
 	}
 }
