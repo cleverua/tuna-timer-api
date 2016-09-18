@@ -55,10 +55,8 @@ func (s *TeamService) EnsureTeamSetUp(slackCommand *models.SlackCustomCommand) (
 	}
 
 	if reloadTeam {
-		team, err = s.repository.findByExternalID(slackCommand.TeamID)
-		if err != nil {
-			return nil, nil, nil, err
-		}
+		// not catching the error here since we've once already created or loaded the Team successfully
+		team, _ = s.repository.findByExternalID(slackCommand.TeamID)
 		existingProject = s.findProject(team, slackCommand.ChannelID)
 		existingUser = s.findUser(team, slackCommand.UserID)
 	}
