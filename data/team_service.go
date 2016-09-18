@@ -79,6 +79,7 @@ func (s *TeamService) findUser(team *models.Team, externalUserID string) *models
 	for _, user := range team.Users {
 		if user.ExternalUserID == externalUserID {
 			result = user
+			break
 		}
 	}
 	return result
