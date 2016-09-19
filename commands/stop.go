@@ -16,7 +16,7 @@ type Stop struct {
 // 3. Any other errors
 
 // Handle - SlackCustomCommandHandler interface
-func (c *Stop) Handle(ctx context.Context, slackCommand models.SlackCustomCommand) *SlackCustomCommandHandlerResult {
+func (c *Stop) Handle(ctx context.Context, slackCommand models.SlackCustomCommand) *ResponseToSlack {
 
 	// dataService := data.CreateDataService()
 	// db := utils.GetDBTransactionFromContext(ctx)

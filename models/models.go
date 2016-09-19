@@ -37,30 +37,18 @@ type Project struct {
 	CreatedAt           time.Time     `json:"created_at" bson:"created_at"`
 }
 
-// Task - a task that belongs to a project and a user, contains a collection of timers
-type Task struct {
-	ID           int64
-	Name         string  `sql:"size:128"`
-	Hash         *string `sql:"size:12"`
-	Team         Team    `gorm:"ForeignKey:TeamID"`
-	TeamID       int64
-	Project      Project `gorm:"ForeignKey:ProjectID"`
-	ProjectID    int64
-	TotalMinutes int
-	Timers       []Timer
-}
-
 // Timer - a time record that has start and finish dates. Belongs to a slack user and a task
 type Timer struct {
-	ID         int64
-	TeamUser   TeamUser `gorm:"ForeignKey:TeamUserID"`
-	TeamUserID int64
-	Task       Task `gorm:"ForeignKey:TaskID"`
-	TaskID     int64
-	StartedAt  time.Time
-	FinishedAt *time.Time
-	Minutes    int
-	DeletedAt  *time.Time
+	ID         bson.ObjectId `json:"id" bson:"_id,omitempty"`
+	TeamID     string        `json:"team_id" bson:"team_id"`
+	ProjectID  string        `json:"project_id" bson:"project_id"`
+	TeamUserID string        `json:"team_user_id" bson:"team_user_id"`
+	TaskName   string        `json:"task_name" bson:"task_name"`
+	TaskHash   string        `json:"task_hash" bson:"task_hash"`
+	StartedAt  time.Time     `json:"started_at" bson:"started_at"`
+	FinishedAt *time.Time    `json:"finished_at" bson:"finished_at"`
+	Minutes    int           `json:"minutes" bson:"minutes"`
+	DeletedAt  *time.Time    `json:"deleted_at" bson:"deleted_at"`
 }
 
 // SlackCustomCommand todo

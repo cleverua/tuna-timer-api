@@ -11,6 +11,7 @@ import (
 	"github.com/pavlo/slack-time/commands"
 	"github.com/pavlo/slack-time/models"
 	"github.com/pavlo/slack-time/utils"
+	"context"
 )
 
 // Handlers is a collection of net/http handlers to serve the API
@@ -18,7 +19,7 @@ type Handlers struct {
 	env                   *utils.Environment
 	mongoSession          *mgo.Session
 	status                map[string]string
-	commandLookupFunction func(slackCommand models.SlackCustomCommand) (commands.SlackCustomCommandHandler, error)
+	commandLookupFunction func(ctx context.Context, slackCommand models.SlackCustomCommand) (commands.SlackCustomCommandHandler, error)
 }
 
 // NewHandlers constructs a Handlers collection
@@ -49,20 +50,17 @@ func (h *Handlers) Timer(w http.ResponseWriter, r *http.Request) {
 		UserName:    r.PostFormValue("user_name"),
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	session := h.mongoSession.Clone()
+	defer session.Close()
 
-	command, err := h.commandLookupFunction(slackCommand)
+	ctx := utils.PutMongoSessionInContext(r.Context(), session)
+	command, err := h.commandLookupFunction(ctx, slackCommand)
 	if err != nil { //todo it is going to be a nicely formatted slack message sent back to user
 		w.Write([]byte(fmt.Sprintf("Unknown command: %s!", slackCommand.Text)))
 		return
 	}
 
-	session := h.mongoSession.Clone()
-	defer session.Close()
-
-	ctx := utils.PutMongoSessionInContext(r.Context(), session)
 	result := command.Handle(ctx, slackCommand)
-
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(result.Body)
 }

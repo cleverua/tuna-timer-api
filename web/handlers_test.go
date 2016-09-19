@@ -53,7 +53,7 @@ func (s *TestHandlersSuite) TestTimer(c *C) {
 	mockCmd := &mockCommand{executed: false}
 	h := NewHandlers(s.env, s.session)
 
-	h.commandLookupFunction = func(slackCommand models.SlackCustomCommand) (commands.SlackCustomCommandHandler, error) {
+	h.commandLookupFunction = func(ctx context.Context, slackCommand models.SlackCustomCommand) (commands.SlackCustomCommandHandler, error) {
 		c.Assert(slackCommand.ChannelID, Equals, "C2147483705")
 		c.Assert(slackCommand.ChannelName, Equals, "test")
 		c.Assert(slackCommand.Command, Equals, "/timer")
@@ -94,7 +94,7 @@ func (s *TestHandlersSuite) TestTimerCommandLookupFailure(c *C) {
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded;")
 	h := NewHandlers(s.env, s.session)
 
-	h.commandLookupFunction = func(slackCommand models.SlackCustomCommand) (commands.SlackCustomCommandHandler, error) {
+	h.commandLookupFunction = func(ctx context.Context, slackCommand models.SlackCustomCommand) (commands.SlackCustomCommandHandler, error) {
 		return nil, errors.New("Simulated failure")
 	}
 
@@ -132,9 +132,9 @@ type mockCommand struct {
 	executed bool
 }
 
-func (cmd *mockCommand) Handle(ctx context.Context, slackCommand models.SlackCustomCommand) *commands.SlackCustomCommandHandlerResult {
+func (cmd *mockCommand) Handle(ctx context.Context, slackCommand models.SlackCustomCommand) *commands.ResponseToSlack {
 	cmd.executed = true
-	return &commands.SlackCustomCommandHandlerResult{
+	return &commands.ResponseToSlack{
 		Body: []byte("OK"),
 	}
 }

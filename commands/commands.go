@@ -9,31 +9,31 @@ import (
 )
 
 const (
-	// CommandNameStart hodls the name of 'start' command
+	// CommandNameStart holds the name of 'start' command
 	CommandNameStart = "start"
 
-	// CommandNameStop hodls the name of 'stop' command
+	// CommandNameStop holds the name of 'stop' command
 	CommandNameStop = "stop"
 
-	// CommandNameStatus hodls the name of 'status' command
+	// CommandNameStatus holds the name of 'status' command
 	CommandNameStatus = "status"
 )
 
 // SlackCustomCommandHandlerResult todo
-type SlackCustomCommandHandlerResult struct {
+type ResponseToSlack struct {
 	Body []byte
 }
 
 // SlackCustomCommandHandler todo
 type SlackCustomCommandHandler interface {
-	Handle(ctx context.Context, slackCommand models.SlackCustomCommand) *SlackCustomCommandHandlerResult
+	Handle(ctx context.Context, slackCommand models.SlackCustomCommand) *ResponseToSlack
 }
 
 // LookupHandler todo
-func LookupHandler(slackCommand models.SlackCustomCommand) (SlackCustomCommandHandler, error) {
+func LookupHandler(ctx context.Context, slackCommand models.SlackCustomCommand) (SlackCustomCommandHandler, error) {
 	userInput := slackCommand.Text
 	if strings.HasPrefix(userInput, CommandNameStart) {
-		cmd := &Stop{}
+		cmd := NewStart(ctx)
 		return cmd, nil
 	} else if strings.HasPrefix(userInput, CommandNameStop) {
 		cmd := &Stop{}
