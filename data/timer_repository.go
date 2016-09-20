@@ -1,13 +1,14 @@
 package data
 
 import (
-	"gopkg.in/mgo.v2"
-	"github.com/pavlo/slack-time/models"
-	"gopkg.in/mgo.v2/bson"
-	"time"
-	"fmt"
 	"crypto/sha256"
+	"fmt"
 	"log"
+	"time"
+
+	"github.com/pavlo/slack-time/models"
+	"gopkg.in/mgo.v2"
+	"gopkg.in/mgo.v2/bson"
 )
 
 const timersCollectionName = "timers"
@@ -37,10 +38,10 @@ func (r *TimerRepository) findActiveByTeamAndUser(teamID, userID string) (*model
 	result := &models.Timer{}
 
 	err := r.collection.Find(bson.M{
-		"team_id": 		teamID,
+		"team_id":      teamID,
 		"team_user_id": userID,
-		"finished_at": 	nil,
-		"deleted_at": 	nil}).One(result)
+		"finished_at":  nil,
+		"deleted_at":   nil}).One(result)
 
 	if err != nil && err == mgo.ErrNotFound {
 		result = nil
@@ -52,14 +53,14 @@ func (r *TimerRepository) findActiveByTeamAndUser(teamID, userID string) (*model
 func (r *TimerRepository) create(teamID, projectID, userID, taskName string) (*models.Timer, error) {
 
 	timer := &models.Timer{
-		ID:               bson.NewObjectId(),
-		TeamID:           teamID,
-		ProjectID:        projectID,
-		TeamUserID:       userID,
-		CreatedAt:        time.Now(),
-		TaskName:   	  taskName,
-		TaskHash: 		  taskSHA256(teamID, projectID, taskName),
-		Minutes:  		  0,
+		ID:         bson.NewObjectId(),
+		TeamID:     teamID,
+		ProjectID:  projectID,
+		TeamUserID: userID,
+		CreatedAt:  time.Now(),
+		TaskName:   taskName,
+		TaskHash:   taskSHA256(teamID, projectID, taskName),
+		Minutes:    0,
 	}
 
 	return r.createTimer(timer)
@@ -87,40 +88,33 @@ db.getCollection('data').aggregate([
 	}
 }])
 
- */
+*/
 func (r *TimerRepository) totalMinutesForTaskAndUser(taskHash, userID string, startDate, endDate time.Time) int {
-
-	log.Printf("startDate: %v", startDate)
-	log.Printf("endDate: %v", endDate)
-
-	pipeConfig := []bson.D{
+	pipeConfig := []map[string] interface{} {
 		{
-			{
-				"$match", bson.M{
-					"task_hash": "h",
-					"team_user_id": userID,
-					"created_at": bson.M{
-						"$gte": startDate,
-						"$lt": endDate,
-					},
-					"finished_at": bson.M{ "$ne": nil },
-					"deleted_at": nil,
+			"$match": bson.M{
+				"task_hash": "h",
+				"team_user_id": userID,
+				"created_at": bson.M{
+					"$gte": startDate,
+					"$lt":  endDate,
 				},
 			},
-			{
-				"$group", bson.M{
-					"_id":            	bson.M{"task_hash": "$task_hash" },
-					"minutes":        	bson.M{"$sum": "$minutes" },
-					"total_timers": 	bson.M{"$sum": 1 },
-				},
+		},
+		{
+			"$group": bson.M{
+				"_id":          bson.M{"task_hash": "$task_hash"},
+				"minutes":      bson.M{"$sum": "$minutes"},
+				"total_timers": bson.M{"$sum": 1},
 			},
 		},
 	}
 
 	var result map[string]interface{}
-	r.collection.Pipe(pipeConfig).One(&result)
-
-	log.Printf("result: %+v", result)
+	err := r.collection.Pipe(pipeConfig).One(&result)
+	if err != nil && err != mgo.ErrNotFound {
+		log.Printf("Error: %s", err)
+	}
 
 	if result == nil {
 		return 0

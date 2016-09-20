@@ -125,7 +125,7 @@ func (s *TimerRepositoryTestSuite) TestTotalMinutesForTaskAndUser(c *C) {
 	}
 
 	m := s.repository.totalMinutesForTaskAndUser("h", "u", s.pt("2016 Sep 09 12:35:00"), s.pt("2016 Sep 21 12:35:00"))
-	c.Assert(m, Equals, 0)
+	c.Assert(m, Equals, 10)
 
 }
 
