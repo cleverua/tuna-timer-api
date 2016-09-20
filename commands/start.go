@@ -5,27 +5,27 @@ import (
 
 	"github.com/pavlo/slack-time/data"
 	"github.com/pavlo/slack-time/models"
-	"github.com/pavlo/slack-time/utils"
 	"github.com/pavlo/slack-time/themes"
+	"github.com/pavlo/slack-time/utils"
 	"gopkg.in/mgo.v2"
 )
 
 //Start - handles the '/timer stop` command received from Slack
 type Start struct {
-	session *mgo.Session
-	teamService *data.TeamService
+	session      *mgo.Session
+	teamService  *data.TeamService
 	timerService *data.TimerService
-	inventory *models.StartCommandInventory
+	inventory    *models.StartCommandInventory
 }
 
 func NewStart(ctx context.Context) *Start {
 	session := utils.GetMongoSessionFromContext(ctx)
 
 	start := &Start{
-		session: session,
-		teamService: data.NewTeamService(session),
+		session:      session,
+		teamService:  data.NewTeamService(session),
 		timerService: data.NewTimerService(session),
-		inventory: &models.StartCommandInventory{},
+		inventory:    &models.StartCommandInventory{},
 	}
 
 	return start
@@ -56,7 +56,7 @@ func (c *Start) Handle(ctx context.Context, slackCommand models.SlackCustomComma
 	}
 
 	if timerToStop != nil {
-		if timerToStop.TaskName == slackCommand.Text {
+		if timerToStop.TaskName == slackCommand.Text && timerToStop.ProjectID == slackCommand.ChannelID {
 			c.inventory.AlreadyStartedTimer = timerToStop
 			c.inventory.AlreadyStartedTimerTotalForToday = c.timerService.TaskTotalMinutesForToday(timerToStop)
 		} else {
