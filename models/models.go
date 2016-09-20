@@ -45,7 +45,7 @@ type Timer struct {
 	TeamUserID string        `json:"team_user_id" bson:"team_user_id"`
 	TaskName   string        `json:"task_name" bson:"task_name"`
 	TaskHash   string        `json:"task_hash" bson:"task_hash"`
-	StartedAt  time.Time     `json:"started_at" bson:"started_at"`
+	CreatedAt  time.Time     `json:"created_at" bson:"created_at"`
 	FinishedAt *time.Time    `json:"finished_at" bson:"finished_at"`
 	Minutes    int           `json:"minutes" bson:"minutes"`
 	DeletedAt  *time.Time    `json:"deleted_at" bson:"deleted_at"`

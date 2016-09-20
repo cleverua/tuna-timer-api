@@ -10,11 +10,15 @@ import (
 	"github.com/justinas/alice"
 	"github.com/pavlo/slack-time/utils"
 	"github.com/pavlo/slack-time/web"
+	"time"
 )
 
 const version = "0.1.0"
 
 func main() {
+
+	time.Local = time.UTC
+
 	environment := utils.NewEnvironment(getEnvironmentName(), version)
 	utils.PrintBanner(environment)
 

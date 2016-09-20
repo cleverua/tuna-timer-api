@@ -8,7 +8,7 @@ import (
 	"gopkg.in/mgo.v2/bson"
 )
 
-const collectionName = "teams"
+const teamsCollectionName = "teams"
 
 // TeamRepository todo
 type TeamRepository struct {
@@ -30,7 +30,7 @@ type TeamRepositoryInterface interface {
 func NewTeamRepository(session *mgo.Session) *TeamRepository {
 	return &TeamRepository{
 		session:    session,
-		collection: session.DB("").C(collectionName),
+		collection: session.DB("").C(teamsCollectionName),
 	}
 }
 

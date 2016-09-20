@@ -58,11 +58,11 @@ func (c *Start) Handle(ctx context.Context, slackCommand models.SlackCustomComma
 	if timerToStop != nil {
 		if timerToStop.TaskName == slackCommand.Text && timerToStop.ProjectID == slackCommand.ChannelID {
 			c.inventory.AlreadyStartedTimer = timerToStop
-			c.inventory.AlreadyStartedTimerTotalForToday = c.timerService.TaskTotalMinutesForToday(timerToStop)
+			c.inventory.AlreadyStartedTimerTotalForToday = c.timerService.TotalMinutesForToday(timerToStop)
 		} else {
 			c.timerService.StopTimer(timerToStop)
 			c.inventory.StoppedTimer = timerToStop
-			c.inventory.StoppedTaskTotalForToday = c.timerService.TaskTotalMinutesForToday(timerToStop)
+			c.inventory.StoppedTaskTotalForToday = c.timerService.TotalMinutesForToday(timerToStop)
 		}
 	}
 
@@ -72,7 +72,7 @@ func (c *Start) Handle(ctx context.Context, slackCommand models.SlackCustomComma
 			// todo: format a decent Slack error message so user knows what's wrong and how to solve the issue
 		}
 		c.inventory.StartedTimer = startedTimer
-		c.inventory.StartedTaskTotalForToday = c.timerService.TaskTotalMinutesForToday(c.inventory.StartedTimer)
+		c.inventory.StartedTaskTotalForToday = c.timerService.TotalMinutesForToday(c.inventory.StartedTimer)
 	}
 
 	return c.response()
