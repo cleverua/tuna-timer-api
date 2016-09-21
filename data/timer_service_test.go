@@ -13,6 +13,39 @@ import (
 	"gopkg.in/mgo.v2/bson"
 )
 
+func (s *TimerServiceTestSuite) TestGetActiveTimer(c *C) {
+
+	now := time.Now()
+
+	// completed
+	s.repo.createTimer(&models.Timer{
+		ID:               bson.NewObjectId(),
+		TeamID:           "team",
+		ProjectID:        "project",
+		TeamUserID:       "user",
+		TaskHash:   	  "task",
+		CreatedAt:        now,
+		FinishedAt: 	  &now,
+		Minutes:  		  10,
+	})
+
+	// not completed
+	s.repo.createTimer(&models.Timer{
+		ID:               bson.NewObjectId(),
+		TeamID:           "team",
+		ProjectID:        "project",
+		TeamUserID:       "user",
+		TaskHash:   	  "task",
+		CreatedAt:        now,
+		Minutes:  		  20,
+	})
+
+	timer, err := s.service.GetActiveTimer("team", "user")
+	c.Assert(err, IsNil)
+	c.Assert(timer, NotNil)
+	c.Assert(timer.Minutes, Equals, 20)
+}
+
 func (s *TimerServiceTestSuite) TestStopTimer(c *C) {
 	now := time.Now()
 
@@ -20,12 +53,12 @@ func (s *TimerServiceTestSuite) TestStopTimer(c *C) {
 	timerStartedAt := now.Add(offsetDuration * -1) // 20 minutes ago
 
 	id := bson.NewObjectId()
-	timer, err := s.repository.createTimer(&models.Timer{
+	timer, err := s.repo.createTimer(&models.Timer{
 		ID:               id,
-		TeamID:           "teamID",
-		ProjectID:        "projectID",
-		TeamUserID:       "u",
-		TaskHash:   	  "t",
+		TeamID:           "team",
+		ProjectID:        "project",
+		TeamUserID:       "user",
+		TaskHash:   	  "task",
 		CreatedAt:        timerStartedAt,
 		Minutes:  		  0,
 	})
@@ -35,7 +68,7 @@ func (s *TimerServiceTestSuite) TestStopTimer(c *C) {
 
 	s.service.StopTimer(timer)
 
-	loadedTimer, err := s.repository.findByID(id.Hex())
+	loadedTimer, err := s.repo.findByID(id.Hex())
 	c.Assert(err, IsNil)
 
 	c.Assert(loadedTimer.Minutes, Equals, 20)
@@ -47,7 +80,7 @@ func (s *TimerServiceTestSuite) TestStartTimer(c *C) {
 	c.Assert(err, IsNil)
 	c.Assert(timer, NotNil)
 
-	loadedTimer, err := s.repository.findByID(timer.ID.Hex())
+	loadedTimer, err := s.repo.findByID(timer.ID.Hex())
 	c.Assert(err, IsNil)
 	c.Assert(loadedTimer, NotNil)
 
@@ -71,23 +104,23 @@ func (s *TimerServiceTestSuite) TestTotalMinutesForTodayAddsTimeForUnfinishedTas
 	offsetDuration2, _ := time.ParseDuration("5m")
 	secondTimerStartedAt := now.Add(offsetDuration2 * -1) // 5 minutes ago
 
-	s.repository.createTimer(&models.Timer{
+	s.repo.createTimer(&models.Timer{
 		ID:               bson.NewObjectId(),
-		TeamID:           "teamID",
-		ProjectID:        "projectID",
-		TeamUserID:       "u",
-		TaskHash:   	  "t",
+		TeamID:           "team",
+		ProjectID:        "project",
+		TeamUserID:       "user",
+		TaskHash:   	  "task",
 		CreatedAt:        now.Add(offsetDuration1 * -1),
 		FinishedAt:		  &firstTimerStartedAt,
 		Minutes:  		  10,
 	})
 
-	timer, _ := s.repository.createTimer(&models.Timer{
+	timer, _ := s.repo.createTimer(&models.Timer{
 		ID:               bson.NewObjectId(),
-		TeamID:           "teamID",
-		ProjectID:        "projectID",
-		TeamUserID:       "u",
-		TaskHash:   	  "t",
+		TeamID:           "team",
+		ProjectID:        "project",
+		TeamUserID:       "user",
+		TaskHash:   	  "task",
 		CreatedAt:        secondTimerStartedAt,
 		FinishedAt:		  nil,
 		Minutes:  		  0,
@@ -111,7 +144,7 @@ func (s *TimerServiceTestSuite) SetUpSuite(c *C) {
 	s.env = e
 	s.session = session.Clone()
 	s.service = NewTimerService(s.session)
-	s.repository = NewTimerRepository(s.session)
+	s.repo = NewTimerRepository(s.session)
 }
 
 func (s *TimerServiceTestSuite) TearDownSuite(c *C) {
@@ -126,10 +159,10 @@ func (s *TimerServiceTestSuite) SetUpTest(c *C) {
 func TestTimerService(t *testing.T) { TestingT(t) }
 
 type TimerServiceTestSuite struct {
-	env        *utils.Environment
-	session    *mgo.Session
-	repository *TimerRepository
-	service    *TimerService
+	env     *utils.Environment
+	session *mgo.Session
+	repo    *TimerRepository
+	service *TimerService
 }
 
 var _ = Suite(&TimerServiceTestSuite {})
