@@ -13,10 +13,26 @@ import (
 	"gopkg.in/mgo.v2/bson"
 )
 
+func (s *TimerServiceTestSuite) TestStartTimer(c *C) {
+	timer, err := s.service.StartTimer("team", "project", "user", "task")
+	c.Assert(err, IsNil)
+	c.Assert(timer, NotNil)
 
+	loadedTimer, err := s.repository.findByID(timer.ID.Hex())
+	c.Assert(err, IsNil)
+	c.Assert(loadedTimer, NotNil)
 
+	c.Assert(loadedTimer.TeamID, Equals, "team")
+	c.Assert(loadedTimer.ProjectID, Equals, "project")
+	c.Assert(loadedTimer.TeamUserID, Equals, "user")
+	c.Assert(loadedTimer.TaskName, Equals, "task")
+	c.Assert(loadedTimer.TaskHash, NotNil)
+	c.Assert(loadedTimer.CreatedAt, NotNil)
+	c.Assert(loadedTimer.FinishedAt, IsNil)
+	c.Assert(loadedTimer.DeletedAt, IsNil)
+	c.Assert(loadedTimer.Minutes, Equals, 0)
+}
 
-// Team User
 func (s *TimerServiceTestSuite) TestTotalMinutesForTodayAddsTimeForUnfinishedTask(c *C) {
 	now := time.Now()
 

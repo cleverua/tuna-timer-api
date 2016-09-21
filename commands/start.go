@@ -15,7 +15,7 @@ type Start struct {
 	session      *mgo.Session
 	teamService  *data.TeamService
 	timerService *data.TimerService
-	inventory    *models.StartCommandReport
+	report       *models.StartCommandReport
 }
 
 func NewStart(ctx context.Context) *Start {
@@ -25,7 +25,7 @@ func NewStart(ctx context.Context) *Start {
 		session:      session,
 		teamService:  data.NewTeamService(session),
 		timerService: data.NewTimerService(session),
-		inventory:    &models.StartCommandReport{},
+		report:    &models.StartCommandReport{},
 	}
 
 	return start
@@ -46,9 +46,9 @@ func (c *Start) Handle(ctx context.Context, slackCommand models.SlackCustomComma
 		// todo: format a decent Slack error message so user knows what's wrong and how to solve the issue
 	}
 
-	c.inventory.Team = team
-	c.inventory.Project = project
-	c.inventory.TeamUser = teamUser
+	c.report.Team = team
+	c.report.Project = project
+	c.report.TeamUser = teamUser
 
 	timerToStop, err := c.timerService.GetActiveTimer(team.ID.Hex(), teamUser.ID.Hex())
 	if err != nil {
@@ -57,22 +57,22 @@ func (c *Start) Handle(ctx context.Context, slackCommand models.SlackCustomComma
 
 	if timerToStop != nil {
 		if timerToStop.TaskName == slackCommand.Text && timerToStop.ProjectID == slackCommand.ChannelID {
-			c.inventory.AlreadyStartedTimer = timerToStop
-			c.inventory.AlreadyStartedTimerTotalForToday = c.timerService.TotalMinutesForTaskToday(timerToStop)
+			c.report.AlreadyStartedTimer = timerToStop
+			c.report.AlreadyStartedTimerTotalForToday = c.timerService.TotalMinutesForTaskToday(timerToStop)
 		} else {
 			c.timerService.StopTimer(timerToStop)
-			c.inventory.StoppedTimer = timerToStop
-			c.inventory.StoppedTaskTotalForToday = c.timerService.TotalMinutesForTaskToday(timerToStop)
+			c.report.StoppedTimer = timerToStop
+			c.report.StoppedTaskTotalForToday = c.timerService.TotalMinutesForTaskToday(timerToStop)
 		}
 	}
 
-	if c.inventory.AlreadyStartedTimer != nil {
+	if c.report.AlreadyStartedTimer != nil {
 		startedTimer, err := c.timerService.StartTimer(team.ID.Hex(), project.ID.Hex(), teamUser.ID.Hex(), slackCommand.Text)
 		if err != nil {
 			// todo: format a decent Slack error message so user knows what's wrong and how to solve the issue
 		}
-		c.inventory.StartedTimer = startedTimer
-		c.inventory.StartedTaskTotalForToday = c.timerService.TotalMinutesForTaskToday(c.inventory.StartedTimer)
+		c.report.StartedTimer = startedTimer
+		c.report.StartedTaskTotalForToday = c.timerService.TotalMinutesForTaskToday(c.report.StartedTimer)
 	}
 
 	return c.response()
@@ -80,7 +80,7 @@ func (c *Start) Handle(ctx context.Context, slackCommand models.SlackCustomComma
 
 func (c *Start) response() *ResponseToSlack {
 	var theme themes.SlackMessageTheme = &themes.DefaultSlackMessageTheme{}
-	content := theme.FormatStartCommand(c.inventory)
+	content := theme.FormatStartCommand(c.report)
 
 	return &ResponseToSlack{
 		Body: []byte(content),

@@ -32,10 +32,9 @@ func (s *TimerService) StopTimer(timer *models.Timer) error {
 	return nil
 }
 
-// StartTimer todo
+// StartTimer creates a new timer
 func (s *TimerService) StartTimer(teamID, projectID, teamUserID, taskName string) (*models.Timer, error) {
-	// dao.create
-	return nil, nil
+	return s.repository.create(teamID, projectID, teamUserID, taskName)
 }
 
 // TotalMinutesForTaskToday calculates the total number of minutes the user was/is working on particular task today
