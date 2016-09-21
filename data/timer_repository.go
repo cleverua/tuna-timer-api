@@ -67,7 +67,6 @@ func (r *TimerRepository) create(teamID, projectID, userID, taskName string) (*m
 }
 
 /*
-
 db.getCollection('data').aggregate([
 {
 	$match: {
@@ -93,7 +92,7 @@ func (r *TimerRepository) totalMinutesForTaskAndUser(taskHash, userID string, st
 	pipeConfig := []map[string] interface{} {
 		{
 			"$match": bson.M{
-				"task_hash": "h",
+				"task_hash": taskHash,
 				"team_user_id": userID,
 				"created_at": bson.M{
 					"$gte": startDate,

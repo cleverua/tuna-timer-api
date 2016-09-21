@@ -109,6 +109,7 @@ func (s *TimerRepositoryTestSuite) TestFindActiveTimerByTeamAndUserButAlreadyDel
 
 func (s *TimerRepositoryTestSuite) TestTotalMinutesForTaskAndUser(c *C) {
 
+	now := time.Now()
 	// creates 10 timers one minute each
 	for i := 10; i < 20; i++ {
 		createdAt := s.pt(fmt.Sprintf("2016 Sep %d 12:35:00", i))
@@ -117,16 +118,58 @@ func (s *TimerRepositoryTestSuite) TestTotalMinutesForTaskAndUser(c *C) {
 			TeamID:           "teamID",
 			ProjectID:        "projectID",
 			TeamUserID:       "u",
+			TaskHash:   	  "t",
 			CreatedAt:        createdAt,
-			FinishedAt:		  &createdAt,
-			TaskHash:   	  "h",
+			FinishedAt:		  &now,
 			Minutes:  		  1,
 		})
 	}
 
-	m := s.repository.totalMinutesForTaskAndUser("h", "u", s.pt("2016 Sep 09 12:35:00"), s.pt("2016 Sep 21 12:35:00"))
+	// let's add a few more task for different users and tasks
+	s.repository.createTimer(&models.Timer{
+		ID:               bson.NewObjectId(),
+		TeamID:           "teamID",
+		ProjectID:        "projectID",
+		TeamUserID:       "u",
+		TaskHash:   	  "another task",
+		CreatedAt:        s.pt("2016 Sep 12 10:35:00"),
+		FinishedAt:		  &now,
+		Minutes:  		  1,
+	})
+
+	s.repository.createTimer(&models.Timer{
+		ID:               bson.NewObjectId(),
+		TeamID:           "teamID",
+		ProjectID:        "projectID",
+		TeamUserID:       "another user",
+		TaskHash:   	  "t",
+		CreatedAt:        s.pt("2016 Sep 13 19:35:00"),
+		FinishedAt:		  &now,
+		Minutes:  		  1,
+	})
+
+	s.repository.createTimer(&models.Timer{
+		ID:               bson.NewObjectId(),
+		TeamID:           "teamID",
+		ProjectID:        "projectID",
+		TeamUserID:       "another user",
+		TaskHash:   	  "another task",
+		CreatedAt:        s.pt("2016 Sep 14 19:35:00"),
+		FinishedAt:		  &now,
+		Minutes:  		  1,
+	})
+
+	// all tasks
+	m := s.repository.totalMinutesForTaskAndUser("t", "u", s.pt("2016 Sep 09 12:35:00"), s.pt("2016 Sep 21 12:35:00"))
 	c.Assert(m, Equals, 10)
 
+	// one year later than any of the tasks
+	m = s.repository.totalMinutesForTaskAndUser("t", "u", s.pt("2017 Sep 09 12:35:00"), s.pt("2017 Sep 21 12:35:00"))
+	c.Assert(m, Equals, 0)
+
+	// should get one for 10th, one for 11th and one for 12th because the endDate is one minute after the third time
+	m = s.repository.totalMinutesForTaskAndUser("t", "u", s.pt("2016 Sep 10 10:00:00"), s.pt("2016 Sep 12 12:36:00"))
+	c.Assert(m, Equals, 3)
 }
 
 // stands for Parse Time

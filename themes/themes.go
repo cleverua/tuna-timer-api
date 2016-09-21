@@ -7,7 +7,7 @@ import (
 
 // SlackMessageTheme an interface each theme must to conform to
 type SlackMessageTheme interface {
-	FormatStartCommand(data *models.StartCommandInventory) string
+	FormatStartCommand(data *models.StartCommandReport) string
 }
 
 type slackThemeTemplate struct {

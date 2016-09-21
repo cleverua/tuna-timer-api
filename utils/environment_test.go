@@ -7,7 +7,7 @@ import (
 )
 
 // Hook up gocheck into the "go test" runner.
-func Test(t *testing.T) { TestingT(t) }
+func TestEnvironment(t *testing.T) { TestingT(t) }
 
 type EnvironmentTestSuite struct {
 	env *Environment

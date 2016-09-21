@@ -2,7 +2,7 @@ package data
 
 import (
 	"github.com/pavlo/slack-time/models"
-	mgo "gopkg.in/mgo.v2"
+	"gopkg.in/mgo.v2"
 	"time"
 )
 
@@ -38,28 +38,23 @@ func (s *TimerService) StartTimer(teamID, projectID, teamUserID, taskName string
 	return nil, nil
 }
 
-// TaskTotalMinutesForToday todo
-func (s *TimerService) TotalMinutesForToday(timer *models.Timer) int {
-
-	taskHash := "hash"
-	//taskHash := timer.TaskHash
-	userID := "userID"
-	//userID := timer.TeamUserID
-	startDate := time.Now().Truncate(24*time.Hour)
+// TotalMinutesForTaskToday calculates the total number of minutes the user was/is working on particular task today
+func (s *TimerService) TotalMinutesForTaskToday(timer *models.Timer) int {
 	endDate := time.Now()
+	startDate := time.Now().Truncate(24*time.Hour)
 
+	result := s.repository.totalMinutesForTaskAndUser(
+		timer.TaskHash, timer.TeamUserID, startDate, endDate)
 
-	s.repository.totalMinutesForTaskAndUser(taskHash, userID, startDate, endDate)
+	if timer.FinishedAt == nil {
+		duration := time.Since(timer.CreatedAt)
+		result += int(duration.Minutes())
+	}
 
-
-
-
-
-	return 0
+	return result
 }
 
 // UserTotalMinutesForToday todo
 func (s *TimerService) UserTotalMinutesForToday(userID string) int {
-	// dao.aggregation
 	return 0
 }

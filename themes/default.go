@@ -9,7 +9,7 @@ import (
 type DefaultSlackMessageTheme struct {
 }
 
-func (theme *DefaultSlackMessageTheme) 	FormatStartCommand(data *models.StartCommandInventory) string{
+func (theme *DefaultSlackMessageTheme) 	FormatStartCommand(data *models.StartCommandReport) string{
 
 	//t := slackThemeTemplate{
 	//	Text: "The TunaTimer has been updated",
