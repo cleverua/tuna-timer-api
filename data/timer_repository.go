@@ -127,6 +127,10 @@ func (r *TimerRepository) createTimer(timer *models.Timer) (*models.Timer, error
 	return timer, err
 }
 
+func (r *TimerRepository) update(timer *models.Timer) error {
+	return r.collection.UpdateId(timer.ID, timer)
+}
+
 // split into two - hash and trim?
 func taskSHA256(teamID, projectID, taskName string) string {
 	hashSeed := fmt.Sprintf("%s%s%s", teamID, projectID, taskName)

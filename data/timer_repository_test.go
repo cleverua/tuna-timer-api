@@ -16,6 +16,22 @@ import (
 
 const timerRepositoryTestSuiteTimeParseLayout = "2006 Jan 02 15:04:05"
 
+func (s *TimerRepositoryTestSuite) TestUpdate(c *C) {
+
+	timer, err := s.repository.create("teamID", "projectID", "userID", "taskName")
+	c.Assert(err, IsNil)
+	c.Assert(timer, NotNil)
+	c.Assert(timer.Minutes, Equals, 0)
+
+	timer.Minutes = 50
+
+	err = s.repository.update(timer)
+	c.Assert(err, IsNil)
+
+	loadedTimer, err := s.repository.findByID(timer.ID.Hex())
+	c.Assert(err, IsNil)
+	c.Assert(loadedTimer.Minutes, Equals, 50)
+}
 
 func (s *TimerRepositoryTestSuite) TestCreateTimer(c *C) {
 	timer, err := s.repository.create("teamID", "projectID", "userID", "taskName")

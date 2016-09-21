@@ -13,6 +13,35 @@ import (
 	"gopkg.in/mgo.v2/bson"
 )
 
+func (s *TimerServiceTestSuite) TestStopTimer(c *C) {
+	now := time.Now()
+
+	offsetDuration, _ := time.ParseDuration("20m")
+	timerStartedAt := now.Add(offsetDuration * -1) // 20 minutes ago
+
+	id := bson.NewObjectId()
+	timer, err := s.repository.createTimer(&models.Timer{
+		ID:               id,
+		TeamID:           "teamID",
+		ProjectID:        "projectID",
+		TeamUserID:       "u",
+		TaskHash:   	  "t",
+		CreatedAt:        timerStartedAt,
+		Minutes:  		  0,
+	})
+
+	c.Assert(err, IsNil)
+	c.Assert(timer, NotNil)
+
+	s.service.StopTimer(timer)
+
+	loadedTimer, err := s.repository.findByID(id.Hex())
+	c.Assert(err, IsNil)
+
+	c.Assert(loadedTimer.Minutes, Equals, 20)
+	c.Assert(loadedTimer.FinishedAt, NotNil)
+}
+
 func (s *TimerServiceTestSuite) TestStartTimer(c *C) {
 	timer, err := s.service.StartTimer("team", "project", "user", "task")
 	c.Assert(err, IsNil)

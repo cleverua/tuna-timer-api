@@ -6,13 +6,13 @@ import (
 	"time"
 )
 
-// TimerService todo
+// TimerService - the structure of the service
 type TimerService struct {
 	session *mgo.Session
 	repository *TimerRepository
 }
 
-// NewTimerService todo
+// NewTimerService constructs an instance of the service
 func NewTimerService(session *mgo.Session) *TimerService {
 	return &TimerService{
 		session: session,
@@ -20,16 +20,18 @@ func NewTimerService(session *mgo.Session) *TimerService {
 	}
 }
 
-// GetActiveTimer todo
+// GetActiveTimer returns a timer the user is currently working on
 func (s *TimerService) GetActiveTimer(teamID, userID string) (*models.Timer, error) {
 	timer, err := s.repository.findActiveByTeamAndUser(teamID, userID)
 	return timer, err
 }
 
-// StopTimer todo
+// StopTimer stops the timer and updates its Minutes field
 func (s *TimerService) StopTimer(timer *models.Timer) error {
-	//dao.updateTimer
-	return nil
+	now := time.Now()
+	timer.Minutes = s.calculateMinutesForTimer(timer)
+	timer.FinishedAt = &now
+	return s.repository.update(timer)
 }
 
 // StartTimer creates a new timer
@@ -46,8 +48,7 @@ func (s *TimerService) TotalMinutesForTaskToday(timer *models.Timer) int {
 		timer.TaskHash, timer.TeamUserID, startDate, endDate)
 
 	if timer.FinishedAt == nil {
-		duration := time.Since(timer.CreatedAt)
-		result += int(duration.Minutes())
+		result += s.calculateMinutesForTimer(timer)
 	}
 
 	return result
@@ -56,4 +57,9 @@ func (s *TimerService) TotalMinutesForTaskToday(timer *models.Timer) int {
 // UserTotalMinutesForToday todo
 func (s *TimerService) UserTotalMinutesForToday(userID string) int {
 	return 0
+}
+
+func (s *TimerService) calculateMinutesForTimer(timer *models.Timer) int {
+	duration := time.Since(timer.CreatedAt)
+	return int(duration.Minutes())
 }
