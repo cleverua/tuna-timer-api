@@ -2,7 +2,7 @@ package models
 
 // StartCommandInventory collect everything that StartCommand creates, modifies or touches
 // This report instance will be sent to a UITheme to format a slack reply to the Start Command
-type StartCommandReport		 struct {
+type StartCommandReport struct {
 	Team                             *Team
 	Project                          *Project
 	TeamUser                         *TeamUser

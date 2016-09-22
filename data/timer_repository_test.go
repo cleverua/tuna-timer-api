@@ -6,12 +6,12 @@ import (
 
 	"gopkg.in/mgo.v2"
 
+	"fmt"
+	"github.com/pavlo/slack-time/models"
 	"github.com/pavlo/slack-time/utils"
 	. "gopkg.in/check.v1"
-	"github.com/pavlo/slack-time/models"
 	"gopkg.in/mgo.v2/bson"
 	"time"
-	"fmt"
 )
 
 const timerRepositoryTestSuiteTimeParseLayout = "2006 Jan 02 15:04:05"
@@ -63,16 +63,15 @@ func (s *TimerRepositoryTestSuite) TestFindActiveTimerByTeamAndUserExists(c *C) 
 
 	newID := bson.NewObjectId()
 	timer := &models.Timer{
-		ID:               newID,
-		TeamID:           "team",
-		ProjectID:        "project",
-		TeamUserID:       "user",
-		CreatedAt:        time.Now(),
-		TaskName:   	  "task",
-		Minutes:  		  0,
+		ID:         newID,
+		TeamID:     "team",
+		ProjectID:  "project",
+		TeamUserID: "user",
+		CreatedAt:  time.Now(),
+		TaskName:   "task",
+		Minutes:    0,
 	}
 	s.repo.createTimer(timer)
-
 
 	timerFromDB, err := s.repo.findActiveByTeamAndUser("team", "user")
 	c.Assert(err, IsNil)
@@ -85,14 +84,14 @@ func (s *TimerRepositoryTestSuite) TestFindActiveTimerByTeamAndUserButAlreadyFin
 	newID := bson.NewObjectId()
 	finishedAt := time.Now()
 	timer := &models.Timer{
-		ID:               newID,
-		TeamID:           "team",
-		ProjectID:        "project",
-		TeamUserID:       "user",
-		CreatedAt:        finishedAt,
-		FinishedAt:		  &finishedAt,
-		TaskName:   	  "task",
-		Minutes:  		  0,
+		ID:         newID,
+		TeamID:     "team",
+		ProjectID:  "project",
+		TeamUserID: "user",
+		CreatedAt:  finishedAt,
+		FinishedAt: &finishedAt,
+		TaskName:   "task",
+		Minutes:    0,
 	}
 	s.repo.createTimer(timer)
 
@@ -106,14 +105,14 @@ func (s *TimerRepositoryTestSuite) TestFindActiveTimerByTeamAndUserButAlreadyDel
 	newID := bson.NewObjectId()
 	deletedAt := time.Now()
 	timer := &models.Timer{
-		ID:               newID,
-		TeamID:           "team",
-		ProjectID:        "project",
-		TeamUserID:       "user",
-		CreatedAt:        deletedAt,
-		DeletedAt:		  &deletedAt,
-		TaskName:   	  "task",
-		Minutes:  		  0,
+		ID:         newID,
+		TeamID:     "team",
+		ProjectID:  "project",
+		TeamUserID: "user",
+		CreatedAt:  deletedAt,
+		DeletedAt:  &deletedAt,
+		TaskName:   "task",
+		Minutes:    0,
 	}
 	s.repo.createTimer(timer)
 
@@ -122,7 +121,6 @@ func (s *TimerRepositoryTestSuite) TestFindActiveTimerByTeamAndUserButAlreadyDel
 	c.Assert(timerFromDB, IsNil)
 }
 
-
 func (s *TimerRepositoryTestSuite) TestTotalMinutesForTaskAndUser(c *C) {
 
 	now := time.Now()
@@ -130,49 +128,49 @@ func (s *TimerRepositoryTestSuite) TestTotalMinutesForTaskAndUser(c *C) {
 	for i := 10; i < 20; i++ {
 		createdAt := s.pt(fmt.Sprintf("2016 Sep %d 12:35:00", i))
 		s.repo.createTimer(&models.Timer{
-			ID:               bson.NewObjectId(),
-			TeamID:           "team",
-			ProjectID:        "project",
-			TeamUserID:       "user",
-			TaskHash:   	  "task",
-			CreatedAt:        createdAt,
-			FinishedAt:		  &now,
-			Minutes:  		  1,
+			ID:         bson.NewObjectId(),
+			TeamID:     "team",
+			ProjectID:  "project",
+			TeamUserID: "user",
+			TaskHash:   "task",
+			CreatedAt:  createdAt,
+			FinishedAt: &now,
+			Minutes:    1,
 		})
 	}
 
 	// let's add a few more task for different users and tasks
 	s.repo.createTimer(&models.Timer{
-		ID:               bson.NewObjectId(),
-		TeamID:           "team",
-		ProjectID:        "project",
-		TeamUserID:       "user",
-		TaskHash:   	  "another task",
-		CreatedAt:        s.pt("2016 Sep 12 10:35:00"),
-		FinishedAt:		  &now,
-		Minutes:  		  1,
+		ID:         bson.NewObjectId(),
+		TeamID:     "team",
+		ProjectID:  "project",
+		TeamUserID: "user",
+		TaskHash:   "another task",
+		CreatedAt:  s.pt("2016 Sep 12 10:35:00"),
+		FinishedAt: &now,
+		Minutes:    1,
 	})
 
 	s.repo.createTimer(&models.Timer{
-		ID:               bson.NewObjectId(),
-		TeamID:           "team",
-		ProjectID:        "project",
-		TeamUserID:       "another user",
-		TaskHash:   	  "task",
-		CreatedAt:        s.pt("2016 Sep 13 19:35:00"),
-		FinishedAt:		  &now,
-		Minutes:  		  1,
+		ID:         bson.NewObjectId(),
+		TeamID:     "team",
+		ProjectID:  "project",
+		TeamUserID: "another user",
+		TaskHash:   "task",
+		CreatedAt:  s.pt("2016 Sep 13 19:35:00"),
+		FinishedAt: &now,
+		Minutes:    1,
 	})
 
 	s.repo.createTimer(&models.Timer{
-		ID:               bson.NewObjectId(),
-		TeamID:           "team",
-		ProjectID:        "project",
-		TeamUserID:       "another user",
-		TaskHash:   	  "another task",
-		CreatedAt:        s.pt("2016 Sep 14 19:35:00"),
-		FinishedAt:		  &now,
-		Minutes:  		  1,
+		ID:         bson.NewObjectId(),
+		TeamID:     "team",
+		ProjectID:  "project",
+		TeamUserID: "another user",
+		TaskHash:   "another task",
+		CreatedAt:  s.pt("2016 Sep 14 19:35:00"),
+		FinishedAt: &now,
+		Minutes:    1,
 	})
 
 	// all tasks
@@ -195,7 +193,7 @@ func (s *TimerRepositoryTestSuite) pt(value string) time.Time {
 }
 
 // Suite lifecycle and callbacks
-func (s *TimerRepositoryTestSuite ) SetUpSuite(c *C) {
+func (s *TimerRepositoryTestSuite) SetUpSuite(c *C) {
 	e := utils.NewEnvironment(utils.TestEnv, "1.0.0")
 
 	session, err := utils.ConnectToDatabase(e.Config)
@@ -226,4 +224,4 @@ type TimerRepositoryTestSuite struct {
 	repo    *TimerRepository
 }
 
-var _ = Suite(&TimerRepositoryTestSuite {})
+var _ = Suite(&TimerRepositoryTestSuite{})

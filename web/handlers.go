@@ -8,10 +8,11 @@ import (
 
 	"gopkg.in/mgo.v2"
 
+	"context"
+
 	"github.com/pavlo/slack-time/commands"
 	"github.com/pavlo/slack-time/models"
 	"github.com/pavlo/slack-time/utils"
-	"context"
 )
 
 // Handlers is a collection of net/http handlers to serve the API
@@ -69,5 +70,6 @@ func (h *Handlers) Timer(w http.ResponseWriter, r *http.Request) {
 func (h *Handlers) Health(w http.ResponseWriter, r *http.Request) {
 	uptime := time.Since(h.env.CreatedAt)
 	h.status["uptime"] = uptime.String() //is it good or not if I modify the map here?
+	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(h.status)
 }

@@ -25,7 +25,7 @@ func NewStart(ctx context.Context) *Start {
 		session:      session,
 		teamService:  data.NewTeamService(session),
 		timerService: data.NewTimerService(session),
-		report:    &models.StartCommandReport{},
+		report:       &models.StartCommandReport{},
 	}
 
 	return start
@@ -65,8 +65,7 @@ func (c *Start) Handle(ctx context.Context, slackCommand models.SlackCustomComma
 			c.report.StoppedTaskTotalForToday = c.timerService.TotalMinutesForTaskToday(timerToStop)
 		}
 	}
-
-	if c.report.AlreadyStartedTimer != nil {
+	if c.report.AlreadyStartedTimer == nil {
 		startedTimer, err := c.timerService.StartTimer(team.ID.Hex(), project.ID.Hex(), teamUser.ID.Hex(), slackCommand.Text)
 		if err != nil {
 			// todo: format a decent Slack error message so user knows what's wrong and how to solve the issue

@@ -1,8 +1,8 @@
 package themes
 
 import (
-	"github.com/pavlo/slack-time/models"
 	"github.com/nlopes/slack"
+	"github.com/pavlo/slack-time/models"
 )
 
 // SlackMessageTheme an interface each theme must to conform to
@@ -11,29 +11,32 @@ type SlackMessageTheme interface {
 }
 
 type slackThemeTemplate struct {
-	Text string
-	Attachments []slack.Attachment
+	Text        string             `json:"text"`
+	Attachments []slack.Attachment `json:"attachments"`
 }
 
 // SlackMessageTheme has a bunch of settings for formatting slack messages that get back in reply to /timer command
-// type SlackMessageTheme struct {
-// 	// Summary  Attachment is an attachment that goes below the most of messages, holds something like "Your total for today is 08:42h"
-// 	SummaryAttachmentColor string
-// 	MarkdownEnabledFor     []string
-// 	FooterIcon             string
+type themeConfig struct {
+	// 	// Summary  Attachment is an attachment that goes below the most of messages, holds something like "Your total for today is 08:42h"
 
-// 	// Start Message
-// 	StartMessageAttachmentColor    string
-// 	StartMessageAttachmentThumbURL string
+	MarkdownEnabledFor     []string
+	SummaryAttachmentColor string
+	FooterIcon             string
+	StartCommandThumbURL   string
+	StartCommandColor      string
 
-// 	// Stop Message
-// 	StopMessageAttachmentColor    string
-// 	StopMessageAttachmentThumbURL string
+	// 	// Start Message
+	// 	StartMessageAttachmentColor    string
+	// 	StartMessageAttachmentThumbURL string
 
-// 	// Resume Message
-// 	ResumeMessageAttachmentColor    string
-// 	ResumeMessageAttachmentThumbURL string
-// }
+	// 	// Stop Message
+	// 	StopMessageAttachmentColor    string
+	// 	StopMessageAttachmentThumbURL string
+
+	// 	// Resume Message
+	// 	ResumeMessageAttachmentColor    string
+	// 	ResumeMessageAttachmentThumbURL string
+}
 
 // Fooo ...
 // type Fooo interface {
@@ -71,9 +74,9 @@ type slackThemeTemplate struct {
 // 	}
 // }
 
-// func todayTotalAttachment(text string) *slack.Attachment {
-// 	return &slack.Attachment{
-// 		AuthorName: text,
-// 		Color:      DefaultSlackMessageTheme.SummaryAttachmentColor,
-// 	}
-// }
+//func summaryAttachment(text string) *slack.Attachment {
+//	return &slack.Attachment{
+//		AuthorName: text,
+//		Color:      DefaultSlackMessageTheme.SummaryAttachmentColor,
+//	}
+//}

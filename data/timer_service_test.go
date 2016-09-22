@@ -6,11 +6,11 @@ import (
 
 	"gopkg.in/mgo.v2"
 
+	"github.com/pavlo/slack-time/models"
 	"github.com/pavlo/slack-time/utils"
 	. "gopkg.in/check.v1"
-	"time"
-	"github.com/pavlo/slack-time/models"
 	"gopkg.in/mgo.v2/bson"
+	"time"
 )
 
 func (s *TimerServiceTestSuite) TestGetActiveTimer(c *C) {
@@ -19,25 +19,25 @@ func (s *TimerServiceTestSuite) TestGetActiveTimer(c *C) {
 
 	// completed
 	s.repo.createTimer(&models.Timer{
-		ID:               bson.NewObjectId(),
-		TeamID:           "team",
-		ProjectID:        "project",
-		TeamUserID:       "user",
-		TaskHash:   	  "task",
-		CreatedAt:        now,
-		FinishedAt: 	  &now,
-		Minutes:  		  10,
+		ID:         bson.NewObjectId(),
+		TeamID:     "team",
+		ProjectID:  "project",
+		TeamUserID: "user",
+		TaskHash:   "task",
+		CreatedAt:  now,
+		FinishedAt: &now,
+		Minutes:    10,
 	})
 
 	// not completed
 	s.repo.createTimer(&models.Timer{
-		ID:               bson.NewObjectId(),
-		TeamID:           "team",
-		ProjectID:        "project",
-		TeamUserID:       "user",
-		TaskHash:   	  "task",
-		CreatedAt:        now,
-		Minutes:  		  20,
+		ID:         bson.NewObjectId(),
+		TeamID:     "team",
+		ProjectID:  "project",
+		TeamUserID: "user",
+		TaskHash:   "task",
+		CreatedAt:  now,
+		Minutes:    20,
 	})
 
 	timer, err := s.service.GetActiveTimer("team", "user")
@@ -54,13 +54,13 @@ func (s *TimerServiceTestSuite) TestStopTimer(c *C) {
 
 	id := bson.NewObjectId()
 	timer, err := s.repo.createTimer(&models.Timer{
-		ID:               id,
-		TeamID:           "team",
-		ProjectID:        "project",
-		TeamUserID:       "user",
-		TaskHash:   	  "task",
-		CreatedAt:        timerStartedAt,
-		Minutes:  		  0,
+		ID:         id,
+		TeamID:     "team",
+		ProjectID:  "project",
+		TeamUserID: "user",
+		TaskHash:   "task",
+		CreatedAt:  timerStartedAt,
+		Minutes:    0,
 	})
 
 	c.Assert(err, IsNil)
@@ -105,30 +105,29 @@ func (s *TimerServiceTestSuite) TestTotalMinutesForTodayAddsTimeForUnfinishedTas
 	secondTimerStartedAt := now.Add(offsetDuration2 * -1) // 5 minutes ago
 
 	s.repo.createTimer(&models.Timer{
-		ID:               bson.NewObjectId(),
-		TeamID:           "team",
-		ProjectID:        "project",
-		TeamUserID:       "user",
-		TaskHash:   	  "task",
-		CreatedAt:        now.Add(offsetDuration1 * -1),
-		FinishedAt:		  &firstTimerStartedAt,
-		Minutes:  		  10,
+		ID:         bson.NewObjectId(),
+		TeamID:     "team",
+		ProjectID:  "project",
+		TeamUserID: "user",
+		TaskHash:   "task",
+		CreatedAt:  now.Add(offsetDuration1 * -1),
+		FinishedAt: &firstTimerStartedAt,
+		Minutes:    10,
 	})
 
 	timer, _ := s.repo.createTimer(&models.Timer{
-		ID:               bson.NewObjectId(),
-		TeamID:           "team",
-		ProjectID:        "project",
-		TeamUserID:       "user",
-		TaskHash:   	  "task",
-		CreatedAt:        secondTimerStartedAt,
-		FinishedAt:		  nil,
-		Minutes:  		  0,
+		ID:         bson.NewObjectId(),
+		TeamID:     "team",
+		ProjectID:  "project",
+		TeamUserID: "user",
+		TaskHash:   "task",
+		CreatedAt:  secondTimerStartedAt,
+		FinishedAt: nil,
+		Minutes:    0,
 	})
 
 	c.Assert(s.service.TotalMinutesForTaskToday(timer), Equals, 15)
 }
-
 
 // Suite lifecycle and callbacks
 func (s *TimerServiceTestSuite) SetUpSuite(c *C) {
@@ -165,4 +164,4 @@ type TimerServiceTestSuite struct {
 	service *TimerService
 }
 
-var _ = Suite(&TimerServiceTestSuite {})
+var _ = Suite(&TimerServiceTestSuite{})

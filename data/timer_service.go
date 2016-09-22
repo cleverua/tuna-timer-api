@@ -8,14 +8,14 @@ import (
 
 // TimerService - the structure of the service
 type TimerService struct {
-	session *mgo.Session
+	session    *mgo.Session
 	repository *TimerRepository
 }
 
 // NewTimerService constructs an instance of the service
 func NewTimerService(session *mgo.Session) *TimerService {
 	return &TimerService{
-		session: session,
+		session:    session,
 		repository: NewTimerRepository(session),
 	}
 }
@@ -42,7 +42,7 @@ func (s *TimerService) StartTimer(teamID, projectID, teamUserID, taskName string
 // TotalMinutesForTaskToday calculates the total number of minutes the user was/is working on particular task today
 func (s *TimerService) TotalMinutesForTaskToday(timer *models.Timer) int {
 	endDate := time.Now()
-	startDate := time.Now().Truncate(24*time.Hour)
+	startDate := time.Now().Truncate(24 * time.Hour)
 
 	result := s.repository.totalMinutesForTaskAndUser(
 		timer.TaskHash, timer.TeamUserID, startDate, endDate)
