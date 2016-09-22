@@ -54,13 +54,25 @@ func NewEnvironment(environment string, appVersion string) *Environment {
 func (env *Environment) MigrateDatabase(session *mgo.Session) error {
 	log.Println("Migrating database...")
 
-	session.DB("").C("teams").Create(&mgo.CollectionInfo{})
-	session.DB("").C("teams").EnsureIndex(mgo.Index{
+	teams := session.DB("").C("teams")
+
+	teams.Create(&mgo.CollectionInfo{})
+	teams.EnsureIndex(mgo.Index{
 		Unique: true,
 		Key:    []string{"ext_id"},
 	})
 
-	session.DB("").C("timers").Create(&mgo.CollectionInfo{})
+	timers := session.DB("").C("timers")
+	timers.Create(&mgo.CollectionInfo{})
+	timers.EnsureIndex(mgo.Index{Key: []string{"team_id"}})
+	timers.EnsureIndex(mgo.Index{Key: []string{"project_id"}})
+	timers.EnsureIndex(mgo.Index{Key: []string{"team_user_id"}})
+	timers.EnsureIndex(mgo.Index{Key: []string{"hash"}})
+	timers.EnsureIndex(mgo.Index{Key: []string{"created_at"}})
+	timers.EnsureIndex(mgo.Index{Key: []string{"created_at"}})
+	timers.EnsureIndex(mgo.Index{Key: []string{"finished_at"}})
+	timers.EnsureIndex(mgo.Index{Key: []string{"deleted_at"}})
+
 
 	log.Println("Database migrated!")
 	return nil

@@ -6,7 +6,6 @@ import (
 	"gopkg.in/mgo.v2"
 )
 
-
 // TruncateTables - clears database tables, supposed to be run in test's setup method
 func TruncateTables(session *mgo.Session) {
 	tablesToTruncate := []string{"teams", "timers"}
