@@ -2,6 +2,7 @@
 
 [![Build Status](https://semaphoreci.com/api/v1/pavlikus/slack-time/branches/develop/badge.svg)](https://semaphoreci.com/pavlikus/slack-time)
 [![codecov](https://codecov.io/gh/pavlo/slack-time/branch/develop/graph/badge.svg)](https://codecov.io/gh/pavlo/slack-time)
+[![Issue Count](https://codeclimate.com/github/pavlo/slack-time/badges/issue_count.svg)](https://codeclimate.com/github/pavlo/slack-time)
 
 "Slack Time" a simple time tracker for teams that use [Slack](https:www.slack.com) as their office. Using the tool you and your team members can track time spent on tasks as well as get exhaustive reports.
 
