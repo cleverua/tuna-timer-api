@@ -73,7 +73,6 @@ func (env *Environment) MigrateDatabase(session *mgo.Session) error {
 	timers.EnsureIndex(mgo.Index{Key: []string{"finished_at"}})
 	timers.EnsureIndex(mgo.Index{Key: []string{"deleted_at"}})
 
-
 	log.Println("Database migrated!")
 	return nil
 }

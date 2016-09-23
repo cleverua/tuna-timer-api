@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"github.com/nlopes/slack"
 	"github.com/pavlo/slack-time/models"
+	"github.com/pavlo/slack-time/utils"
+	"time"
 )
 
 // DefaultSlackMessageTheme - todo
@@ -43,28 +45,29 @@ func (t *DefaultSlackMessageTheme) format(data *models.StartCommandReport) *slac
 	}
 
 	if data.StartedTimer != nil {
-		startTimerAttachment := t.defaultAttachment()
-		startTimerAttachment.ThumbURL = t.StartCommandThumbURL
-		startTimerAttachment.Footer = fmt.Sprintf(
+		sa := t.defaultAttachment()
+		sa.Text = fmt.Sprintf("Started for: %s", data.StartedTimer.TaskName)
+		sa.ThumbURL = t.StartCommandThumbURL
+		sa.Footer = fmt.Sprintf(
 			"Task ID: %s > <http://www.google.com|Open in Application>", data.StartedTimer.TaskHash)
-		startTimerAttachment.Color = t.StartCommandColor
+		sa.Color = t.StartCommandColor
 
-		startTimerAttachment.Fields = []slack.AttachmentField{}
+		sa.Fields = []slack.AttachmentField{}
 
 		thisRoundField := slack.AttachmentField{
 			Title: "This Round",
-			Value: "00:01h",
+			Value: utils.FormatDuration(time.Duration(1 * time.Minute)),
 			Short: true,
 		}
 
 		todayField := slack.AttachmentField{
 			Title: "Today",
-			Value: string(data.StartedTaskTotalForToday),
+			Value: utils.FormatDuration(time.Duration(data.StartedTaskTotalForToday * int(time.Minute))),
 			Short: true,
 		}
 
-		startTimerAttachment.Fields = append(startTimerAttachment.Fields, thisRoundField, todayField)
-		tpl.Attachments = append(tpl.Attachments, startTimerAttachment)
+		sa.Fields = append(sa.Fields, thisRoundField, todayField)
+		tpl.Attachments = append(tpl.Attachments, sa)
 	}
 
 	return &tpl

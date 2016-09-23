@@ -78,7 +78,7 @@ func (c *Start) Handle(ctx context.Context, slackCommand models.SlackCustomComma
 }
 
 func (c *Start) response() *ResponseToSlack {
-	var theme themes.SlackMessageTheme = &themes.DefaultSlackMessageTheme{}
+	var theme themes.SlackMessageTheme = themes.NewDefaultSlackMessageTheme()
 	content := theme.FormatStartCommand(c.report)
 
 	return &ResponseToSlack{
