@@ -56,7 +56,7 @@ func (c *Start) Handle(ctx context.Context, slackCommand models.SlackCustomComma
 	}
 
 	if timerToStop != nil {
-		if timerToStop.TaskName == slackCommand.Text && timerToStop.ProjectID == slackCommand.ChannelID {
+		if timerToStop.TaskName == slackCommand.Text && timerToStop.ProjectID == project.ID.Hex() {
 			c.report.AlreadyStartedTimer = timerToStop
 			c.report.AlreadyStartedTimerTotalForToday = c.timerService.TotalMinutesForTaskToday(timerToStop)
 		} else {
