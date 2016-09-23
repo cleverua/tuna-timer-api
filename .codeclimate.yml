@@ -6,3 +6,6 @@ ratings:
   paths: []
 exclude_paths:
 - vendor/
+- docs
+- Godeps
+- docker
