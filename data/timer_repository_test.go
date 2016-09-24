@@ -121,7 +121,7 @@ func (s *TimerRepositoryTestSuite) TestFindActiveTimerByTeamAndUserButAlreadyDel
 	c.Assert(timerFromDB, IsNil)
 }
 
-func (s *TimerRepositoryTestSuite) TestTotalMinutesForTaskAndUser(c *C) {
+func (s *TimerRepositoryTestSuite) TestTotalMinutesMethods(c *C) {
 
 	now := time.Now()
 	// creates 10 timers one minute each
@@ -184,6 +184,15 @@ func (s *TimerRepositoryTestSuite) TestTotalMinutesForTaskAndUser(c *C) {
 	// should get one for 10th, one for 11th and one for 12th because the endDate is one minute after the third time
 	m = s.repo.totalMinutesForTaskAndUser("task", "user", s.pt("2016 Sep 10 10:00:00"), s.pt("2016 Sep 12 12:36:00"))
 	c.Assert(m, Equals, 3)
+
+	m = s.repo.totalMinutesForUser("user", s.pt("2016 Sep 09 12:35:00"), s.pt("2016 Sep 21 12:35:00"))
+	c.Assert(m, Equals, 11) // 10 regular and one outstanding timer
+
+	m = s.repo.totalMinutesForUser("user", s.pt("2017 Sep 09 12:35:00"), s.pt("2017 Sep 21 12:35:00"))
+	c.Assert(m, Equals, 0)
+
+	m = s.repo.totalMinutesForUser("user", s.pt("2016 Sep 12 00:00:00"), s.pt("2016 Sep 12 23:59:59"))
+	c.Assert(m, Equals, 2)
 }
 
 // stands for Parse Time

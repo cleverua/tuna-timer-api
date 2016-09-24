@@ -54,9 +54,24 @@ func (s *TimerService) TotalMinutesForTaskToday(timer *models.Timer) int {
 	return result
 }
 
-// UserTotalMinutesForToday todo
-func (s *TimerService) UserTotalMinutesForToday(userID string) int {
-	return 0
+// UserTotalMinutesForToday calculates the total number of minute this user contributed to any project today
+func (s *TimerService) TotalMinutesForUserToday(userID string) int {
+	endDate := time.Now()
+	startDate := time.Now().Truncate(24 * time.Hour)
+
+	result := s.repository.totalMinutesForUser(userID, startDate, endDate)
+
+	activeTimer, _ := s.repository.findActiveByUser(userID)
+	if activeTimer != nil {
+		today := time.Now().Truncate(24 * time.Hour)
+		if activeTimer.CreatedAt.Unix() <= today.Unix() {
+			activeTimer.CreatedAt = today
+		}
+
+		result += s.calculateMinutesForTimer(activeTimer)
+	}
+
+	return result
 }
 
 func (s *TimerService) calculateMinutesForTimer(timer *models.Timer) int {

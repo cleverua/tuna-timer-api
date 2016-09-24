@@ -15,3 +15,12 @@ type StartCommandReport struct {
 	Resumed                          bool
 	UserTotalForToday                int
 }
+
+type StopCommandReport struct {
+	Team                     *Team
+	Project                  *Project
+	TeamUser                 *TeamUser
+	StoppedTimer             *Timer
+	StoppedTaskTotalForToday int
+	UserTotalForToday        int
+}

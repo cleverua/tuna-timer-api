@@ -3,8 +3,6 @@ package commands
 import (
 	"context"
 	"fmt"
-	"strings"
-
 	"github.com/pavlo/slack-time/models"
 )
 
@@ -31,16 +29,17 @@ type SlackCustomCommandHandler interface {
 
 // LookupHandler todo
 func LookupHandler(ctx context.Context, slackCommand models.SlackCustomCommand) (SlackCustomCommandHandler, error) {
-	userInput := slackCommand.Text
-	if strings.HasPrefix(userInput, CommandNameStart) {
+	subCommand := slackCommand.SubCommand
+
+	if subCommand == CommandNameStart {
 		cmd := NewStart(ctx)
 		return cmd, nil
-	} else if strings.HasPrefix(userInput, CommandNameStop) {
-		cmd := &Stop{}
+	} else if subCommand == CommandNameStop {
+		cmd := NewStop(ctx)
 		return cmd, nil
-	} else if strings.HasPrefix(userInput, CommandNameStatus) {
+	} else if subCommand == CommandNameStatus {
 		cmd := &Stop{}
 		return cmd, nil
 	}
-	return nil, fmt.Errorf("Failed to look up a handler for `%s` name", userInput)
+	return nil, fmt.Errorf("Failed to look up a handler for `%s` name", subCommand)
 }

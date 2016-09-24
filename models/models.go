@@ -62,6 +62,7 @@ type SlackCustomCommand struct {
 	UserID      string `json:"user_id"`
 	UserName    string `json:"user_name"`
 	Command     string `json:"command"`
+	SubCommand  string
 	Text        string `json:"text"`
 	ResponseURL string `json:"response_url"`
 	CreatedAt   time.Time

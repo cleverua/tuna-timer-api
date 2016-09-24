@@ -50,6 +50,22 @@ func (r *TimerRepository) findActiveByTeamAndUser(teamID, userID string) (*model
 	return result, err
 }
 
+func (r *TimerRepository) findActiveByUser(userID string) (*models.Timer, error) {
+
+	result := &models.Timer{}
+
+	err := r.collection.Find(bson.M{
+		"team_user_id": userID,
+		"finished_at":  nil,
+		"deleted_at":   nil}).One(result)
+
+	if err != nil && err == mgo.ErrNotFound {
+		result = nil
+		err = nil
+	}
+	return result, err
+}
+
 func (r *TimerRepository) create(teamID, projectID, userID, taskName string) (*models.Timer, error) {
 
 	timer := &models.Timer{
@@ -96,13 +112,46 @@ func (r *TimerRepository) totalMinutesForTaskAndUser(taskHash, userID string, st
 				"team_user_id": userID,
 				"created_at": bson.M{
 					"$gte": startDate,
-					"$lt":  endDate,
+					"$lte": endDate,
 				},
 			},
 		},
 		{
 			"$group": bson.M{
 				"_id":          bson.M{"task_hash": "$task_hash"},
+				"minutes":      bson.M{"$sum": "$minutes"},
+				"total_timers": bson.M{"$sum": 1},
+			},
+		},
+	}
+
+	var result map[string]interface{}
+	err := r.collection.Pipe(pipeConfig).One(&result)
+	if err != nil && err != mgo.ErrNotFound {
+		log.Printf("Error: %s", err)
+	}
+
+	if result == nil {
+		return 0
+	}
+
+	return result["minutes"].(int)
+}
+
+func (r *TimerRepository) totalMinutesForUser(userID string, startDate, endDate time.Time) int {
+	pipeConfig := []map[string]interface{}{
+		{
+			"$match": bson.M{
+				"team_user_id": userID,
+				"created_at": bson.M{
+					"$gte": startDate,
+					"$lte": endDate,
+				},
+			},
+		},
+		{
+			"$group": bson.M{
+				"_id":          bson.M{"user_id": "$team_user_id"},
 				"minutes":      bson.M{"$sum": "$minutes"},
 				"total_timers": bson.M{"$sum": 1},
 			},

@@ -129,6 +129,59 @@ func (s *TimerServiceTestSuite) TestTotalMinutesForTodayAddsTimeForUnfinishedTas
 	c.Assert(s.service.TotalMinutesForTaskToday(timer), Equals, 15)
 }
 
+func (s *TimerServiceTestSuite) TestTotalMinutesForUserToday(c *C) {
+	now := time.Now()
+
+	duration, _ := time.ParseDuration("5m")
+	secondTimerStartedAt := now.Add(duration * -1) // 5 minutes ago
+
+	s.repo.createTimer(&models.Timer{
+		ID:         bson.NewObjectId(),
+		TeamID:     "team",
+		ProjectID:  "project",
+		TeamUserID: "user",
+		TaskHash:   "task",
+		CreatedAt:  now,
+		FinishedAt: &now,
+		Minutes:    10,
+	})
+
+	s.repo.createTimer(&models.Timer{
+		ID:         bson.NewObjectId(),
+		TeamID:     "team",
+		ProjectID:  "project",
+		TeamUserID: "user",
+		TaskHash:   "task",
+		CreatedAt:  secondTimerStartedAt,
+		FinishedAt: nil,
+		Minutes:    0,
+	})
+
+	c.Assert(s.service.TotalMinutesForUserToday("user"), Equals, 15)
+	c.Assert(s.service.TotalMinutesForUserToday("this user has no tasks"), Equals, 0)
+}
+
+func (s *TimerServiceTestSuite) TestTotalMinutesForUserTodayWhenOneTasksLastsSinceYesterday(c *C) {
+	now := time.Now()
+
+	duration, _ := time.ParseDuration("25h")
+	startedAt := now.Add(duration * -1) // 25 hours ago ago
+
+	s.repo.createTimer(&models.Timer{
+		ID:         bson.NewObjectId(),
+		TeamID:     "team",
+		ProjectID:  "project",
+		TeamUserID: "user",
+		TaskHash:   "task",
+		CreatedAt:  startedAt,
+		FinishedAt: nil,
+		Minutes:    0,
+	})
+
+	actual := now.Hour()*60 + now.Minute()
+	c.Assert(s.service.TotalMinutesForUserToday("user"), Equals, actual)
+}
+
 // Suite lifecycle and callbacks
 func (s *TimerServiceTestSuite) SetUpSuite(c *C) {
 	e := utils.NewEnvironment(utils.TestEnv, "1.0.0")

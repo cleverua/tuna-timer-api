@@ -8,6 +8,7 @@ import (
 // SlackMessageTheme an interface each theme must to conform to
 type SlackMessageTheme interface {
 	FormatStartCommand(data *models.StartCommandReport) string
+	FormatStopCommand(data *models.StopCommandReport) string
 }
 
 type slackThemeTemplate struct {
@@ -24,7 +25,8 @@ type themeConfig struct {
 	FooterIcon             string
 	StartCommandThumbURL   string
 	StartCommandColor      string
-
+	StopCommandThumbURL    string
+	StopCommandColor       string
 	// 	// Start Message
 	// 	StartMessageAttachmentColor    string
 	// 	StartMessageAttachmentThumbURL string

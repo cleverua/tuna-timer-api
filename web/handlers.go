@@ -51,6 +51,8 @@ func (h *Handlers) Timer(w http.ResponseWriter, r *http.Request) {
 		UserName:    r.PostFormValue("user_name"),
 	}
 
+	slackCommand = utils.NormalizeSlackCustomCommand(slackCommand)
+
 	session := h.mongoSession.Clone()
 	defer session.Close()
 
