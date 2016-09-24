@@ -60,7 +60,7 @@ func (s *TestHandlersSuite) TestTimer(c *C) {
 		c.Assert(slackCommand.ResponseURL, Equals, "https://hooks.slack.com/commands/1234/5678")
 		c.Assert(slackCommand.TeamDomain, Equals, "example")
 		c.Assert(slackCommand.TeamID, Equals, "T0001")
-		c.Assert(slackCommand.Text, Equals, "start Convert the logotype to PNG")
+		c.Assert(slackCommand.Text, Equals, "Convert the logotype to PNG")
 		c.Assert(slackCommand.Token, Equals, "gIkuvaNzQIHg97ATvDxqgjtO")
 		c.Assert(slackCommand.UserID, Equals, "U2147483697")
 		c.Assert(slackCommand.UserName, Equals, "Steve")
