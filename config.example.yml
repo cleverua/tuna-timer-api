@@ -1,4 +1,4 @@
-development:
+production:
   database:
     url: mongodb://localhost:27017/tuna_timer_prod
 development:

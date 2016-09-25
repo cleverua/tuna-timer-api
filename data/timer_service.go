@@ -3,7 +3,6 @@ package data
 import (
 	"github.com/pavlo/slack-time/models"
 	"gopkg.in/mgo.v2"
-	"log"
 	"time"
 )
 
@@ -23,7 +22,6 @@ func NewTimerService(session *mgo.Session) *TimerService {
 
 // GetActiveTimer returns a timer the user is currently working on
 func (s *TimerService) GetActiveTimer(teamID, userID string) (*models.Timer, error) {
-	log.Println("GetActiveTimer")
 	timer, err := s.repository.findActiveByTeamAndUser(teamID, userID)
 	return timer, err
 }

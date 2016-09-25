@@ -82,5 +82,6 @@ func (h *Handlers) ClearAllData(w http.ResponseWriter, r *http.Request) {
 	session := h.mongoSession.Clone()
 	defer session.Close()
 	utils.TruncateTables(session)
+	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(bson.M{"success": true})
 }
