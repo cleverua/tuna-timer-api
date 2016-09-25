@@ -51,7 +51,7 @@ func (t *DefaultSlackMessageTheme) FormatStatusCommand(data *models.StatusComman
 		statusAttachment.FooterIcon = t.FooterIcon
 		var buffer bytes.Buffer
 		for _, task := range data.Tasks {
-			buffer.WriteString(fmt.Sprintf("•  *%s*  %s\n", utils.FormatDuration(time.Duration(task.Minutes*int(time.Minute))), task.Name))
+			buffer.WriteString(fmt.Sprintf("•  *%s*  %s\n", utils.FormatDuration(time.Duration(task.Minutes*int64(time.Minute))), task.Name))
 		}
 		statusAttachment.AuthorName = "Completed:"
 		statusAttachment.Text = buffer.String()
@@ -167,13 +167,13 @@ func (t *DefaultSlackMessageTheme) attachmentForTimer(text string, thumbURL stri
 
 	thisRoundField := slack.AttachmentField{
 		Title: "This Round",
-		Value: utils.FormatDuration(time.Duration(timer.Minutes * int(time.Minute))),
+		Value: utils.FormatDuration(time.Duration(timer.Minutes * int64(time.Minute))),
 		Short: true,
 	}
 
 	todayField := slack.AttachmentField{
 		Title: "Today",
-		Value: utils.FormatDuration(time.Duration(totalForToday * int(time.Minute))),
+		Value: utils.FormatDuration(time.Duration(totalForToday * int64(time.Minute))),
 		Short: true,
 	}
 
@@ -185,7 +185,7 @@ func (t *DefaultSlackMessageTheme) summaryAttachment(period string, minutes int)
 	result := slack.Attachment{}
 	result.Text = fmt.Sprintf("*Your total for %s is %s*",
 		period,
-		utils.FormatDuration(time.Duration(minutes*int(time.Minute))))
+		utils.FormatDuration(time.Duration(minutes*int64(time.Minute))))
 
 	result.Color = t.SummaryAttachmentColor
 	result.MarkdownIn = t.MarkdownEnabledFor
