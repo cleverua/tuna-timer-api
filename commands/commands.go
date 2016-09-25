@@ -38,7 +38,7 @@ func LookupHandler(ctx context.Context, slackCommand models.SlackCustomCommand) 
 		cmd := NewStop(ctx)
 		return cmd, nil
 	} else if subCommand == CommandNameStatus {
-		cmd := &Stop{}
+		cmd := NewStatus(ctx)
 		return cmd, nil
 	}
 	return nil, fmt.Errorf("Failed to look up a handler for `%s` name", subCommand)

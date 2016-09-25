@@ -157,8 +157,8 @@ func (s *TimerServiceTestSuite) TestTotalMinutesForUserToday(c *C) {
 		Minutes:    0,
 	})
 
-	c.Assert(s.service.TotalMinutesForUserToday("user"), Equals, 15)
-	c.Assert(s.service.TotalMinutesForUserToday("this user has no tasks"), Equals, 0)
+	c.Assert(s.service.TotalUserMinutesForDay("user", time.Now()), Equals, 15)
+	c.Assert(s.service.TotalUserMinutesForDay("this user has no tasks", time.Now()), Equals, 0)
 }
 
 func (s *TimerServiceTestSuite) TestTotalMinutesForUserTodayWhenOneTasksLastsSinceYesterday(c *C) {
@@ -179,7 +179,56 @@ func (s *TimerServiceTestSuite) TestTotalMinutesForUserTodayWhenOneTasksLastsSin
 	})
 
 	actual := now.Hour()*60 + now.Minute()
-	c.Assert(s.service.TotalMinutesForUserToday("user"), Equals, actual)
+	c.Assert(s.service.TotalUserMinutesForDay("user", time.Now()), Equals, actual)
+}
+
+func (s *TimerServiceTestSuite) TestGetCompletedTasksForDay(c *C) {
+
+	now := time.Now()
+
+	s.repo.createTimer(&models.Timer{
+		ID:         bson.NewObjectId(),
+		TeamID:     "team",
+		ProjectID:  "project",
+		TeamUserID: "user",
+		TaskHash:   "task",
+		CreatedAt:  utils.PT("2016 Sep 12 10:35:00"),
+		FinishedAt: &now,
+		Minutes:    2,
+	})
+
+	s.repo.createTimer(&models.Timer{
+		ID:         bson.NewObjectId(),
+		TeamID:     "team",
+		ProjectID:  "project",
+		TeamUserID: "user",
+		TaskHash:   "task",
+		CreatedAt:  utils.PT("2016 Sep 12 23:59:59"),
+		FinishedAt: &now,
+		Minutes:    3,
+	})
+
+	s.repo.createTimer(&models.Timer{
+		ID:         bson.NewObjectId(),
+		TeamID:     "team",
+		ProjectID:  "project",
+		TeamUserID: "user",
+		TaskHash:   "task",
+		CreatedAt:  utils.PT("2016 Sep 13 00:00:00"),
+		FinishedAt: &now,
+		Minutes:    7,
+	})
+
+	v, err := s.service.GetCompletedTasksForDay("user", utils.PT("2016 Sep 12 23:59:59"))
+	c.Assert(err, IsNil)
+	c.Assert(len(v), Equals, 1)
+	c.Assert(v[0].Minutes, Equals, 5)
+
+	v, err = s.service.GetCompletedTasksForDay("user", utils.PT("2016 Sep 13 23:59:59"))
+	c.Assert(err, IsNil)
+	c.Assert(len(v), Equals, 1)
+	c.Assert(v[0].Minutes, Equals, 7)
+
 }
 
 // Suite lifecycle and callbacks

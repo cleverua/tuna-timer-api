@@ -38,6 +38,7 @@ func main() {
 	// Slack will sometimes call the API method using a GET request
 	// to check SSL certificate - so we reply with a status handler here
 	router.HandleFunc("/api/v1/timer", handlers.Health).Methods("GET")
+	router.HandleFunc("/temporary/clear_data", handlers.ClearAllData).Methods("GET")
 
 	defaultMiddleware := alice.New(
 		web.LoggingMiddleware,

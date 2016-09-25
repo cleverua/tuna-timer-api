@@ -14,8 +14,6 @@ import (
 	"time"
 )
 
-const timerRepositoryTestSuiteTimeParseLayout = "2006 Jan 02 15:04:05"
-
 func (s *TimerRepositoryTestSuite) TestUpdate(c *C) {
 
 	timer, err := s.repo.create("team", "project", "user", "task")
@@ -126,7 +124,7 @@ func (s *TimerRepositoryTestSuite) TestTotalMinutesMethods(c *C) {
 	now := time.Now()
 	// creates 10 timers one minute each
 	for i := 10; i < 20; i++ {
-		createdAt := s.pt(fmt.Sprintf("2016 Sep %d 12:35:00", i))
+		createdAt := utils.PT(fmt.Sprintf("2016 Sep %d 12:35:00", i))
 		s.repo.createTimer(&models.Timer{
 			ID:         bson.NewObjectId(),
 			TeamID:     "team",
@@ -146,7 +144,7 @@ func (s *TimerRepositoryTestSuite) TestTotalMinutesMethods(c *C) {
 		ProjectID:  "project",
 		TeamUserID: "user",
 		TaskHash:   "another task",
-		CreatedAt:  s.pt("2016 Sep 12 10:35:00"),
+		CreatedAt:  utils.PT("2016 Sep 12 10:35:00"),
 		FinishedAt: &now,
 		Minutes:    1,
 	})
@@ -157,7 +155,7 @@ func (s *TimerRepositoryTestSuite) TestTotalMinutesMethods(c *C) {
 		ProjectID:  "project",
 		TeamUserID: "another user",
 		TaskHash:   "task",
-		CreatedAt:  s.pt("2016 Sep 13 19:35:00"),
+		CreatedAt:  utils.PT("2016 Sep 13 19:35:00"),
 		FinishedAt: &now,
 		Minutes:    1,
 	})
@@ -168,37 +166,87 @@ func (s *TimerRepositoryTestSuite) TestTotalMinutesMethods(c *C) {
 		ProjectID:  "project",
 		TeamUserID: "another user",
 		TaskHash:   "another task",
-		CreatedAt:  s.pt("2016 Sep 14 19:35:00"),
+		CreatedAt:  utils.PT("2016 Sep 14 19:35:00"),
 		FinishedAt: &now,
 		Minutes:    1,
 	})
 
 	// all tasks
-	m := s.repo.totalMinutesForTaskAndUser("task", "user", s.pt("2016 Sep 09 12:35:00"), s.pt("2016 Sep 21 12:35:00"))
+	m := s.repo.totalMinutesForTaskAndUser("task", "user", utils.PT("2016 Sep 09 12:35:00"), utils.PT("2016 Sep 21 12:35:00"))
 	c.Assert(m, Equals, 10)
 
 	// one year later than any of the tasks
-	m = s.repo.totalMinutesForTaskAndUser("task", "user", s.pt("2017 Sep 09 12:35:00"), s.pt("2017 Sep 21 12:35:00"))
+	m = s.repo.totalMinutesForTaskAndUser("task", "user", utils.PT("2017 Sep 09 12:35:00"), utils.PT("2017 Sep 21 12:35:00"))
 	c.Assert(m, Equals, 0)
 
 	// should get one for 10th, one for 11th and one for 12th because the endDate is one minute after the third time
-	m = s.repo.totalMinutesForTaskAndUser("task", "user", s.pt("2016 Sep 10 10:00:00"), s.pt("2016 Sep 12 12:36:00"))
+	m = s.repo.totalMinutesForTaskAndUser("task", "user", utils.PT("2016 Sep 10 10:00:00"), utils.PT("2016 Sep 12 12:36:00"))
 	c.Assert(m, Equals, 3)
 
-	m = s.repo.totalMinutesForUser("user", s.pt("2016 Sep 09 12:35:00"), s.pt("2016 Sep 21 12:35:00"))
+	m = s.repo.totalMinutesForUser("user", utils.PT("2016 Sep 09 12:35:00"), utils.PT("2016 Sep 21 12:35:00"))
 	c.Assert(m, Equals, 11) // 10 regular and one outstanding timer
 
-	m = s.repo.totalMinutesForUser("user", s.pt("2017 Sep 09 12:35:00"), s.pt("2017 Sep 21 12:35:00"))
+	m = s.repo.totalMinutesForUser("user", utils.PT("2017 Sep 09 12:35:00"), utils.PT("2017 Sep 21 12:35:00"))
 	c.Assert(m, Equals, 0)
 
-	m = s.repo.totalMinutesForUser("user", s.pt("2016 Sep 12 00:00:00"), s.pt("2016 Sep 12 23:59:59"))
+	m = s.repo.totalMinutesForUser("user", utils.PT("2016 Sep 12 00:00:00"), utils.PT("2016 Sep 12 23:59:59"))
 	c.Assert(m, Equals, 2)
 }
 
-// stands for Parse Time
-func (s *TimerRepositoryTestSuite) pt(value string) time.Time {
-	result, _ := time.Parse(timerRepositoryTestSuiteTimeParseLayout, value)
-	return result
+func (s *TimerRepositoryTestSuite) TestCompletedTasksForUser(c *C) {
+
+	now := time.Now()
+
+	s.repo.createTimer(&models.Timer{
+		ID:         bson.NewObjectId(),
+		TeamID:     "team",
+		ProjectID:  "project",
+		TeamUserID: "user",
+		TaskHash:   "task-hash1",
+		TaskName:   "task-name1",
+		CreatedAt:  utils.PT("2016 Sep 25 12:35:00"),
+		FinishedAt: &now,
+		Minutes:    5,
+	})
+
+	s.repo.createTimer(&models.Timer{
+		ID:         bson.NewObjectId(),
+		TeamID:     "team",
+		ProjectID:  "project",
+		TeamUserID: "user",
+		TaskHash:   "task-hash1",
+		TaskName:   "task-name1",
+		CreatedAt:  utils.PT("2016 Sep 25 12:40:00"),
+		FinishedAt: &now,
+		Minutes:    10,
+	})
+
+	s.repo.createTimer(&models.Timer{
+		ID:         bson.NewObjectId(),
+		TeamID:     "team",
+		ProjectID:  "project",
+		TeamUserID: "user",
+		TaskHash:   "task-hash2",
+		TaskName:   "task-name2",
+		CreatedAt:  utils.PT("2016 Sep 25 12:50:00"),
+		FinishedAt: &now,
+		Minutes:    20,
+	})
+
+	m, err := s.repo.completedTasksForUser("user", utils.PT("2016 Sep 25 12:35:00"), utils.PT("2016 Sep 25 12:45:00"))
+	c.Assert(err, IsNil)
+	c.Assert(len(m), Equals, 1) // only the `task-hash1` one given the time frame
+	c.Assert(m[0].Minutes, Equals, 15)
+	c.Assert(m[0].Name, Equals, "task-name1")
+
+	m, err = s.repo.completedTasksForUser("user", utils.PT("2016 Sep 25 12:35:00"), utils.PT("2016 Sep 25 15:00:00"))
+	c.Assert(err, IsNil)
+	c.Assert(len(m), Equals, 2)
+	c.Assert(m[0].Minutes, Equals, 15)
+	c.Assert(m[0].Name, Equals, "task-name1")
+
+	c.Assert(m[1].Minutes, Equals, 20)
+	c.Assert(m[1].Name, Equals, "task-name2")
 }
 
 // Suite lifecycle and callbacks

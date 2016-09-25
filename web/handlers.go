@@ -13,6 +13,7 @@ import (
 	"github.com/pavlo/slack-time/commands"
 	"github.com/pavlo/slack-time/models"
 	"github.com/pavlo/slack-time/utils"
+	"gopkg.in/mgo.v2/bson"
 )
 
 // Handlers is a collection of net/http handlers to serve the API
@@ -59,7 +60,7 @@ func (h *Handlers) Timer(w http.ResponseWriter, r *http.Request) {
 	ctx := utils.PutMongoSessionInContext(r.Context(), session)
 	command, err := h.commandLookupFunction(ctx, slackCommand)
 	if err != nil { //todo it is going to be a nicely formatted slack message sent back to user
-		w.Write([]byte(fmt.Sprintf("Unknown command: %s!", slackCommand.Text)))
+		w.Write([]byte(fmt.Sprintf("Unknown command: %s!", slackCommand.SubCommand)))
 		return
 	}
 
@@ -74,4 +75,12 @@ func (h *Handlers) Health(w http.ResponseWriter, r *http.Request) {
 	h.status["uptime"] = uptime.String() //is it good or not if I modify the map here?
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(h.status)
+}
+
+// ClearAllData - is supposed to be called by the QA team during early testing stage
+func (h *Handlers) ClearAllData(w http.ResponseWriter, r *http.Request) {
+	session := h.mongoSession.Clone()
+	defer session.Close()
+	utils.TruncateTables(session)
+	json.NewEncoder(w).Encode(bson.M{"success": true})
 }

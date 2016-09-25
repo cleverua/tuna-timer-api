@@ -1,6 +1,7 @@
 package themes
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"github.com/nlopes/slack"
@@ -22,12 +23,65 @@ var defaultThemeConfig = themeConfig{
 	StartCommandColor:      "FB6E04",
 	StopCommandThumbURL:    "http://icons.iconarchive.com/icons/graphicloads/100-flat/128/pause-icon.png",
 	StopCommandColor:       "#2779DA",
+	StatusCommandThumbURL:  "http://icons.iconarchive.com/icons/graphicloads/100-flat/128/stat-icon.png",
+	StatusCommandColor:     "#959150",
 }
 
 func NewDefaultSlackMessageTheme() *DefaultSlackMessageTheme {
 	return &DefaultSlackMessageTheme{
 		themeConfig: defaultThemeConfig,
 	}
+}
+
+func (t *DefaultSlackMessageTheme) FormatStatusCommand(data *models.StatusCommandReport) string {
+
+	tpl := slackThemeTemplate{
+		Text:        fmt.Sprintf("Your status for %s", data.PeriodName),
+		Attachments: []slack.Attachment{},
+	}
+
+	summaryAttachmentVisible := len(data.Tasks) > 0 || data.AlreadyStartedTimer != nil
+
+	if len(data.Tasks) > 0 {
+		statusAttachment := t.defaultAttachment()
+		statusAttachment.ThumbURL = t.StatusCommandThumbURL
+		statusAttachment.Color = t.StatusCommandColor
+
+		statusAttachment.Footer = "<http://www.foo.com|Edit tasks in Application>"
+		statusAttachment.FooterIcon = t.FooterIcon
+		var buffer bytes.Buffer
+		for _, task := range data.Tasks {
+			buffer.WriteString(fmt.Sprintf("•  *%s*  %s\n", utils.FormatDuration(time.Duration(task.Minutes*int(time.Minute))), task.Name))
+		}
+		statusAttachment.AuthorName = "Completed:"
+		statusAttachment.Text = buffer.String()
+		tpl.Attachments = append(tpl.Attachments, statusAttachment)
+	}
+
+	if data.AlreadyStartedTimer != nil {
+		sa := t.attachmentForTimer(
+			fmt.Sprintf("Already started for: %s", data.AlreadyStartedTimer.TaskName),
+			t.StartCommandThumbURL,
+			data.AlreadyStartedTimer,
+			data.AlreadyStartedTimerTotalForToday)
+
+		sa.Color = t.StartCommandColor
+
+		tpl.Attachments = append(tpl.Attachments, sa)
+	}
+
+	if summaryAttachmentVisible {
+		tpl.Attachments = append(tpl.Attachments, t.summaryAttachment(data.PeriodName, data.UserTotalForPeriod))
+	} else {
+		tpl.Text = fmt.Sprintf("You have no tasks completed %s", data.PeriodName)
+	}
+
+	result, err := json.Marshal(tpl)
+	if err != nil {
+		// todo return { "text": err.String() }
+	}
+
+	return string(result)
 }
 
 func (t *DefaultSlackMessageTheme) FormatStopCommand(data *models.StopCommandReport) string {
@@ -39,14 +93,14 @@ func (t *DefaultSlackMessageTheme) FormatStopCommand(data *models.StopCommandRep
 	if data.StoppedTimer != nil {
 		sa := t.attachmentForTimer(
 			fmt.Sprintf("Stopped for: %s", data.StoppedTimer.TaskName),
-			t.StartCommandThumbURL,
+			t.StopCommandThumbURL,
 			data.StoppedTimer,
 			data.StoppedTaskTotalForToday)
 
 		tpl.Attachments = append(tpl.Attachments, sa)
 	}
 
-	tpl.Attachments = append(tpl.Attachments, t.summaryAttachment(data.UserTotalForToday))
+	tpl.Attachments = append(tpl.Attachments, t.summaryAttachment("today", data.UserTotalForToday))
 
 	result, err := json.Marshal(tpl)
 	if err != nil {
@@ -64,7 +118,7 @@ func (t *DefaultSlackMessageTheme) FormatStartCommand(data *models.StartCommandR
 
 	if data.StoppedTimer != nil {
 		sa := t.attachmentForTimer(
-			fmt.Sprintf("Stopped for: %s", data.StartedTimer.TaskName),
+			fmt.Sprintf("Stopped for: %s", data.StoppedTimer.TaskName),
 			t.StartCommandThumbURL,
 			data.StoppedTimer,
 			data.StoppedTaskTotalForToday)
@@ -92,7 +146,7 @@ func (t *DefaultSlackMessageTheme) FormatStartCommand(data *models.StartCommandR
 		tpl.Attachments = append(tpl.Attachments, sa)
 	}
 
-	tpl.Attachments = append(tpl.Attachments, t.summaryAttachment(data.UserTotalForToday))
+	tpl.Attachments = append(tpl.Attachments, t.summaryAttachment("today", data.UserTotalForToday))
 
 	result, err := json.Marshal(tpl)
 	if err != nil {
@@ -108,7 +162,6 @@ func (t *DefaultSlackMessageTheme) attachmentForTimer(text string, thumbURL stri
 	sa.ThumbURL = thumbURL
 	sa.Footer = fmt.Sprintf(
 		"Task ID: %s > <http://www.google.com|Open in Application>", timer.TaskHash)
-	sa.Color = t.StartCommandColor
 
 	sa.Fields = []slack.AttachmentField{}
 
@@ -128,10 +181,11 @@ func (t *DefaultSlackMessageTheme) attachmentForTimer(text string, thumbURL stri
 	return sa
 }
 
-func (t *DefaultSlackMessageTheme) summaryAttachment(todayTotalMinutes int) slack.Attachment {
+func (t *DefaultSlackMessageTheme) summaryAttachment(period string, minutes int) slack.Attachment {
 	result := slack.Attachment{}
-	result.Text = fmt.Sprintf("*Your total for today is %s*",
-		utils.FormatDuration(time.Duration(todayTotalMinutes*int(time.Minute))))
+	result.Text = fmt.Sprintf("*Your total for %s is %s*",
+		period,
+		utils.FormatDuration(time.Duration(minutes*int(time.Minute))))
 
 	result.Color = t.SummaryAttachmentColor
 	result.MarkdownIn = t.MarkdownEnabledFor

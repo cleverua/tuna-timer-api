@@ -24,3 +24,14 @@ type StopCommandReport struct {
 	StoppedTaskTotalForToday int
 	UserTotalForToday        int
 }
+
+type StatusCommandReport struct {
+	Team                             *Team
+	Project                          *Project
+	TeamUser                         *TeamUser
+	Tasks                            []*TaskAggregation
+	AlreadyStartedTimer              *Timer
+	AlreadyStartedTimerTotalForToday int
+	PeriodName                       string // `today`, `yesterday`, `MM-DD-YYYY`
+	UserTotalForPeriod               int
+}

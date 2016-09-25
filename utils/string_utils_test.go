@@ -18,6 +18,12 @@ func (s *FormatDurationTestSuite) TestNormalizeSlackCustomCommand(c *C) {
 	})
 	c.Assert(cmd.Text, Equals, "Add MongoDB service to docker-compose.yml")
 	c.Assert(cmd.SubCommand, Equals, "start")
+
+	cmd = NormalizeSlackCustomCommand(models.SlackCustomCommand{
+		Text: "status",
+	})
+	c.Assert(cmd.Text, Equals, "")
+	c.Assert(cmd.SubCommand, Equals, "status")
 }
 
 func TestStringUtils(t *testing.T) { TestingT(t) }

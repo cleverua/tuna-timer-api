@@ -3,6 +3,7 @@ package data
 import (
 	"github.com/pavlo/slack-time/models"
 	"gopkg.in/mgo.v2"
+	"log"
 	"time"
 )
 
@@ -22,6 +23,7 @@ func NewTimerService(session *mgo.Session) *TimerService {
 
 // GetActiveTimer returns a timer the user is currently working on
 func (s *TimerService) GetActiveTimer(teamID, userID string) (*models.Timer, error) {
+	log.Println("GetActiveTimer")
 	timer, err := s.repository.findActiveByTeamAndUser(teamID, userID)
 	return timer, err
 }
@@ -29,7 +31,7 @@ func (s *TimerService) GetActiveTimer(teamID, userID string) (*models.Timer, err
 // StopTimer stops the timer and updates its Minutes field
 func (s *TimerService) StopTimer(timer *models.Timer) error {
 	now := time.Now()
-	timer.Minutes = s.calculateMinutesForTimer(timer)
+	timer.Minutes = s.CalculateMinutesForActiveTimer(timer)
 	timer.FinishedAt = &now
 	return s.repository.update(timer)
 }
@@ -48,33 +50,46 @@ func (s *TimerService) TotalMinutesForTaskToday(timer *models.Timer) int {
 		timer.TaskHash, timer.TeamUserID, startDate, endDate)
 
 	if timer.FinishedAt == nil {
-		result += s.calculateMinutesForTimer(timer)
+		result += s.CalculateMinutesForActiveTimer(timer)
 	}
 
 	return result
 }
 
 // UserTotalMinutesForToday calculates the total number of minute this user contributed to any project today
-func (s *TimerService) TotalMinutesForUserToday(userID string) int {
-	endDate := time.Now()
-	startDate := time.Now().Truncate(24 * time.Hour)
+func (s *TimerService) TotalUserMinutesForDay(userID string, day time.Time) int {
+	startDate := day.Truncate(24 * time.Hour)
 
-	result := s.repository.totalMinutesForUser(userID, startDate, endDate)
+	result := s.repository.totalMinutesForUser(userID, startDate, day)
 
 	activeTimer, _ := s.repository.findActiveByUser(userID)
 	if activeTimer != nil {
-		today := time.Now().Truncate(24 * time.Hour)
-		if activeTimer.CreatedAt.Unix() <= today.Unix() {
-			activeTimer.CreatedAt = today
+		if activeTimer.CreatedAt.Unix() <= startDate.Unix() {
+			activeTimer.CreatedAt = startDate
 		}
 
-		result += s.calculateMinutesForTimer(activeTimer)
+		result += s.CalculateMinutesForActiveTimer(activeTimer)
 	}
 
 	return result
 }
 
-func (s *TimerService) calculateMinutesForTimer(timer *models.Timer) int {
+// GetCompletedTasksForDay
+func (s *TimerService) GetCompletedTasksForDay(userID string, day time.Time) ([]*models.TaskAggregation, error) {
+
+	startDate := day.Truncate(24 * time.Hour)
+	endDate := time.Date(day.Year(), day.Month(), day.Day(), 23, 59, 59, 0, time.UTC)
+
+	tasks, err := s.repository.completedTasksForUser(userID, startDate, endDate)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tasks, nil
+}
+
+func (s *TimerService) CalculateMinutesForActiveTimer(timer *models.Timer) int {
 	duration := time.Since(timer.CreatedAt)
 	return int(duration.Minutes())
 }

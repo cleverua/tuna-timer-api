@@ -171,6 +171,48 @@ func (r *TimerRepository) totalMinutesForUser(userID string, startDate, endDate 
 	return result["minutes"].(int)
 }
 
+func (r *TimerRepository) completedTasksForUser(userID string, startDate, endDate time.Time) ([]*models.TaskAggregation, error) {
+
+	pipeConfig := []map[string]interface{}{
+		{
+			"$match": bson.M{
+				"team_user_id": userID,
+				"created_at": bson.M{
+					"$gte": startDate,
+					"$lte": endDate,
+				},
+				"finished_at": bson.M{"$ne": nil},
+				"deleted_at":  nil,
+			},
+		},
+		{
+			"$sort": bson.M{"created_at": -1},
+		},
+		{
+			"$group": bson.M{
+				"_id":     bson.M{"task_name": "$task_name", "project_id": "$project_id"},
+				"minutes": bson.M{"$sum": "$minutes"},
+			},
+		},
+		{
+			"$project": bson.M{
+				"_id":        0,
+				"task_name":  "$_id.task_name",
+				"minutes":    "$minutes",
+				"project_id": "$project_id",
+			},
+		},
+	}
+
+	var results []*models.TaskAggregation
+	err := r.collection.Pipe(pipeConfig).All(&results)
+	if err != nil && err != mgo.ErrNotFound {
+		return nil, err
+	}
+
+	return results, nil
+}
+
 func (r *TimerRepository) createTimer(timer *models.Timer) (*models.Timer, error) {
 	err := r.collection.Insert(timer)
 	return timer, err

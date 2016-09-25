@@ -8,6 +8,7 @@ import (
 	"github.com/pavlo/slack-time/themes"
 	"github.com/pavlo/slack-time/utils"
 	"gopkg.in/mgo.v2"
+	"time"
 )
 
 //Stop - handles the '/timer stop` command received from Slack
@@ -59,7 +60,7 @@ func (c *Stop) Handle(ctx context.Context, slackCommand models.SlackCustomComman
 		c.report.StoppedTaskTotalForToday = c.timerService.TotalMinutesForTaskToday(timerToStop)
 	}
 
-	c.report.UserTotalForToday = c.timerService.TotalMinutesForUserToday(teamUser.ID.Hex())
+	c.report.UserTotalForToday = c.timerService.TotalUserMinutesForDay(teamUser.ID.Hex(), time.Now())
 
 	return c.response()
 }
