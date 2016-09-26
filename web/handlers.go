@@ -14,6 +14,7 @@ import (
 	"github.com/tuna-timer/tuna-timer-api/models"
 	"github.com/tuna-timer/tuna-timer-api/utils"
 	"gopkg.in/mgo.v2/bson"
+	"log"
 )
 
 // Handlers is a collection of net/http handlers to serve the API
@@ -39,6 +40,8 @@ func NewHandlers(env *utils.Environment, mongoSession *mgo.Session) *Handlers {
 
 // Timer handles Slack /timer command
 func (h *Handlers) Timer(w http.ResponseWriter, r *http.Request) {
+	now := time.Now()
+
 	slackCommand := models.SlackCustomCommand{
 		ChannelID:   r.PostFormValue("channel_id"),
 		ChannelName: r.PostFormValue("channel_name"),
@@ -67,6 +70,8 @@ func (h *Handlers) Timer(w http.ResponseWriter, r *http.Request) {
 	result := command.Handle(ctx, slackCommand)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(result.Body)
+
+	log.Printf("Timer command took %s", time.Since(now).String())
 }
 
 // Health handles a call for app health request
