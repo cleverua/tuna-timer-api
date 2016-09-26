@@ -3,10 +3,10 @@ package commands
 import (
 	"context"
 
-	"github.com/pavlo/slack-time/data"
-	"github.com/pavlo/slack-time/models"
-	"github.com/pavlo/slack-time/themes"
-	"github.com/pavlo/slack-time/utils"
+	"github.com/tuna-timer/tuna-timer-api/data"
+	"github.com/tuna-timer/tuna-timer-api/models"
+	"github.com/tuna-timer/tuna-timer-api/themes"
+	"github.com/tuna-timer/tuna-timer-api/utils"
 	"gopkg.in/mgo.v2"
 	"time"
 )

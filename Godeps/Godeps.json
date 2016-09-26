@@ -1,5 +1,5 @@
 {
-	"ImportPath": "github.com/pavlo/slack-time",
+	"ImportPath": "github.com/tuna-timer/tuna-timer-api",
 	"GoVersion": "go1.7",
 	"GodepVersion": "v74",
 	"Packages": [

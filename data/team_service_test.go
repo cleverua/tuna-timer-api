@@ -6,8 +6,8 @@ import (
 
 	"errors"
 
-	"github.com/pavlo/slack-time/models"
-	"github.com/pavlo/slack-time/utils"
+	"github.com/tuna-timer/tuna-timer-api/models"
+	"github.com/tuna-timer/tuna-timer-api/utils"
 	. "gopkg.in/check.v1"
 	"gopkg.in/mgo.v2"
 )

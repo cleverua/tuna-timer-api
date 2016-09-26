@@ -1,7 +1,7 @@
 package utils
 
 import (
-	"github.com/pavlo/slack-time/models"
+	"github.com/tuna-timer/tuna-timer-api/models"
 	. "gopkg.in/check.v1"
 	"testing"
 )

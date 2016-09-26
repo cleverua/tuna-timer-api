@@ -8,8 +8,8 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/justinas/alice"
-	"github.com/pavlo/slack-time/utils"
-	"github.com/pavlo/slack-time/web"
+	"github.com/tuna-timer/tuna-timer-api/utils"
+	"github.com/tuna-timer/tuna-timer-api/web"
 	"time"
 )
 

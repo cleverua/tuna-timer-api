@@ -10,9 +10,9 @@ import (
 
 	"context"
 
-	"github.com/pavlo/slack-time/commands"
-	"github.com/pavlo/slack-time/models"
-	"github.com/pavlo/slack-time/utils"
+	"github.com/tuna-timer/tuna-timer-api/commands"
+	"github.com/tuna-timer/tuna-timer-api/models"
+	"github.com/tuna-timer/tuna-timer-api/utils"
 	"gopkg.in/mgo.v2/bson"
 )
 

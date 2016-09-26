@@ -1,7 +1,7 @@
 package data
 
 import (
-	"github.com/pavlo/slack-time/models"
+	"github.com/tuna-timer/tuna-timer-api/models"
 	"gopkg.in/mgo.v2"
 )
 

@@ -3,7 +3,7 @@ package commands
 import (
 	"context"
 	"fmt"
-	"github.com/pavlo/slack-time/models"
+	"github.com/tuna-timer/tuna-timer-api/models"
 )
 
 const (

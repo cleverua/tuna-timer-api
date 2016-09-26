@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/nlopes/slack"
-	"github.com/pavlo/slack-time/models"
-	"github.com/pavlo/slack-time/utils"
+	"github.com/tuna-timer/tuna-timer-api/models"
+	"github.com/tuna-timer/tuna-timer-api/utils"
 	"time"
 )
 
