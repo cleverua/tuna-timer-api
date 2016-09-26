@@ -1,6 +1,6 @@
 # Slack Time     
 
-[![Build Status](https://semaphoreci.com/api/v1/pavlikus/slack-time/branches/develop/badge.svg)](https://semaphoreci.com/pavlikus/slack-time)
+[![Build Status](https://semaphoreci.com/api/v1/pavlikus/tuna-timer-api/branches/develop/badge.svg)](https://semaphoreci.com/pavlikus/tuna-timer-api)
 [![codecov](https://codecov.io/gh/tuna-timer/tuna-timer-api/branch/develop/graph/badge.svg)](https://codecov.io/gh/tuna-timer/tuna-timer-api)
 [![Issue Count](https://codeclimate.com/github/tuna-timer/tuna-timer-api/badges/issue_count.svg)](https://codeclimate.com/github/tuna-timer/tuna-timer-api)
 
