@@ -161,6 +161,7 @@ func (t *DefaultSlackMessageTheme) attachmentForTimer(text string, thumbURL stri
 	sa := t.defaultAttachment()
 	sa.Text = text
 	//sa.ThumbURL = thumbURL
+
 	sa.Footer = fmt.Sprintf(
 		"Task ID: %s > <http://www.google.com|Open in Application>", timer.TaskHash)
 
