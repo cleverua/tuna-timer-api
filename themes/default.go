@@ -60,12 +60,13 @@ func (t *DefaultSlackMessageTheme) FormatStatusCommand(data *models.StatusComman
 
 	if data.AlreadyStartedTimer != nil {
 		sa := t.attachmentForTimer(
-			fmt.Sprintf("Already started for: %s", data.AlreadyStartedTimer.TaskName),
+			fmt.Sprintf("%s", data.AlreadyStartedTimer.TaskName),
 			t.StartCommandThumbURL,
 			data.AlreadyStartedTimer,
 			data.AlreadyStartedTimerTotalForToday)
 
 		sa.Color = t.StartCommandColor
+		sa.AuthorName = "Current:"
 
 		tpl.Attachments = append(tpl.Attachments, sa)
 	}
@@ -159,7 +160,7 @@ func (t *DefaultSlackMessageTheme) FormatStartCommand(data *models.StartCommandR
 func (t *DefaultSlackMessageTheme) attachmentForTimer(text string, thumbURL string, timer *models.Timer, totalForToday int) slack.Attachment {
 	sa := t.defaultAttachment()
 	sa.Text = text
-	sa.ThumbURL = thumbURL
+	//sa.ThumbURL = thumbURL
 	sa.Footer = fmt.Sprintf(
 		"Task ID: %s > <http://www.google.com|Open in Application>", timer.TaskHash)
 
