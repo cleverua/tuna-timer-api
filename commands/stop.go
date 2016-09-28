@@ -17,6 +17,7 @@ type Stop struct {
 	teamService  *data.TeamService
 	timerService *data.TimerService
 	report       *models.StopCommandReport
+	ctx          context.Context
 }
 
 func NewStop(ctx context.Context) *Stop {
@@ -27,6 +28,7 @@ func NewStop(ctx context.Context) *Stop {
 		teamService:  data.NewTeamService(session),
 		timerService: data.NewTimerService(session),
 		report:       &models.StopCommandReport{},
+		ctx:          ctx,
 	}
 
 	return start
@@ -66,7 +68,7 @@ func (c *Stop) Handle(ctx context.Context, slackCommand models.SlackCustomComman
 }
 
 func (c *Stop) response() *ResponseToSlack {
-	var theme themes.SlackMessageTheme = themes.NewDefaultSlackMessageTheme()
+	var theme themes.SlackMessageTheme = themes.NewDefaultSlackMessageTheme(c.ctx)
 	content := theme.FormatStopCommand(c.report)
 
 	return &ResponseToSlack{

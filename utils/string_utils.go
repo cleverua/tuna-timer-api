@@ -1,7 +1,9 @@
 package utils
 
 import (
+	"fmt"
 	"github.com/tuna-timer/tuna-timer-api/models"
+	"net/http"
 	"strings"
 )
 
@@ -27,4 +29,12 @@ func NormalizeSlackCustomCommand(cmd models.SlackCustomCommand) models.SlackCust
 	}
 
 	return cmd
+}
+
+func GetSelfURLFromRequest(r *http.Request) string {
+	scheme := "http"
+	if r.TLS != nil {
+		scheme = "https"
+	}
+	return fmt.Sprintf("%s://%s", scheme, r.Host)
 }

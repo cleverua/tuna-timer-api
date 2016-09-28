@@ -1,6 +1,6 @@
 0.0.0.0:9090
 
-proxy / app:8080 {
-    health_check /health
+proxy /api app:8080 {
+    health_check /api/v1/health
     health_check_interval 10s
 }

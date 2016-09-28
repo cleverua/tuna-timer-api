@@ -2,6 +2,7 @@ package themes
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"github.com/nlopes/slack"
@@ -13,23 +14,28 @@ import (
 // DefaultSlackMessageTheme - todo
 type DefaultSlackMessageTheme struct {
 	themeConfig
+	ctx context.Context
 }
 
 var defaultThemeConfig = themeConfig{
 	MarkdownEnabledFor:     []string{"text", "pretext"},
 	SummaryAttachmentColor: "#FFFFFF",
 	FooterIcon:             "http://icons.iconarchive.com/icons/martin-berube/flat-animal/48/tuna-icon.png",
-	StartCommandThumbURL:   "http://icons.iconarchive.com/icons/graphicloads/100-flat/128/new-icon.png",
-	StartCommandColor:      "FB6E04",
-	StopCommandThumbURL:    "http://icons.iconarchive.com/icons/graphicloads/100-flat/128/pause-icon.png",
-	StopCommandColor:       "#2779DA",
-	StatusCommandThumbURL:  "http://icons.iconarchive.com/icons/graphicloads/100-flat/128/stat-icon.png",
-	StatusCommandColor:     "#959150",
+
+	StartCommandThumbURL: "/assets/themes/default/ic_current.png",
+	StartCommandColor:    "FB6E04",
+
+	StopCommandThumbURL: "/assets/themes/default/ic_completed.png",
+	StopCommandColor:    "#2779DA",
+
+	StatusCommandThumbURL: "/assets/themes/default/ic_status.png",
+	StatusCommandColor:    "#959150",
 }
 
-func NewDefaultSlackMessageTheme() *DefaultSlackMessageTheme {
+func NewDefaultSlackMessageTheme(ctx context.Context) *DefaultSlackMessageTheme {
 	return &DefaultSlackMessageTheme{
 		themeConfig: defaultThemeConfig,
+		ctx:         ctx,
 	}
 }
 
@@ -44,7 +50,7 @@ func (t *DefaultSlackMessageTheme) FormatStatusCommand(data *models.StatusComman
 
 	if len(data.Tasks) > 0 {
 		statusAttachment := t.defaultAttachment()
-		statusAttachment.ThumbURL = t.StatusCommandThumbURL
+		statusAttachment.ThumbURL = t.asset(t.StatusCommandThumbURL)
 		statusAttachment.Color = t.StatusCommandColor
 
 		statusAttachment.Footer = "<http://www.foo.com|Edit tasks in Application>"
@@ -61,7 +67,7 @@ func (t *DefaultSlackMessageTheme) FormatStatusCommand(data *models.StatusComman
 	if data.AlreadyStartedTimer != nil {
 		sa := t.attachmentForTimer(
 			fmt.Sprintf("%s", data.AlreadyStartedTimer.TaskName),
-			t.StartCommandThumbURL,
+			t.asset(t.StartCommandThumbURL),
 			data.AlreadyStartedTimer,
 			data.AlreadyStartedTimerTotalForToday)
 
@@ -94,7 +100,7 @@ func (t *DefaultSlackMessageTheme) FormatStopCommand(data *models.StopCommandRep
 	if data.StoppedTimer != nil {
 		sa := t.attachmentForTimer(
 			fmt.Sprintf("Stopped for: %s", data.StoppedTimer.TaskName),
-			t.StopCommandThumbURL,
+			t.asset(t.StopCommandThumbURL),
 			data.StoppedTimer,
 			data.StoppedTaskTotalForToday)
 
@@ -120,7 +126,7 @@ func (t *DefaultSlackMessageTheme) FormatStartCommand(data *models.StartCommandR
 	if data.StoppedTimer != nil {
 		sa := t.attachmentForTimer(
 			fmt.Sprintf("Stopped for: %s", data.StoppedTimer.TaskName),
-			t.StartCommandThumbURL,
+			t.asset(t.StopCommandThumbURL),
 			data.StoppedTimer,
 			data.StoppedTaskTotalForToday)
 
@@ -130,7 +136,7 @@ func (t *DefaultSlackMessageTheme) FormatStartCommand(data *models.StartCommandR
 	if data.StartedTimer != nil {
 		sa := t.attachmentForTimer(
 			fmt.Sprintf("Started for: %s", data.StartedTimer.TaskName),
-			t.StartCommandThumbURL,
+			t.asset(t.StartCommandThumbURL),
 			data.StartedTimer,
 			data.StartedTaskTotalForToday)
 
@@ -140,7 +146,7 @@ func (t *DefaultSlackMessageTheme) FormatStartCommand(data *models.StartCommandR
 	if data.AlreadyStartedTimer != nil {
 		sa := t.attachmentForTimer(
 			fmt.Sprintf("Already started for: %s", data.AlreadyStartedTimer.TaskName),
-			t.StartCommandThumbURL,
+			t.asset(t.StartCommandThumbURL),
 			data.AlreadyStartedTimer,
 			data.AlreadyStartedTimerTotalForToday)
 
@@ -160,7 +166,7 @@ func (t *DefaultSlackMessageTheme) FormatStartCommand(data *models.StartCommandR
 func (t *DefaultSlackMessageTheme) attachmentForTimer(text string, thumbURL string, timer *models.Timer, totalForToday int) slack.Attachment {
 	sa := t.defaultAttachment()
 	sa.Text = text
-	//sa.ThumbURL = thumbURL
+	sa.ThumbURL = thumbURL
 
 	sa.Footer = fmt.Sprintf(
 		"Task ID: %s > <http://www.google.com|Open in Application>", timer.TaskHash)
@@ -199,4 +205,8 @@ func (t *DefaultSlackMessageTheme) defaultAttachment() slack.Attachment {
 	result.MarkdownIn = t.MarkdownEnabledFor
 	result.FooterIcon = t.FooterIcon
 	return result
+}
+
+func (t *DefaultSlackMessageTheme) asset(assetPath string) string {
+	return utils.GetSelfBaseURLFromContext(t.ctx) + assetPath
 }

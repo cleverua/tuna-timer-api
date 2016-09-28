@@ -32,7 +32,7 @@ func main() {
 
 	router := mux.NewRouter().StrictSlash(true)
 	router.HandleFunc("/", handlers.Health).Methods("GET")
-	router.HandleFunc("/health", handlers.Health).Methods("GET")
+	router.HandleFunc("/api/v1/health", handlers.Health).Methods("GET")
 	router.HandleFunc("/api/v1/timer", handlers.Timer).Methods("POST")
 
 	// Slack will sometimes call the API method using a GET request

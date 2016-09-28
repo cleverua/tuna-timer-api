@@ -61,6 +61,10 @@ func (h *Handlers) Timer(w http.ResponseWriter, r *http.Request) {
 	defer session.Close()
 
 	ctx := utils.PutMongoSessionInContext(r.Context(), session)
+
+	selfBaseURL := utils.GetSelfURLFromRequest(r)
+	ctx = utils.PutSelfBaseURLInContext(ctx, selfBaseURL)
+
 	command, err := h.commandLookupFunction(ctx, slackCommand)
 	if err != nil { //todo it is going to be a nicely formatted slack message sent back to user
 		w.Write([]byte(fmt.Sprintf("Unknown command: %s!", slackCommand.SubCommand)))
@@ -71,6 +75,7 @@ func (h *Handlers) Timer(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(result.Body)
 
+	//todo: rather defer it
 	log.Printf("Timer command took %s", time.Since(now).String())
 }
 

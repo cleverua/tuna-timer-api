@@ -17,6 +17,7 @@ type Status struct {
 	teamService  *data.TeamService
 	timerService *data.TimerService
 	report       *models.StatusCommandReport
+	ctx          context.Context
 }
 
 func NewStatus(ctx context.Context) *Status {
@@ -27,6 +28,7 @@ func NewStatus(ctx context.Context) *Status {
 		teamService:  data.NewTeamService(session),
 		timerService: data.NewTimerService(session),
 		report:       &models.StatusCommandReport{},
+		ctx:          ctx,
 	}
 
 	return status
@@ -74,7 +76,7 @@ func (c *Status) Handle(ctx context.Context, slackCommand models.SlackCustomComm
 }
 
 func (c *Status) response() *ResponseToSlack {
-	var theme themes.SlackMessageTheme = themes.NewDefaultSlackMessageTheme()
+	var theme themes.SlackMessageTheme = themes.NewDefaultSlackMessageTheme(c.ctx)
 	content := theme.FormatStatusCommand(c.report)
 
 	return &ResponseToSlack{

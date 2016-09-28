@@ -17,6 +17,7 @@ type Start struct {
 	teamService  *data.TeamService
 	timerService *data.TimerService
 	report       *models.StartCommandReport
+	ctx          context.Context
 }
 
 func NewStart(ctx context.Context) *Start {
@@ -27,6 +28,7 @@ func NewStart(ctx context.Context) *Start {
 		teamService:  data.NewTeamService(session),
 		timerService: data.NewTimerService(session),
 		report:       &models.StartCommandReport{},
+		ctx:          ctx,
 	}
 
 	return start
@@ -81,7 +83,7 @@ func (c *Start) Handle(ctx context.Context, slackCommand models.SlackCustomComma
 }
 
 func (c *Start) response() *ResponseToSlack {
-	var theme themes.SlackMessageTheme = themes.NewDefaultSlackMessageTheme()
+	var theme themes.SlackMessageTheme = themes.NewDefaultSlackMessageTheme(c.ctx)
 	content := theme.FormatStartCommand(c.report)
 
 	return &ResponseToSlack{
