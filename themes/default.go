@@ -54,7 +54,7 @@ func (t *DefaultSlackMessageTheme) FormatStatusCommand(data *models.StatusComman
 		statusAttachment.Color = t.StopCommandColor
 
 		statusAttachment.Footer = "<http://www.foo.com|Open in Application>"
-		statusAttachment.FooterIcon = t.FooterIcon
+		//statusAttachment.FooterIcon = t.FooterIcon
 		var buffer bytes.Buffer
 		for _, task := range data.Tasks {
 
@@ -338,7 +338,7 @@ func (t *DefaultSlackMessageTheme) summaryAttachment(period string, minutes int)
 func (t *DefaultSlackMessageTheme) defaultAttachment() slack.Attachment {
 	result := slack.Attachment{}
 	result.MarkdownIn = t.MarkdownEnabledFor
-	result.FooterIcon = t.FooterIcon
+	//result.FooterIcon = t.FooterIcon
 	return result
 }
 
