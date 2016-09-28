@@ -50,8 +50,8 @@ func (t *DefaultSlackMessageTheme) FormatStatusCommand(data *models.StatusComman
 
 	if len(data.Tasks) > 0 {
 		statusAttachment := t.defaultAttachment()
-		statusAttachment.ThumbURL = t.asset(t.StatusCommandThumbURL)
-		statusAttachment.Color = t.StatusCommandColor
+		statusAttachment.ThumbURL = t.asset(t.StopCommandThumbURL)
+		statusAttachment.Color = t.StopCommandColor
 
 		statusAttachment.Footer = "<http://www.foo.com|Edit tasks in Application>"
 		statusAttachment.FooterIcon = t.FooterIcon
@@ -209,7 +209,7 @@ func (t *DefaultSlackMessageTheme) FormatStartCommand(data *models.StartCommandR
 
 func (t *DefaultSlackMessageTheme) attachmentForNewTask(timer *models.Timer) slack.Attachment {
 	sa := t.defaultAttachment()
-	sa.Text = fmt.Sprintf("Started: %s", timer.TaskName)
+	sa.Text = fmt.Sprintf("Started: %s\n\n", timer.TaskName)
 	sa.ThumbURL = t.asset(t.StartCommandThumbURL)
 	sa.Color = t.StartCommandColor
 
@@ -271,20 +271,21 @@ func (t *DefaultSlackMessageTheme) attachmentForStoppedTask(timer *models.Timer,
 	sa.Fields = []slack.AttachmentField{}
 
 	totalField := slack.AttachmentField{
-		Title: "This Round / Total for Today",
-		Value: fmt.Sprintf("%s / %s",
-			utils.FormatDuration(time.Duration(int64(timer.Minutes) * int64(time.Minute))),
-			utils.FormatDuration(time.Duration(int64(totalForToday) * int64(time.Minute))),
-		),
+		Title: "Spent",
+		Value: utils.FormatDuration(time.Duration(int64(timer.Minutes) * int64(time.Minute))),
 		Short: true,
 	}
 
-	//todayField := slack.AttachmentField{
-	//	Title: "Total for Today",
-	//	Value:
-	//	Short: false,
-	//}
+	todayField := slack.AttachmentField{
+		Title: "Total for Today",
+		Value: utils.FormatDuration(time.Duration(int64(totalForToday) * int64(time.Minute))),
+		Short: true,
+	}
 	sa.Fields = append(sa.Fields, totalField)
+
+	if timer.Minutes != totalForToday {
+		sa.Fields = append(sa.Fields, todayField)
+	}
 	return sa
 }
 
