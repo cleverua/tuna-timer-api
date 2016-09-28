@@ -54,11 +54,11 @@ func (t *DefaultSlackMessageTheme) FormatStatusCommand(data *models.StatusComman
 		var buffer bytes.Buffer
 		for _, task := range data.Tasks {
 			if data.AlreadyStartedTimer == nil || data.AlreadyStartedTimer.TaskName != task.Name {
-				projectName := ""
-				if data.Project.ID.Hex() != task.ProjectID {
-					projectName = fmt.Sprintf("<#%s|%s>  ", data.Project.ExternalProjectID, data.Project.ExternalProjectName)
-				}
-				buffer.WriteString(fmt.Sprintf("•  *%s*  %s%s\n", utils.FormatDuration(time.Duration(int64(task.Minutes)*int64(time.Minute))), projectName, task.Name))
+				//projectName := ""
+				//if data.Project.ID.Hex() != task.ProjectID {
+				//	projectName = fmt.Sprintf("<#%s|%s>  ", data.Project.ExternalProjectID, data.Project.ExternalProjectName)
+				//}
+				buffer.WriteString(fmt.Sprintf("•  *%s*  %s\n", utils.FormatDuration(time.Duration(int64(task.Minutes)*int64(time.Minute))), task.Name))
 			}
 		}
 		statusAttachment.AuthorName = "Completed:"
@@ -143,7 +143,7 @@ func (t *DefaultSlackMessageTheme) attachmentForNewTask(project *models.Project,
 	sa.AuthorName = "Started:"
 
 	sa.Footer = fmt.Sprintf(
-		"Project: %s > Task ID: %s > <http://www.google.com|Edit in Application>", project.ExternalProjectName, timer.TaskHash)
+		"Project: #%s > Task ID: %s > <http://www.google.com|Edit in Application>", project.ExternalProjectName, timer.TaskHash)
 
 	return sa
 }
