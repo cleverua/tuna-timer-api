@@ -41,7 +41,6 @@ func (t *DefaultSlackMessageTheme) FormatStatusCommand(data *models.StatusComman
 	tpl := slackThemeTemplate{
 		Text:        fmt.Sprintf("Your status for %s", data.PeriodName),
 		Attachments: []slack.Attachment{},
-		LinkNames:   1,
 	}
 
 	summaryAttachmentVisible := len(data.Tasks) > 0 || data.AlreadyStartedTimer != nil
@@ -57,7 +56,7 @@ func (t *DefaultSlackMessageTheme) FormatStatusCommand(data *models.StatusComman
 			if data.AlreadyStartedTimer == nil || data.AlreadyStartedTimer.TaskName != task.Name {
 				projectName := ""
 				if data.Project.ID.Hex() != task.ProjectID {
-					projectName = "#" + data.Project.ExternalProjectName + ", "
+					projectName = fmt.Sprintf("<#%s|%s>  ", data.Project.ExternalProjectID, data.Project.ExternalProjectName)
 				}
 				buffer.WriteString(fmt.Sprintf("•  *%s*  %s%s\n", utils.FormatDuration(time.Duration(int64(task.Minutes)*int64(time.Minute))), projectName, task.Name))
 			}
