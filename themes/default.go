@@ -19,17 +19,17 @@ type DefaultSlackMessageTheme struct {
 
 var defaultThemeConfig = themeConfig{
 	MarkdownEnabledFor:     []string{"text", "pretext"},
-	SummaryAttachmentColor: "#FFFFFF",
+	SummaryAttachmentColor: "#000000",
 	FooterIcon:             "http://icons.iconarchive.com/icons/martin-berube/flat-animal/48/tuna-icon.png",
 
 	StartCommandThumbURL: "/assets/themes/default/ic_current.png",
-	StartCommandColor:    "FB6E04",
+	StartCommandColor:    "F5A623",
 
 	StopCommandThumbURL: "/assets/themes/default/ic_completed.png",
-	StopCommandColor:    "#2779DA",
+	StopCommandColor:    "#4A90E2",
 
 	StatusCommandThumbURL: "/assets/themes/default/ic_status.png",
-	StatusCommandColor:    "#959150",
+	StatusCommandColor:    "#9B9B9B",
 }
 
 func NewDefaultSlackMessageTheme(ctx context.Context) *DefaultSlackMessageTheme {
@@ -99,7 +99,7 @@ func (t *DefaultSlackMessageTheme) FormatStopCommand(data *models.StopCommandRep
 
 	if data.StoppedTimer != nil {
 		sa := t.attachmentForTimer(
-			fmt.Sprintf("Stopped for: %s", data.StoppedTimer.TaskName),
+			fmt.Sprintf("Completed: %s", data.StoppedTimer.TaskName),
 			t.asset(t.StopCommandThumbURL),
 			data.StoppedTimer,
 			data.StoppedTaskTotalForToday)
@@ -125,7 +125,7 @@ func (t *DefaultSlackMessageTheme) FormatStartCommand(data *models.StartCommandR
 
 	if data.StoppedTimer != nil {
 		sa := t.attachmentForTimer(
-			fmt.Sprintf("Stopped for: %s", data.StoppedTimer.TaskName),
+			fmt.Sprintf("Completed: %s", data.StoppedTimer.TaskName),
 			t.asset(t.StopCommandThumbURL),
 			data.StoppedTimer,
 			data.StoppedTaskTotalForToday)
@@ -135,7 +135,7 @@ func (t *DefaultSlackMessageTheme) FormatStartCommand(data *models.StartCommandR
 
 	if data.StartedTimer != nil {
 		sa := t.attachmentForTimer(
-			fmt.Sprintf("Started for: %s", data.StartedTimer.TaskName),
+			fmt.Sprintf("Started: %s", data.StartedTimer.TaskName),
 			t.asset(t.StartCommandThumbURL),
 			data.StartedTimer,
 			data.StartedTaskTotalForToday)
@@ -145,7 +145,7 @@ func (t *DefaultSlackMessageTheme) FormatStartCommand(data *models.StartCommandR
 
 	if data.AlreadyStartedTimer != nil {
 		sa := t.attachmentForTimer(
-			fmt.Sprintf("Already started for: %s", data.AlreadyStartedTimer.TaskName),
+			fmt.Sprintf("Current: %s", data.AlreadyStartedTimer.TaskName),
 			t.asset(t.StartCommandThumbURL),
 			data.AlreadyStartedTimer,
 			data.AlreadyStartedTimerTotalForToday)
