@@ -65,10 +65,10 @@ func (t *DefaultSlackMessageTheme) FormatStatusCommand(data *models.StatusComman
 	}
 
 	if data.AlreadyStartedTimer != nil {
-		sa := t.attachmentForRestartedTask(data.AlreadyStartedTimer, data.AlreadyStartedTimerTotalForToday)
+		sa := t.attachmentForCurrentTask(data.AlreadyStartedTimer, data.AlreadyStartedTimerTotalForToday)
 
-		sa.Text = fmt.Sprintf("•  *%s*  %s\n", utils.FormatDuration(time.Duration(int64(data.AlreadyStartedTimerTotalForToday)*int64(time.Minute))), data.AlreadyStartedTimer.TaskName)
-		sa.AuthorName = "Current:"
+		//sa.Text = fmt.Sprintf("•  *%s*  %s\n", utils.FormatDuration(time.Duration(int64(data.AlreadyStartedTimerTotalForToday)*int64(time.Minute))), data.AlreadyStartedTimer.TaskName)
+		//sa.AuthorName = "Current:"
 
 		//sa := t.attachmentForTimer(
 		//	fmt.Sprintf("%s", data.AlreadyStartedTimer.TaskName),
@@ -236,6 +236,33 @@ func (t *DefaultSlackMessageTheme) attachmentForNewTask(timer *models.Timer) sla
 	return sa
 }
 
+func (t *DefaultSlackMessageTheme) attachmentForCurrentTask(timer *models.Timer, totalForToday int) slack.Attachment {
+	sa := t.defaultAttachment()
+	sa.Text = fmt.Sprintf("•  *%s*  %s\n", utils.FormatDuration(time.Duration(int64(totalForToday)*int64(time.Minute))), timer.TaskName)
+	sa.ThumbURL = t.asset(t.StartCommandThumbURL)
+	sa.Color = t.StartCommandColor
+	sa.AuthorName = "Current:"
+
+	sa.Footer = fmt.Sprintf(
+		"Task ID: %s > <http://www.google.com|Open in Application>", timer.TaskHash)
+
+	sa.Fields = []slack.AttachmentField{}
+	//
+	//thisRoundField := slack.AttachmentField{
+	//	Title: "This Round",
+	//	Value: utils.FormatDuration(time.Duration(int64(timer.Minutes) * int64(time.Minute))),
+	//	Short: true,
+	//}
+
+	//todayField := slack.AttachmentField{
+	//	Title: "Total for today",
+	//	Value: utils.FormatDuration(time.Duration(int64(totalForToday) * int64(time.Minute))),
+	//	Short: false,
+	//}
+	//sa.Fields = append(sa.Fields, todayField)
+	return sa
+}
+
 func (t *DefaultSlackMessageTheme) attachmentForRestartedTask(timer *models.Timer, totalForToday int) slack.Attachment {
 	sa := t.defaultAttachment()
 	sa.Text = fmt.Sprintf("Resumed: %s", timer.TaskName)
@@ -253,18 +280,20 @@ func (t *DefaultSlackMessageTheme) attachmentForRestartedTask(timer *models.Time
 	//	Short: true,
 	//}
 
-	todayField := slack.AttachmentField{
-		Title: "Total for today",
-		Value: utils.FormatDuration(time.Duration(int64(totalForToday) * int64(time.Minute))),
-		Short: false,
-	}
-	sa.Fields = append(sa.Fields, todayField)
+	//todayField := slack.AttachmentField{
+	//	Title: "Total for today",
+	//	Value: utils.FormatDuration(time.Duration(int64(totalForToday) * int64(time.Minute))),
+	//	Short: false,
+	//}
+	//sa.Fields = append(sa.Fields, todayField)
 	return sa
 }
 
 func (t *DefaultSlackMessageTheme) attachmentForStoppedTask(timer *models.Timer, totalForToday int) slack.Attachment {
 	sa := t.defaultAttachment()
-	sa.Text = fmt.Sprintf("Completed: %s", timer.TaskName)
+	sa.AuthorName = "Completed:"
+
+	sa.Text = fmt.Sprintf("•  *%s*  %s\n", utils.FormatDuration(time.Duration(int64(totalForToday)*int64(time.Minute))), timer.TaskName)
 	sa.ThumbURL = t.asset(t.StopCommandThumbURL)
 	sa.Color = t.StopCommandColor
 
@@ -273,22 +302,22 @@ func (t *DefaultSlackMessageTheme) attachmentForStoppedTask(timer *models.Timer,
 
 	sa.Fields = []slack.AttachmentField{}
 
-	totalField := slack.AttachmentField{
-		Title: "Spent",
-		Value: utils.FormatDuration(time.Duration(int64(timer.Minutes) * int64(time.Minute))),
-		Short: true,
-	}
-
-	todayField := slack.AttachmentField{
-		Title: "Total for Today",
-		Value: utils.FormatDuration(time.Duration(int64(totalForToday) * int64(time.Minute))),
-		Short: true,
-	}
-	sa.Fields = append(sa.Fields, totalField)
-
-	if timer.Minutes != totalForToday {
-		sa.Fields = append(sa.Fields, todayField)
-	}
+	//totalField := slack.AttachmentField{
+	//	Title: "Spent",
+	//	Value: utils.FormatDuration(time.Duration(int64(timer.Minutes) * int64(time.Minute))),
+	//	Short: true,
+	//}
+	//
+	//todayField := slack.AttachmentField{
+	//	Title: "Total for Today",
+	//	Value: utils.FormatDuration(time.Duration(int64(totalForToday) * int64(time.Minute))),
+	//	Short: true,
+	//}
+	//sa.Fields = append(sa.Fields, totalField)
+	//
+	//if timer.Minutes != totalForToday {
+	//	sa.Fields = append(sa.Fields, todayField)
+	//}
 	return sa
 }
 
