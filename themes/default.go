@@ -112,12 +112,12 @@ func (t *DefaultSlackMessageTheme) FormatStartCommand(data *models.StartCommandR
 	}
 
 	if data.StartedTimer != nil {
-		sa := t.attachmentForNewTask(data.StartedTimer, data.StartedTaskTotalForToday)
+		sa := t.attachmentForNewTask(data.Project, data.StartedTimer, data.StartedTaskTotalForToday)
 		tpl.Attachments = append(tpl.Attachments, sa)
 	}
 
 	if data.AlreadyStartedTimer != nil {
-		sa := t.attachmentForNewTask(data.AlreadyStartedTimer, data.AlreadyStartedTimerTotalForToday)
+		sa := t.attachmentForNewTask(data.Project, data.AlreadyStartedTimer, data.AlreadyStartedTimerTotalForToday)
 		tpl.Attachments = append(tpl.Attachments, sa)
 	}
 
@@ -131,7 +131,7 @@ func (t *DefaultSlackMessageTheme) FormatStartCommand(data *models.StartCommandR
 	return string(result)
 }
 
-func (t *DefaultSlackMessageTheme) attachmentForNewTask(timer *models.Timer, taskTotalForToday int) slack.Attachment {
+func (t *DefaultSlackMessageTheme) attachmentForNewTask(project *models.Project, timer *models.Timer, taskTotalForToday int) slack.Attachment {
 	sa := t.defaultAttachment()
 	sa.Text = fmt.Sprintf("•  *%s*  %s\n", utils.FormatDuration(time.Duration(int64(taskTotalForToday)*int64(time.Minute))), timer.TaskName)
 	sa.ThumbURL = t.asset(t.StartCommandThumbURL)
@@ -139,7 +139,7 @@ func (t *DefaultSlackMessageTheme) attachmentForNewTask(timer *models.Timer, tas
 	sa.AuthorName = "Started:"
 
 	sa.Footer = fmt.Sprintf(
-		"Task ID: %s > <http://www.google.com|Edit in Application>", timer.TaskHash)
+		"Project: %s > Task ID: %s > <http://www.google.com|Edit in Application>", project.ExternalProjectName, timer.TaskHash)
 
 	return sa
 }
