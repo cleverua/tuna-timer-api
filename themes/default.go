@@ -41,6 +41,7 @@ func (t *DefaultSlackMessageTheme) FormatStatusCommand(data *models.StatusComman
 	tpl := slackThemeTemplate{
 		Text:        fmt.Sprintf("Your status for %s", data.PeriodName),
 		Attachments: []slack.Attachment{},
+		LinkNames:   1,
 	}
 
 	summaryAttachmentVisible := len(data.Tasks) > 0 || data.AlreadyStartedTimer != nil

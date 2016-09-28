@@ -15,6 +15,7 @@ type SlackMessageTheme interface {
 type slackThemeTemplate struct {
 	Text        string             `json:"text"`
 	Attachments []slack.Attachment `json:"attachments"`
+	LinkNames   int                `json:"link_names"`
 }
 
 // SlackMessageTheme has a bunch of settings for formatting slack messages that get back in reply to /timer command
