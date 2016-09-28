@@ -150,7 +150,7 @@ func (t *DefaultSlackMessageTheme) FormatStartCommand(data *models.StartCommandR
 	}
 
 	if data.StartedTimer != nil {
-		sa := t.attachmentForNewTask(data.StartedTimer)
+		sa := t.attachmentForNewTask(data.StartedTimer, data.StartedTaskTotalForToday)
 			//t.attachmentForTimer(
 			//fmt.Sprintf("Started: %s", data.StartedTimer.TaskName),
 			//t.asset(t.StartCommandThumbURL),
@@ -209,11 +209,11 @@ func (t *DefaultSlackMessageTheme) FormatStartCommand(data *models.StartCommandR
 //
 //	sa.Fields = append(sa.Fields, thisRoundField, todayField)
 //	return sa
-//}
+//} // StartedTaskTotalForToday
 
-func (t *DefaultSlackMessageTheme) attachmentForNewTask(timer *models.Timer) slack.Attachment {
+func (t *DefaultSlackMessageTheme) attachmentForNewTask(timer *models.Timer, taskTotalForToday int) slack.Attachment {
 	sa := t.defaultAttachment()
-	sa.Text = fmt.Sprintf("•  *%s*  %s\n", utils.FormatDuration(time.Duration(0*int64(time.Minute))), timer.TaskName)
+	sa.Text = fmt.Sprintf("•  *%s*  %s\n", utils.FormatDuration(time.Duration(taskTotalForToday*int64(time.Minute))), timer.TaskName)
 	//sa.Text = fmt.Sprintf("Started: %s\n\n", timer.TaskName)
 	sa.ThumbURL = t.asset(t.StartCommandThumbURL)
 	sa.Color = t.StartCommandColor
