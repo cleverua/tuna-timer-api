@@ -54,7 +54,11 @@ func (t *DefaultSlackMessageTheme) FormatStatusCommand(data *models.StatusComman
 		var buffer bytes.Buffer
 		for _, task := range data.Tasks {
 			if data.AlreadyStartedTimer == nil || data.AlreadyStartedTimer.TaskName != task.Name {
-				buffer.WriteString(fmt.Sprintf("•  *%s*  %s\n", utils.FormatDuration(time.Duration(int64(task.Minutes)*int64(time.Minute))), task.Name))
+				projectName := ""
+				if data.Project.ID.Hex() != task.ProjectID {
+					projectName = "#" + data.Project.ExternalProjectName + ", "
+				}
+				buffer.WriteString(fmt.Sprintf("•  *%s*  %s%s\n", utils.FormatDuration(time.Duration(int64(task.Minutes)*int64(time.Minute))), projectName, task.Name))
 			}
 		}
 		statusAttachment.AuthorName = "Completed:"
