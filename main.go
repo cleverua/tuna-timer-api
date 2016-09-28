@@ -31,14 +31,16 @@ func main() {
 	handlers := web.NewHandlers(environment, session)
 
 	router := mux.NewRouter().StrictSlash(true)
-	router.HandleFunc("/", handlers.Health).Methods("GET")
+
 	router.HandleFunc("/api/v1/health", handlers.Health).Methods("GET")
-	router.HandleFunc("/api/v1/timer", handlers.Timer).Methods("POST")
 
 	// Slack will sometimes call the API method using a GET request
 	// to check SSL certificate - so we reply with a status handler here
-	router.HandleFunc("/api/v1/timer", handlers.Health).Methods("GET")
-	router.HandleFunc("/temporary/clear_data", handlers.ClearAllData).Methods("GET")
+	router.HandleFunc("/api/v1/timer", handlers.Timer).Methods("POST", "GET")
+	router.HandleFunc("/api/v1/temporary/clear_data", handlers.ClearAllData).Methods("GET")
+
+	// Static assets
+	router.PathPrefix("/assets/").Handler(http.StripPrefix("/assets/", http.FileServer(http.Dir("./assets/"))))
 
 	defaultMiddleware := alice.New(
 		web.LoggingMiddleware,

@@ -3,6 +3,7 @@ FROM alpine:latest
 # Bash needed by `wait-for-it.sh` script
 RUN apk add --no-cache bash
 
+ADD assets /assets
 ADD slack-time-linux-amd64 /
 ADD config.example.yml /config.yml
 ADD docker/wait-for-it.sh /wait-for-it.sh
