@@ -104,6 +104,8 @@ func (t *DefaultSlackMessageTheme) FormatStopCommand(data *models.StopCommandRep
 			data.StoppedTimer,
 			data.StoppedTaskTotalForToday)
 
+		sa.Color = t.StopCommandColor
+
 		tpl.Attachments = append(tpl.Attachments, sa)
 	}
 
@@ -130,6 +132,8 @@ func (t *DefaultSlackMessageTheme) FormatStartCommand(data *models.StartCommandR
 			data.StoppedTimer,
 			data.StoppedTaskTotalForToday)
 
+		sa.Color = t.StopCommandColor
+
 		tpl.Attachments = append(tpl.Attachments, sa)
 	}
 
@@ -140,6 +144,8 @@ func (t *DefaultSlackMessageTheme) FormatStartCommand(data *models.StartCommandR
 			data.StartedTimer,
 			data.StartedTaskTotalForToday)
 
+		sa.Color = t.StartCommandColor
+
 		tpl.Attachments = append(tpl.Attachments, sa)
 	}
 
@@ -149,6 +155,8 @@ func (t *DefaultSlackMessageTheme) FormatStartCommand(data *models.StartCommandR
 			t.asset(t.StartCommandThumbURL),
 			data.AlreadyStartedTimer,
 			data.AlreadyStartedTimerTotalForToday)
+
+		sa.Color = t.StartCommandColor
 
 		tpl.Attachments = append(tpl.Attachments, sa)
 	}
