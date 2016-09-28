@@ -17,7 +17,7 @@ func (s *FormatDurationTestSuite) TestFormatting(c *C) {
 	c.Assert(FormatDuration(d), Equals, "500:25h")
 
 	d = time.Duration(0)
-	c.Assert(FormatDuration(d), Equals, "00:01h")
+	c.Assert(FormatDuration(d), Equals, "00:00h")
 }
 
 func TestFormatDuration(t *testing.T) { TestingT(t) }

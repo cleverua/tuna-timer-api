@@ -65,14 +65,18 @@ func (t *DefaultSlackMessageTheme) FormatStatusCommand(data *models.StatusComman
 	}
 
 	if data.AlreadyStartedTimer != nil {
-		sa := t.attachmentForTimer(
-			fmt.Sprintf("%s", data.AlreadyStartedTimer.TaskName),
-			t.asset(t.StartCommandThumbURL),
-			data.AlreadyStartedTimer,
-			data.AlreadyStartedTimerTotalForToday)
-
-		sa.Color = t.StartCommandColor
+		sa := t.attachmentForRestartedTask(data.AlreadyStartedTimer, data.AlreadyStartedTimerTotalForToday)
+		sa.Text = data.AlreadyStartedTimer.TaskName
 		sa.AuthorName = "Current:"
+
+		//sa := t.attachmentForTimer(
+		//	fmt.Sprintf("%s", data.AlreadyStartedTimer.TaskName),
+		//	t.asset(t.StartCommandThumbURL),
+		//	data.AlreadyStartedTimer,
+		//	data.AlreadyStartedTimerTotalForToday)
+
+		//sa.Color = t.StartCommandColor
+		//sa.AuthorName = "Current:"
 
 		tpl.Attachments = append(tpl.Attachments, sa)
 	}
@@ -98,13 +102,14 @@ func (t *DefaultSlackMessageTheme) FormatStopCommand(data *models.StopCommandRep
 	}
 
 	if data.StoppedTimer != nil {
-		sa := t.attachmentForTimer(
-			fmt.Sprintf("Completed: %s", data.StoppedTimer.TaskName),
-			t.asset(t.StopCommandThumbURL),
-			data.StoppedTimer,
-			data.StoppedTaskTotalForToday)
-
-		sa.Color = t.StopCommandColor
+		sa := t.attachmentForStoppedTask(data.StoppedTimer, data.StoppedTaskTotalForToday)
+			//t.attachmentForTimer(
+			//fmt.Sprintf("Completed: %s", data.StoppedTimer.TaskName),
+			//t.asset(t.StopCommandThumbURL),
+			//data.StoppedTimer,
+			//data.StoppedTaskTotalForToday)
+		//
+		//sa.Color = t.StopCommandColor
 
 		tpl.Attachments = append(tpl.Attachments, sa)
 	}
@@ -126,37 +131,42 @@ func (t *DefaultSlackMessageTheme) FormatStartCommand(data *models.StartCommandR
 	}
 
 	if data.StoppedTimer != nil {
-		sa := t.attachmentForTimer(
-			fmt.Sprintf("Completed: %s", data.StoppedTimer.TaskName),
-			t.asset(t.StopCommandThumbURL),
-			data.StoppedTimer,
-			data.StoppedTaskTotalForToday)
+		sa := t.attachmentForStoppedTask(data.StoppedTimer, data.StoppedTaskTotalForToday)
 
-		sa.Color = t.StopCommandColor
+		//
+		//sa := t.attachmentForTimer(
+		//	fmt.Sprintf("Completed: %s", data.StoppedTimer.TaskName),
+		//	t.asset(t.StopCommandThumbURL),
+		//	data.StoppedTimer,
+		//	data.StoppedTaskTotalForToday)
+		//
+		//sa.Color = t.StopCommandColor
 
 		tpl.Attachments = append(tpl.Attachments, sa)
 	}
 
 	if data.StartedTimer != nil {
-		sa := t.attachmentForTimer(
-			fmt.Sprintf("Started: %s", data.StartedTimer.TaskName),
-			t.asset(t.StartCommandThumbURL),
-			data.StartedTimer,
-			data.StartedTaskTotalForToday)
+		sa := t.attachmentForNewTask(data.StartedTimer)
+			//t.attachmentForTimer(
+			//fmt.Sprintf("Started: %s", data.StartedTimer.TaskName),
+			//t.asset(t.StartCommandThumbURL),
+			//data.StartedTimer,
+			//data.StartedTaskTotalForToday)
 
-		sa.Color = t.StartCommandColor
+
 
 		tpl.Attachments = append(tpl.Attachments, sa)
 	}
 
 	if data.AlreadyStartedTimer != nil {
-		sa := t.attachmentForTimer(
-			fmt.Sprintf("Current: %s", data.AlreadyStartedTimer.TaskName),
-			t.asset(t.StartCommandThumbURL),
-			data.AlreadyStartedTimer,
-			data.AlreadyStartedTimerTotalForToday)
-
-		sa.Color = t.StartCommandColor
+		sa := t.attachmentForRestartedTask(data.AlreadyStartedTimer, data.AlreadyStartedTimerTotalForToday)
+			//t.attachmentForTimer(
+			//fmt.Sprintf("Current: %s", data.AlreadyStartedTimer.TaskName),
+			//t.asset(t.StartCommandThumbURL),
+			//data.AlreadyStartedTimer,
+			//data.AlreadyStartedTimerTotalForToday)
+		//
+		//sa.Color = t.StartCommandColor
 
 		tpl.Attachments = append(tpl.Attachments, sa)
 	}
@@ -171,29 +181,110 @@ func (t *DefaultSlackMessageTheme) FormatStartCommand(data *models.StartCommandR
 	return string(result)
 }
 
-func (t *DefaultSlackMessageTheme) attachmentForTimer(text string, thumbURL string, timer *models.Timer, totalForToday int) slack.Attachment {
+//func (t *DefaultSlackMessageTheme) attachmentForTimer(text string, thumbURL string, timer *models.Timer, totalForToday int) slack.Attachment {
+//	sa := t.defaultAttachment()
+//	sa.Text = text
+//	sa.ThumbURL = thumbURL
+//
+//	sa.Footer = fmt.Sprintf(
+//		"Task ID: %s > <http://www.google.com|Open in Application>", timer.TaskHash)
+//
+//	sa.Fields = []slack.AttachmentField{}
+//
+//	thisRoundField := slack.AttachmentField{
+//		Title: "This Round",
+//		Value: utils.FormatDuration(time.Duration(int64(timer.Minutes) * int64(time.Minute))),
+//		Short: true,
+//	}
+//
+//	todayField := slack.AttachmentField{
+//		Title: "Today",
+//		Value: utils.FormatDuration(time.Duration(int64(totalForToday) * int64(time.Minute))),
+//		Short: true,
+//	}
+//
+//	sa.Fields = append(sa.Fields, thisRoundField, todayField)
+//	return sa
+//}
+
+func (t *DefaultSlackMessageTheme) attachmentForNewTask(timer *models.Timer) slack.Attachment {
 	sa := t.defaultAttachment()
-	sa.Text = text
-	sa.ThumbURL = thumbURL
+	sa.Text = fmt.Sprintf("Started: %s", timer.TaskName)
+	sa.ThumbURL = t.asset(t.StartCommandThumbURL)
+	sa.Color = t.StartCommandColor
+
+	sa.Footer = fmt.Sprintf(
+		"Task ID: %s > <http://www.google.com|Open in Application>", timer.TaskHash)
+
+	//sa.Fields = []slack.AttachmentField{}
+	//
+	//thisRoundField := slack.AttachmentField{
+	//	Title: "This Round",
+	//	Value: utils.FormatDuration(time.Duration(int64(timer.Minutes) * int64(time.Minute))),
+	//	Short: true,
+	//}
+	//
+	//todayField := slack.AttachmentField{
+	//	Title: "Today",
+	//	Value: utils.FormatDuration(time.Duration(int64(totalForToday) * int64(time.Minute))),
+	//	Short: true,
+	//}
+	//sa.Fields = append(sa.Fields, thisRoundField, todayField)
+	return sa
+}
+
+func (t *DefaultSlackMessageTheme) attachmentForRestartedTask(timer *models.Timer, totalForToday int) slack.Attachment {
+	sa := t.defaultAttachment()
+	sa.Text = fmt.Sprintf("Resumed: %s", timer.TaskName)
+	sa.ThumbURL = t.asset(t.StartCommandThumbURL)
+	sa.Color = t.StartCommandColor
+
+	sa.Footer = fmt.Sprintf(
+		"Task ID: %s > <http://www.google.com|Open in Application>", timer.TaskHash)
+
+	sa.Fields = []slack.AttachmentField{}
+	//
+	//thisRoundField := slack.AttachmentField{
+	//	Title: "This Round",
+	//	Value: utils.FormatDuration(time.Duration(int64(timer.Minutes) * int64(time.Minute))),
+	//	Short: true,
+	//}
+
+	todayField := slack.AttachmentField{
+		Title: "Total for today",
+		Value: utils.FormatDuration(time.Duration(int64(totalForToday) * int64(time.Minute))),
+		Short: false,
+	}
+	sa.Fields = append(sa.Fields, todayField)
+	return sa
+}
+
+func (t *DefaultSlackMessageTheme) attachmentForStoppedTask(timer *models.Timer, totalForToday int) slack.Attachment {
+	sa := t.defaultAttachment()
+	sa.Text = fmt.Sprintf("Completed: %s", timer.TaskName)
+	sa.ThumbURL = t.asset(t.StopCommandThumbURL)
+	sa.Color = t.StopCommandColor
 
 	sa.Footer = fmt.Sprintf(
 		"Task ID: %s > <http://www.google.com|Open in Application>", timer.TaskHash)
 
 	sa.Fields = []slack.AttachmentField{}
 
-	thisRoundField := slack.AttachmentField{
-		Title: "This Round",
-		Value: utils.FormatDuration(time.Duration(int64(timer.Minutes) * int64(time.Minute))),
+	totalField := slack.AttachmentField{
+		Title: "This Round / Total for Today",
+		Value: fmt.Sprintf("%s / %s",
+			utils.FormatDuration(time.Duration(int64(timer.Minutes) * int64(time.Minute))),
+			utils.FormatDuration(time.Duration(int64(totalForToday) * int64(time.Minute))),
+		),
 		Short: true,
 	}
 
-	todayField := slack.AttachmentField{
-		Title: "Today",
-		Value: utils.FormatDuration(time.Duration(int64(totalForToday) * int64(time.Minute))),
-		Short: true,
-	}
-
-	sa.Fields = append(sa.Fields, thisRoundField, todayField)
+	//todayField := slack.AttachmentField{
+	//	Title: "Total for Today",
+	//	Value:
+	//	Short: false,
+	//}
+	sa.Fields = append(sa.Fields, totalField)
 	return sa
 }
 

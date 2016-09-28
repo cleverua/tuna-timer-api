@@ -8,7 +8,7 @@ import (
 // FormatDuration formats duration to be like HH:MMh regardless of days, months etc
 func FormatDuration(d time.Duration) string {
 	if d.Minutes() == 0 {
-		return "00:01h"
+		return "00:00h"
 	}
 
 	minutes := int(d.Minutes()) % 60
