@@ -218,7 +218,7 @@ func (t *DefaultSlackMessageTheme) task(text string, minutes int) string {
 }
 
 func (t *DefaultSlackMessageTheme) taskWithProject(text string, minutes int, projectID, projectName string) string {
-	return fmt.Sprintf("•  *%s*%s %s\n",
+	return fmt.Sprintf("•  *%s  *%s  %s\n",
 		utils.FormatDuration(time.Duration(int64(minutes)*int64(time.Minute))),
 		t.channelLink(projectID, projectName),
 		text)
