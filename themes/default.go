@@ -49,24 +49,28 @@ func (t *DefaultSlackMessageTheme) FormatStatusCommand(data *models.StatusComman
 		statusAttachment := t.defaultAttachment()
 		statusAttachment.ThumbURL = t.asset(t.StopCommandThumbURL)
 		statusAttachment.Color = t.StopCommandColor
+		statusAttachment.AuthorName = "Completed:"
 
-		statusAttachment.Footer = "<http://www.foo.com|Open in Application>"
 		var buffer bytes.Buffer
+
 		for _, task := range data.Tasks {
-			if data.AlreadyStartedTimer == nil || data.AlreadyStartedTimer.TaskName != task.Name {
-				projectLink := ""
-				if data.Project.ID.Hex() != task.ProjectID {
-					projectLink = fmt.Sprintf(", %s ", t.channelLink(task.ProjectExternalID, task.ProjectExternalName))
+
+			displayProjectLink := task.ProjectExternalID != data.Project.ExternalProjectID
+
+			if data.AlreadyStartedTimer == nil || data.AlreadyStartedTimer.TaskHash != task.TaskHash {
+				if displayProjectLink {
+					buffer.WriteString(t.taskWithProject(task.Name, task.Minutes, task.ProjectExternalID, task.ProjectExternalName))
+				} else {
+					buffer.WriteString(t.task(task.Name, task.Minutes))
 				}
-				buffer.WriteString(fmt.Sprintf("•  *%s*%s %s\n",
-					utils.FormatDuration(time.Duration(int64(task.Minutes)*int64(time.Minute))),
-					projectLink,
-					task.Name))
 			}
 		}
-		statusAttachment.AuthorName = "Completed:"
-		statusAttachment.Text = buffer.String()
-		tpl.Attachments = append(tpl.Attachments, statusAttachment)
+
+		if buffer.Len() > 0 {
+			statusAttachment.Text = buffer.String()
+			statusAttachment.Footer = "<http://www.foo.com|Open in Application>"
+			tpl.Attachments = append(tpl.Attachments, statusAttachment)
+		}
 	}
 
 	if data.AlreadyStartedTimer != nil {
@@ -140,26 +144,26 @@ func (t *DefaultSlackMessageTheme) FormatStartCommand(data *models.StartCommandR
 
 func (t *DefaultSlackMessageTheme) attachmentForNewTask(timer *models.Timer, taskTotalForToday int) slack.Attachment {
 	sa := t.defaultAttachment()
-	sa.Text = fmt.Sprintf("•  *%s*  %s\n", utils.FormatDuration(time.Duration(int64(taskTotalForToday)*int64(time.Minute))), timer.TaskName)
+	sa.Text = t.task(timer.TaskName, taskTotalForToday) //fmt.Sprintf("•  *%s*  %s\n", utils.FormatDuration(time.Duration(int64(taskTotalForToday)*int64(time.Minute))), timer.TaskName)
 	sa.ThumbURL = t.asset(t.StartCommandThumbURL)
 	sa.Color = t.StartCommandColor
 	sa.AuthorName = "Started:"
 
 	sa.Footer = fmt.Sprintf(
-		"Project: %s > Task ID: %s > <http://www.google.com|Edit in Application>", t.channelLinkForTimer(timer), timer.TaskHash)
+		"Project: %s > Task: %s > <http://www.google.com|Edit in Application>", t.channelLinkForTimer(timer), timer.TaskHash)
 
 	return sa
 }
 
 func (t *DefaultSlackMessageTheme) attachmentForCurrentTask(timer *models.Timer, totalForToday int) slack.Attachment {
 	sa := t.defaultAttachment()
-	sa.Text = fmt.Sprintf("•  *%s*  %s\n", utils.FormatDuration(time.Duration(int64(totalForToday)*int64(time.Minute))), timer.TaskName)
+	sa.Text = t.task(timer.TaskName, totalForToday) //fmt.Sprintf("•  *%s*  %s\n", utils.FormatDuration(time.Duration(int64(totalForToday)*int64(time.Minute))), timer.TaskName)
 	sa.ThumbURL = t.asset(t.StartCommandThumbURL)
 	sa.Color = t.StartCommandColor
 	sa.AuthorName = "Current:"
 
 	sa.Footer = fmt.Sprintf(
-		"Project: %s > Task ID: %s > <http://www.google.com|Open in Application>", t.channelLinkForTimer(timer), timer.TaskHash)
+		"Project: %s > Task: %s > <http://www.google.com|Open in Application>", t.channelLinkForTimer(timer), timer.TaskHash)
 
 	sa.Fields = []slack.AttachmentField{}
 	return sa
@@ -169,12 +173,12 @@ func (t *DefaultSlackMessageTheme) attachmentForStoppedTask(timer *models.Timer,
 	sa := t.defaultAttachment()
 	sa.AuthorName = "Completed:"
 
-	sa.Text = fmt.Sprintf("•  *%s*  %s\n", utils.FormatDuration(time.Duration(int64(totalForToday)*int64(time.Minute))), timer.TaskName)
+	sa.Text = t.task(timer.TaskName, totalForToday) // fmt.Sprintf("•  *%s*  %s\n", utils.FormatDuration(time.Duration(int64(totalForToday)*int64(time.Minute))), timer.TaskName)
 	sa.ThumbURL = t.asset(t.StopCommandThumbURL)
 	sa.Color = t.StopCommandColor
 
 	sa.Footer = fmt.Sprintf(
-		"Project: %s > Task ID: %s > <http://www.google.com|Open in Application>", t.channelLinkForTimer(timer), timer.TaskHash)
+		"Project: %s > Task: %s > <http://www.google.com|Open in Application>", t.channelLinkForTimer(timer), timer.TaskHash)
 
 	sa.Fields = []slack.AttachmentField{}
 	return sa
@@ -206,5 +210,16 @@ func (t *DefaultSlackMessageTheme) channelLinkForTimer(timer *models.Timer) stri
 }
 
 func (t *DefaultSlackMessageTheme) channelLink(channelID, channelName string) string {
-	return fmt.Sprintf("<#%s|%s>  ", channelID, channelName)
+	return fmt.Sprintf("<#%s|%s>", channelID, channelName)
+}
+
+func (t *DefaultSlackMessageTheme) task(text string, minutes int) string {
+	return fmt.Sprintf("•  *%s*  %s\n", utils.FormatDuration(time.Duration(int64(minutes)*int64(time.Minute))), text)
+}
+
+func (t *DefaultSlackMessageTheme) taskWithProject(text string, minutes int, projectID, projectName string) string {
+	return fmt.Sprintf("•  *%s*%s %s\n",
+		utils.FormatDuration(time.Duration(int64(minutes)*int64(time.Minute))),
+		t.channelLink(projectID, projectName),
+		text)
 }

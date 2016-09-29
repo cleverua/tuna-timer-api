@@ -192,18 +192,18 @@ func (r *TimerRepository) completedTasksForUser(userID string, startDate, endDat
 		},
 		{
 			"$group": bson.M{
-				"_id":     bson.M{"task_name": "$task_name", "project_id": "$project_id", "project_ext_name": "$project_ext_name", "project_ext_id": "$project_ext_id"},
+				"_id":     bson.M{"task_name": "$task_name", "task_hash": "$task_hash", "project_ext_name": "$project_ext_name", "project_ext_id": "$project_ext_id"},
 				"minutes": bson.M{"$sum": "$minutes"},
 			},
 		},
 		{
 			"$project": bson.M{
-				"_id":        0,
-				"task_name":  "$_id.task_name",
-				"minutes":    "$minutes",
-				"project_id": "$_id.project_id",
+				"_id":              0,
+				"task_name":        "$_id.task_name",
+				"minutes":          "$minutes",
+				"task_hash":        "$_id.task_hash",
 				"project_ext_name": "$_id.project_ext_name",
-				"project_ext_id": "$_id.project_ext_id",
+				"project_ext_id":   "$_id.project_ext_id",
 			},
 		},
 	}
