@@ -8,16 +8,16 @@ import (
 
 func (s *FormatDurationTestSuite) TestFormatting(c *C) {
 	d := time.Duration(1 * time.Minute)
-	c.Assert(FormatDuration(d), Equals, "00:01h")
+	c.Assert(FormatDuration(d), Equals, "0:01")
 
 	d = time.Duration(5*time.Hour + 25*time.Minute)
-	c.Assert(FormatDuration(d), Equals, "05:25h")
+	c.Assert(FormatDuration(d), Equals, "5:25")
 
 	d = time.Duration(500*time.Hour + 25*time.Minute)
-	c.Assert(FormatDuration(d), Equals, "500:25h")
+	c.Assert(FormatDuration(d), Equals, "500:25")
 
 	d = time.Duration(0)
-	c.Assert(FormatDuration(d), Equals, "00:00h")
+	c.Assert(FormatDuration(d), Equals, "0:00")
 }
 
 func TestFormatDuration(t *testing.T) { TestingT(t) }
