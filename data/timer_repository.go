@@ -66,17 +66,19 @@ func (r *TimerRepository) findActiveByUser(userID string) (*models.Timer, error)
 	return result, err
 }
 
-func (r *TimerRepository) create(teamID, projectID, userID, taskName string) (*models.Timer, error) {
+func (r *TimerRepository) create(teamID string, project *models.Project, userID string, taskName string) (*models.Timer, error) {
 
 	timer := &models.Timer{
-		ID:         bson.NewObjectId(),
-		TeamID:     teamID,
-		ProjectID:  projectID,
-		TeamUserID: userID,
-		CreatedAt:  time.Now(),
-		TaskName:   taskName,
-		TaskHash:   taskSHA256(teamID, projectID, taskName),
-		Minutes:    0,
+		ID:                  bson.NewObjectId(),
+		TeamID:              teamID,
+		ProjectID:           project.ID.Hex(),
+		ProjectExternalName: project.ExternalProjectName,
+		ProjectExternalID:   project.ExternalProjectID,
+		TeamUserID:          userID,
+		CreatedAt:           time.Now(),
+		TaskName:            taskName,
+		TaskHash:            taskSHA256(teamID, project.ID.Hex(), taskName),
+		Minutes:             0,
 	}
 
 	return r.createTimer(timer)
@@ -190,7 +192,7 @@ func (r *TimerRepository) completedTasksForUser(userID string, startDate, endDat
 		},
 		{
 			"$group": bson.M{
-				"_id":     bson.M{"task_name": "$task_name", "project_id": "$project_id"},
+				"_id":     bson.M{"task_name": "$task_name", "project_id": "$project_id", "project_ext_name": "$project_ext_name", "project_ext_id": "$project_ext_id"},
 				"minutes": bson.M{"$sum": "$minutes"},
 			},
 		},
@@ -199,7 +201,9 @@ func (r *TimerRepository) completedTasksForUser(userID string, startDate, endDat
 				"_id":        0,
 				"task_name":  "$_id.task_name",
 				"minutes":    "$minutes",
-				"project_id": "$project_id",
+				"project_id": "$_id.project_id",
+				"project_ext_name": "$_id.project_ext_name",
+				"project_ext_id": "$_id.project_ext_id",
 			},
 		},
 	}

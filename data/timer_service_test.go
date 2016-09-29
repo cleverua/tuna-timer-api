@@ -76,7 +76,15 @@ func (s *TimerServiceTestSuite) TestStopTimer(c *C) {
 }
 
 func (s *TimerServiceTestSuite) TestStartTimer(c *C) {
-	timer, err := s.service.StartTimer("team", "project", "user", "task")
+
+	projectID := bson.NewObjectId()
+	project := &models.Project{
+		ID:                  projectID,
+		ExternalProjectName: "project",
+		ExternalProjectID:   "0987654321",
+	}
+
+	timer, err := s.service.StartTimer("team", project, "user", "task")
 	c.Assert(err, IsNil)
 	c.Assert(timer, NotNil)
 
@@ -85,7 +93,7 @@ func (s *TimerServiceTestSuite) TestStartTimer(c *C) {
 	c.Assert(loadedTimer, NotNil)
 
 	c.Assert(loadedTimer.TeamID, Equals, "team")
-	c.Assert(loadedTimer.ProjectID, Equals, "project")
+	c.Assert(loadedTimer.ProjectID, Equals, projectID.Hex())
 	c.Assert(loadedTimer.TeamUserID, Equals, "user")
 	c.Assert(loadedTimer.TaskName, Equals, "task")
 	c.Assert(loadedTimer.TaskHash, NotNil)

@@ -39,16 +39,18 @@ type Project struct {
 
 // Timer - a time record that has start and finish dates. Belongs to a slack user and a task
 type Timer struct {
-	ID         bson.ObjectId `json:"id" bson:"_id,omitempty"`
-	TeamID     string        `json:"team_id" bson:"team_id"`
-	ProjectID  string        `json:"project_id" bson:"project_id"`
-	TeamUserID string        `json:"team_user_id" bson:"team_user_id"`
-	TaskName   string        `json:"task_name" bson:"task_name"`
-	TaskHash   string        `json:"task_hash" bson:"task_hash"`
-	CreatedAt  time.Time     `json:"created_at" bson:"created_at"`
-	FinishedAt *time.Time    `json:"finished_at" bson:"finished_at"`
-	Minutes    int           `json:"minutes" bson:"minutes"`
-	DeletedAt  *time.Time    `json:"deleted_at" bson:"deleted_at"`
+	ID                  bson.ObjectId `json:"id" bson:"_id,omitempty"`
+	TeamID              string        `json:"team_id" bson:"team_id"`
+	ProjectID           string        `json:"project_id" bson:"project_id"`
+	ProjectExternalName string        `json:"project_ext_name" bson:"project_ext_name"`
+	ProjectExternalID   string        `json:"project_ext_id" bson:"project_ext_id"`
+	TeamUserID          string        `json:"team_user_id" bson:"team_user_id"`
+	TaskName            string        `json:"task_name" bson:"task_name"`
+	TaskHash            string        `json:"task_hash" bson:"task_hash"`
+	CreatedAt           time.Time     `json:"created_at" bson:"created_at"`
+	FinishedAt          *time.Time    `json:"finished_at" bson:"finished_at"`
+	Minutes             int           `json:"minutes" bson:"minutes"`
+	DeletedAt           *time.Time    `json:"deleted_at" bson:"deleted_at"`
 }
 
 // SlackCustomCommand todo

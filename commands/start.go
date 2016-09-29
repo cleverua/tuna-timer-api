@@ -69,7 +69,7 @@ func (c *Start) Handle(ctx context.Context, slackCommand models.SlackCustomComma
 		}
 	}
 	if c.report.AlreadyStartedTimer == nil {
-		startedTimer, err := c.timerService.StartTimer(team.ID.Hex(), project.ID.Hex(), teamUser.ID.Hex(), slackCommand.Text)
+		startedTimer, err := c.timerService.StartTimer(team.ID.Hex(), project, teamUser.ID.Hex(), slackCommand.Text)
 		if err != nil {
 			// todo: format a decent Slack error message so user knows what's wrong and how to solve the issue
 		}

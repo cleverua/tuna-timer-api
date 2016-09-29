@@ -16,7 +16,13 @@ import (
 
 func (s *TimerRepositoryTestSuite) TestUpdate(c *C) {
 
-	timer, err := s.repo.create("team", "project", "user", "task")
+	project := &models.Project{
+		ID:                  bson.NewObjectId(),
+		ExternalProjectName: "project",
+		ExternalProjectID:   "0987654321",
+	}
+
+	timer, err := s.repo.create("team", project, "user", "task")
 	c.Assert(err, IsNil)
 	c.Assert(timer, NotNil)
 	c.Assert(timer.Minutes, Equals, 0)
@@ -32,7 +38,13 @@ func (s *TimerRepositoryTestSuite) TestUpdate(c *C) {
 }
 
 func (s *TimerRepositoryTestSuite) TestCreateTimer(c *C) {
-	timer, err := s.repo.create("team", "project", "user", "task")
+	project := &models.Project{
+		ID:                  bson.NewObjectId(),
+		ExternalProjectName: "project",
+		ExternalProjectID:   "0987654321",
+	}
+
+	timer, err := s.repo.create("team", project, "user", "task")
 	c.Assert(err, IsNil)
 	c.Assert(timer, NotNil)
 
@@ -44,11 +56,12 @@ func (s *TimerRepositoryTestSuite) TestCreateTimer(c *C) {
 	c.Assert(timerFromDB.FinishedAt, IsNil)
 	c.Assert(timerFromDB.Minutes, Equals, 0)
 	c.Assert(timerFromDB.TeamID, Equals, "team")
-	c.Assert(timerFromDB.ProjectID, Equals, "project")
+	c.Assert(timerFromDB.ProjectID, Equals, project.ID.Hex())
+	c.Assert(timerFromDB.ProjectExternalID, Equals, "0987654321")
+	c.Assert(timerFromDB.ProjectExternalName, Equals, "project")
 	c.Assert(timerFromDB.TeamUserID, Equals, "user")
 	c.Assert(timerFromDB.TaskName, Equals, "task")
-	// it is sha256 of "teamprojecttask" is f249066b06ac0dc93f7c26683f4ae80d2ba46441940a624dce9b35b82ccc9108
-	c.Assert(timerFromDB.TaskHash, Equals, "f24906")
+
 }
 
 func (s *TimerRepositoryTestSuite) TestFindActiveTimerByTeamAndUserNotExist(c *C) {
