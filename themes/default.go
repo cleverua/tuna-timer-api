@@ -146,7 +146,7 @@ func (t *DefaultSlackMessageTheme) attachmentForNewTask(timer *models.Timer, tas
 	sa.AuthorName = "Started:"
 
 	sa.Footer = fmt.Sprintf(
-		"Project: #%s > Task ID: %s > <http://www.google.com|Edit in Application>", t.channelLinkForTimer(timer), timer.TaskHash)
+		"Project: %s > Task ID: %s > <http://www.google.com|Edit in Application>", t.channelLinkForTimer(timer), timer.TaskHash)
 
 	return sa
 }
