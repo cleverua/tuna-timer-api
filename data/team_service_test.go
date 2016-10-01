@@ -6,6 +6,7 @@ import (
 
 	"errors"
 
+	"github.com/nlopes/slack"
 	"github.com/tuna-timer/tuna-timer-api/models"
 	"github.com/tuna-timer/tuna-timer-api/utils"
 	. "gopkg.in/check.v1"
@@ -99,6 +100,55 @@ func (s *TeamServiceTestSuite) TestEnsureTeamExistsFailureOnFindTeam(c *C) {
 	c.Assert(err, NotNil)
 }
 
+func (r *TeamServiceTestSuite) TestCreateOrUpdateWithSlackOAuthResponseNew(c *C) {
+	oauthResponse := &slack.OAuthResponse{
+		TeamID:      "ext-id",
+		TeamName:    "ext-name",
+		AccessToken: "access-token",
+		Scope:       "scope",
+	}
+
+	err := r.service.CreateOrUpdateWithSlackOAuthResponse(oauthResponse)
+	c.Assert(err, IsNil)
+
+	team, err := r.repository.FindByExternalID("ext-id")
+	c.Assert(err, IsNil)
+	c.Assert(team, NotNil)
+
+	c.Assert(team.ExternalTeamName, Equals, "ext-name")
+
+	details := team.SlackOAuthResponse
+	c.Assert(details, NotNil)
+	c.Assert(details.AccessToken, Equals, "access-token")
+	c.Assert(details.Scope, Equals, "scope")
+}
+
+func (r *TeamServiceTestSuite) TestCreateOrUpdateWithSlackOAuthResponseExisting(c *C) {
+	_, err := r.repository.createTeam("ext-id", "ext-name")
+	c.Assert(err, IsNil)
+
+	oauthResponse := &slack.OAuthResponse{
+		TeamID:      "ext-id",
+		TeamName:    "ext-name-changed",
+		AccessToken: "access-token",
+		Scope:       "scope",
+	}
+
+	err = r.service.CreateOrUpdateWithSlackOAuthResponse(oauthResponse)
+	c.Assert(err, IsNil)
+
+	team, err := r.repository.FindByExternalID("ext-id")
+	c.Assert(err, IsNil)
+	c.Assert(team, NotNil)
+
+	c.Assert(team.ExternalTeamName, Equals, "ext-name-changed")
+
+	details := team.SlackOAuthResponse
+	c.Assert(details, NotNil)
+	c.Assert(details.AccessToken, Equals, "access-token")
+	c.Assert(details.Scope, Equals, "scope")
+}
+
 func getSlackCustomCommand() *models.SlackCustomCommand {
 	return &models.SlackCustomCommand{
 		ChannelID:   "channel-id",
@@ -152,11 +202,11 @@ type testTeamRepositoryImpl struct {
 	addUserSuccess          bool
 }
 
-func (r *testTeamRepositoryImpl) findByExternalID(externalTeamID string) (*models.Team, error) {
+func (r *testTeamRepositoryImpl) FindByExternalID(externalTeamID string) (*models.Team, error) {
 	if !r.findByExternalIDSuccess {
 		return nil, errors.New("TestTeamRepositoryImpl error")
 	}
-	return r.repository.findByExternalID(externalTeamID)
+	return r.repository.FindByExternalID(externalTeamID)
 }
 
 func (r *testTeamRepositoryImpl) createTeam(externalID, externalName string) (*models.Team, error) {
@@ -178,6 +228,10 @@ func (r *testTeamRepositoryImpl) addUser(team *models.Team, externalUserID, exte
 		return errors.New("TestTeamRepositoryImpl error")
 	}
 	return r.repository.addUser(team, externalUserID, externalUserName)
+}
+
+func (r *testTeamRepositoryImpl) save(team *models.Team) error {
+	return nil
 }
 
 // Suite lifecycle and callbacks

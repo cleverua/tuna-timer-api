@@ -1,10 +1,21 @@
 production:
   database:
     url: mongodb://localhost:27017/tuna_timer_prod
+  slack:
+    client_id: ""
+    client_secret: ""
+    verification_token: ""
 development:
   database:
     url: mongodb://localhost:27017/tuna_timer_dev
+  slack:
+    client_id: ""
+    client_secret: ""
+    verification_token: ""
 test:
   database:
     url: mongodb://localhost:27017/tuna_timer_test
-
+  slack:
+    client_id: ""
+    client_secret: ""
+    verification_token: ""

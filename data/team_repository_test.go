@@ -6,6 +6,7 @@ import (
 
 	"gopkg.in/mgo.v2"
 
+	"github.com/tuna-timer/tuna-timer-api/models"
 	"github.com/tuna-timer/tuna-timer-api/utils"
 	. "gopkg.in/check.v1"
 )
@@ -19,7 +20,7 @@ func (s *TeamRepositoryTestSuite) TestAddUser(c *C) {
 	err = s.repository.addUser(team, "external-user-id", "external-user-name")
 	c.Assert(err, IsNil)
 
-	reloadedTeam, _ := s.repository.findByExternalID("external-id")
+	reloadedTeam, _ := s.repository.FindByExternalID("external-id")
 	c.Assert(len(reloadedTeam.Users), Equals, 1)
 	testUser := reloadedTeam.Users[0]
 
@@ -40,7 +41,7 @@ func (s *TeamRepositoryTestSuite) TestAddUserExists(c *C) {
 	err = s.repository.addUser(team, "external-user-id", "external-use-name")
 	c.Assert(err, IsNil)
 
-	reloadedTeam, _ := s.repository.findByExternalID("external-id")
+	reloadedTeam, _ := s.repository.FindByExternalID("external-id")
 	c.Assert(len(reloadedTeam.Users), Equals, 1)
 }
 
@@ -53,7 +54,7 @@ func (s *TeamRepositoryTestSuite) TestAddProject(c *C) {
 	err = s.repository.addProject(team, "external-project-id", "external-project-name")
 	c.Assert(err, IsNil)
 
-	reloadedTeam, _ := s.repository.findByExternalID("external-id")
+	reloadedTeam, _ := s.repository.FindByExternalID("external-id")
 	c.Assert(len(reloadedTeam.Projects), Equals, 1)
 	testProject := reloadedTeam.Projects[0]
 
@@ -74,24 +75,24 @@ func (s *TeamRepositoryTestSuite) TestAddProjectExists(c *C) {
 	err = s.repository.addProject(team, "external-project-id", "external-project-name")
 	c.Assert(err, IsNil)
 
-	reloadedTeam, _ := s.repository.findByExternalID("external-id")
+	reloadedTeam, _ := s.repository.FindByExternalID("external-id")
 	c.Assert(len(reloadedTeam.Projects), Equals, 1)
 }
 
 // Find By External ID
-func (s *TeamRepositoryTestSuite) TestFindByExternalId(c *C) {
+func (s *TeamRepositoryTestSuite) TestFindByExternalID(c *C) {
 	team, err := s.repository.createTeam("external-id", "external-name")
 	c.Assert(err, IsNil)
 	c.Assert(team, NotNil)
 
-	resultTeam, err := s.repository.findByExternalID("external-id")
+	resultTeam, err := s.repository.FindByExternalID("external-id")
 	c.Assert(err, IsNil)
 	c.Assert(resultTeam, NotNil)
 	c.Assert(resultTeam.ID, Equals, team.ID)
 }
 
-func (s *TeamRepositoryTestSuite) TestFindByExternalIdNotExist(c *C) {
-	resultTeam, err := s.repository.findByExternalID("external-id")
+func (s *TeamRepositoryTestSuite) TestFindByExternalIDNotExist(c *C) {
+	resultTeam, err := s.repository.FindByExternalID("external-id")
 	c.Assert(err, IsNil)
 	c.Assert(resultTeam, IsNil)
 }
@@ -116,6 +117,34 @@ func (s *TeamRepositoryTestSuite) TestCreateTeamWhenAlreadyExists(c *C) {
 	_, err = s.repository.createTeam("external-id", "external-name")
 	c.Assert(err, NotNil)
 	c.Assert(mgo.IsDup(err), Equals, true)
+}
+
+func (s *TeamRepositoryTestSuite) TestSave(c *C) {
+	t := &models.Team{
+		ExternalTeamID:     "team-id",
+		ExternalTeamName:   "team-name",
+		SlackOAuthResponse: nil,
+	}
+	err := s.repository.save(t)
+	c.Assert(err, IsNil)
+
+	team, err := s.repository.FindByExternalID("team-id")
+	c.Assert(team, NotNil)
+}
+
+func (s *TeamRepositoryTestSuite) TestSaveUpdatesExisting(c *C) {
+
+	team, err := s.repository.createTeam("external-id", "external-name")
+	c.Assert(err, IsNil)
+	c.Assert(team, NotNil)
+
+	team.ExternalTeamName = "new-name"
+	err = s.repository.save(team)
+	c.Assert(err, IsNil)
+
+	t, err := s.repository.FindByExternalID("external-id")
+	c.Assert(t, NotNil)
+	c.Assert(t.ExternalTeamName, Equals, "new-name")
 }
 
 // Suite lifecycle and callbacks

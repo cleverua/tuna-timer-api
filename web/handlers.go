@@ -15,6 +15,8 @@ import (
 	"github.com/tuna-timer/tuna-timer-api/utils"
 	"gopkg.in/mgo.v2/bson"
 	"log"
+	//"github.com/tuna-timer/tuna-timer-api/data"
+	"github.com/tuna-timer/tuna-timer-api/data"
 )
 
 // Handlers is a collection of net/http handlers to serve the API
@@ -23,6 +25,7 @@ type Handlers struct {
 	mongoSession          *mgo.Session
 	status                map[string]string
 	commandLookupFunction func(ctx context.Context, slackCommand models.SlackCustomCommand) (commands.SlackCustomCommandHandler, error)
+	slackOAuth            SlackOAuth
 }
 
 // NewHandlers constructs a Handlers collection
@@ -35,6 +38,7 @@ func NewHandlers(env *utils.Environment, mongoSession *mgo.Session) *Handlers {
 			"version": env.AppVersion,
 		},
 		commandLookupFunction: commands.LookupHandler,
+		slackOAuth:            NewSlackOAuth(),
 	}
 }
 
@@ -77,6 +81,42 @@ func (h *Handlers) Timer(w http.ResponseWriter, r *http.Request) {
 
 	//todo: rather defer it
 	log.Printf("Timer command took %s", time.Since(now).String())
+}
+
+// SlackOauth2Redirect handles the OAuth2 redirect from Slack and exchanges the `code` with `accessToken`
+// https://api.slack.com/methods/oauth.access
+func (h *Handlers) SlackOauth2Redirect(w http.ResponseWriter, r *http.Request) {
+	code := r.URL.Query().Get("code")
+	clientID := h.env.Config.UString("slack.client_id")
+	clientSecret := h.env.Config.UString("slack.client_secret")
+
+	if code == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("`code` parameter is either missed or blank!"))
+		return
+	}
+
+	oauthResponse, err := h.slackOAuth.GetOAuthResponse(clientID, clientSecret, code)
+	if err != nil {
+		msg := fmt.Sprintf("Got a failure during getting an access token from Slack: %s", err)
+		log.Println(msg)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(msg))
+		return
+	}
+
+	teamService := data.NewTeamService(h.mongoSession)
+
+	err = teamService.CreateOrUpdateWithSlackOAuthResponse(oauthResponse)
+	if err != nil {
+		msg := fmt.Sprintf("Got a failure during creating a team: %s", err)
+		log.Println(msg)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(msg))
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
 }
 
 // Health handles a call for app health request

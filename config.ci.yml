@@ -1,4 +1,7 @@
 test:
   database:
     url: mongodb://localhost:27017/tuna_timer_dev
-
+  slack:
+      client_id:
+      client_secret:
+      verification_token:

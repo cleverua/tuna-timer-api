@@ -39,6 +39,9 @@ func main() {
 	router.HandleFunc("/api/v1/timer", handlers.Timer).Methods("POST", "GET")
 	router.HandleFunc("/api/v1/temporary/clear_data", handlers.ClearAllData).Methods("GET")
 
+	// Slack  OAuth2 stuff
+	router.HandleFunc("/api/v1/slack/oauth2redirect", handlers.SlackOauth2Redirect).Methods("GET")
+
 	// Static assets
 	router.PathPrefix("/assets/").Handler(http.StripPrefix("/assets/", http.FileServer(http.Dir("./assets/"))))
 

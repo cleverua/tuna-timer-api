@@ -6,6 +6,7 @@ import (
 	"github.com/tuna-timer/tuna-timer-api/models"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
+	"log"
 )
 
 const teamsCollectionName = "teams"
@@ -20,7 +21,8 @@ type TeamRepository struct {
 // It has two implementations `TeamRepository` and `testTeamRepository`.
 // The latter used to mimic/test error cases
 type TeamRepositoryInterface interface {
-	findByExternalID(externalTeamID string) (*models.Team, error)
+	FindByExternalID(externalTeamID string) (*models.Team, error)
+	save(team *models.Team) error
 	createTeam(externalID, externalName string) (*models.Team, error)
 	addProject(team *models.Team, externalProjectID, externalProjectName string) error
 	addUser(team *models.Team, externalUserID, externalUserName string) error
@@ -34,7 +36,18 @@ func NewTeamRepository(session *mgo.Session) *TeamRepository {
 	}
 }
 
-func (r *TeamRepository) findByExternalID(externalTeamID string) (*models.Team, error) {
+func (r *TeamRepository) save(team *models.Team) error {
+	if team.ID == "" {
+		team.ID = bson.NewObjectId()
+		team.CreatedAt = time.Now()
+		return r.collection.Insert(team)
+	}
+
+	log.Printf("Updating: %+v", team)
+	return r.collection.Update(bson.M{"_id": team.ID}, team)
+}
+
+func (r *TeamRepository) FindByExternalID(externalTeamID string) (*models.Team, error) {
 	team := &models.Team{}
 	err := r.collection.Find(bson.M{"ext_id": externalTeamID}).One(team)
 

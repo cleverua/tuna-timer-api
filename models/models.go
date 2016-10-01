@@ -3,6 +3,7 @@ package models
 import (
 	"time"
 
+	"github.com/nlopes/slack"
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -13,11 +14,12 @@ type Team struct {
 	// slack channel ID or
 	// skype group ID or
 	// hipchat channel ID
-	ExternalTeamID   string      `json:"ext_id" bson:"ext_id"`
-	ExternalTeamName string      `json:"ext_name" bson:"ext_name"`
-	Users            []*TeamUser `json:"users" bson:"users"`
-	Projects         []*Project  `json:"projects" bson:"projects"`
-	CreatedAt        time.Time   `json:"created_at" bson:"created_at"`
+	ExternalTeamID     string               `json:"ext_id" bson:"ext_id"`
+	ExternalTeamName   string               `json:"ext_name" bson:"ext_name"`
+	Users              []*TeamUser          `json:"users" bson:"users"`
+	Projects           []*Project           `json:"projects" bson:"projects"`
+	CreatedAt          time.Time            `json:"created_at" bson:"created_at"`
+	SlackOAuthResponse *slack.OAuthResponse `json:"external_details" bson:"external_details"`
 }
 
 // TeamUser represents a Slack user that belongs to a team.

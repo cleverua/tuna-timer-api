@@ -1,6 +1,7 @@
 package data
 
 import (
+	"github.com/nlopes/slack"
 	"github.com/tuna-timer/tuna-timer-api/models"
 	"gopkg.in/mgo.v2"
 )
@@ -19,10 +20,33 @@ func NewTeamService(session *mgo.Session) *TeamService {
 	}
 }
 
+func (s *TeamService) CreateOrUpdateWithSlackOAuthResponse(slackOAuthResponse *slack.OAuthResponse) error {
+	team, err := s.repository.FindByExternalID(slackOAuthResponse.TeamID)
+	if err != nil {
+		return err
+	}
+
+	if team == nil {
+		team = &models.Team{
+			ExternalTeamID: slackOAuthResponse.TeamID,
+		}
+	}
+
+	team.ExternalTeamName = slackOAuthResponse.TeamName
+	team.SlackOAuthResponse = slackOAuthResponse
+
+	err = s.repository.save(team)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // EnsureTeamSetUp creates Team, User and Project if either is not in database yet
 func (s *TeamService) EnsureTeamSetUp(slackCommand *models.SlackCustomCommand) (*models.Team, *models.Project, *models.TeamUser, error) {
 
-	team, err := s.repository.findByExternalID(slackCommand.TeamID)
+	team, err := s.repository.FindByExternalID(slackCommand.TeamID)
 	if err != nil {
 		return nil, nil, nil, err
 	}
@@ -56,7 +80,7 @@ func (s *TeamService) EnsureTeamSetUp(slackCommand *models.SlackCustomCommand) (
 
 	if reloadTeam {
 		// not catching the error here since we've once already created or loaded the Team successfully
-		team, _ = s.repository.findByExternalID(slackCommand.TeamID)
+		team, _ = s.repository.FindByExternalID(slackCommand.TeamID)
 		existingProject = s.findProject(team, slackCommand.ChannelID)
 		existingUser = s.findUser(team, slackCommand.UserID)
 	}
