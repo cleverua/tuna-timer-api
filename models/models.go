@@ -14,18 +14,20 @@ type Team struct {
 	// slack channel ID or
 	// skype group ID or
 	// hipchat channel ID
-	ExternalTeamID     string               `json:"ext_id" bson:"ext_id"`
-	ExternalTeamName   string               `json:"ext_name" bson:"ext_name"`
-	Users              []*TeamUser          `json:"users" bson:"users"`
+	ExternalTeamID   string `json:"ext_id" bson:"ext_id"`
+	ExternalTeamName string `json:"ext_name" bson:"ext_name"`
+	//Users              []*TeamUser          `json:"users" bson:"users"`
 	Projects           []*Project           `json:"projects" bson:"projects"`
 	CreatedAt          time.Time            `json:"created_at" bson:"created_at"`
-	SlackOAuthResponse *slack.OAuthResponse `json:"external_details" bson:"external_details"`
+	SlackOAuthResponse *slack.OAuthResponse `json:"slack_oauth" bson:"slack_oauth"`
 }
 
 // TeamUser represents a Slack user that belongs to a team.
 // We not going to call it `User` because we may want to have admin users to administer stuff via UI etc
 type TeamUser struct {
 	ID               bson.ObjectId `json:"id" bson:"_id,omitempty"`
+	TeamID           string        `json:"team_id" bson:"team_id"`
+	SlackUserData    *slack.User   `json:"slack_user_data" bson:"slack_user_data"`
 	ExternalUserID   string        `json:"ext_id" bson:"ext_id"`
 	ExternalUserName string        `json:"ext_name" bson:"ext_name"`
 	CreatedAt        time.Time     `json:"created_at" bson:"created_at"`

@@ -16,6 +16,7 @@ type Start struct {
 	session      *mgo.Session
 	teamService  *data.TeamService
 	timerService *data.TimerService
+	userService  *data.UserService
 	report       *models.StartCommandReport
 	ctx          context.Context
 }
@@ -27,6 +28,7 @@ func NewStart(ctx context.Context) *Start {
 		session:      session,
 		teamService:  data.NewTeamService(session),
 		timerService: data.NewTimerService(session),
+		userService:  data.NewUserService(session),
 		report:       &models.StartCommandReport{},
 		ctx:          ctx,
 	}
@@ -44,7 +46,12 @@ func NewStart(ctx context.Context) *Start {
 
 // Handle - SlackCustomCommandHandler interface
 func (c *Start) Handle(ctx context.Context, slackCommand models.SlackCustomCommand) *ResponseToSlack {
-	team, project, teamUser, err := c.teamService.EnsureTeamSetUp(&slackCommand)
+	team, project, err := c.teamService.EnsureTeamSetUp(&slackCommand)
+	if err != nil {
+		// todo: format a decent Slack error message so user knows what's wrong and how to solve the issue
+	}
+
+	teamUser, err := c.userService.EnsureUser(team, slackCommand.UserID)
 	if err != nil {
 		// todo: format a decent Slack error message so user knows what's wrong and how to solve the issue
 	}

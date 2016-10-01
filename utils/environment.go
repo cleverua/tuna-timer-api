@@ -73,6 +73,13 @@ func (env *Environment) MigrateDatabase(session *mgo.Session) error {
 	timers.EnsureIndex(mgo.Index{Key: []string{"finished_at"}})
 	timers.EnsureIndex(mgo.Index{Key: []string{"deleted_at"}})
 
+	users := session.DB("").C("team_users")
+	users.Create(&mgo.CollectionInfo{})
+	users.EnsureIndex(mgo.Index{
+		Unique: true,
+		Key:    []string{"ext_id"},
+	})
+
 	log.Println("Database migrated!")
 	return nil
 }

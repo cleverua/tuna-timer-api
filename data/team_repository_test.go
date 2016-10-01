@@ -11,40 +11,6 @@ import (
 	. "gopkg.in/check.v1"
 )
 
-// Team User
-func (s *TeamRepositoryTestSuite) TestAddUser(c *C) {
-	team, err := s.repository.createTeam("external-id", "external-name")
-	c.Assert(err, IsNil)
-	c.Assert(team, NotNil)
-
-	err = s.repository.addUser(team, "external-user-id", "external-user-name")
-	c.Assert(err, IsNil)
-
-	reloadedTeam, _ := s.repository.FindByExternalID("external-id")
-	c.Assert(len(reloadedTeam.Users), Equals, 1)
-	testUser := reloadedTeam.Users[0]
-
-	c.Assert(testUser.ID, NotNil)
-	c.Assert(testUser.CreatedAt, NotNil)
-	c.Assert(testUser.ExternalUserID, Equals, "external-user-id")
-	c.Assert(testUser.ExternalUserName, Equals, "external-user-name")
-}
-
-func (s *TeamRepositoryTestSuite) TestAddUserExists(c *C) {
-	team, err := s.repository.createTeam("external-id", "external-name")
-	c.Assert(err, IsNil)
-	c.Assert(team, NotNil)
-
-	err = s.repository.addUser(team, "external-user-id", "external-user-name")
-	c.Assert(err, IsNil)
-
-	err = s.repository.addUser(team, "external-user-id", "external-use-name")
-	c.Assert(err, IsNil)
-
-	reloadedTeam, _ := s.repository.FindByExternalID("external-id")
-	c.Assert(len(reloadedTeam.Users), Equals, 1)
-}
-
 // Add Project
 func (s *TeamRepositoryTestSuite) TestAddProject(c *C) {
 	team, err := s.repository.createTeam("external-id", "external-name")
@@ -107,7 +73,6 @@ func (s *TeamRepositoryTestSuite) TestCreateTeam(c *C) {
 	c.Assert(team.ExternalTeamName, Equals, "external-name")
 	c.Assert(team.CreatedAt, NotNil)
 	c.Assert(len(team.Projects), Equals, 0)
-	c.Assert(len(team.Users), Equals, 0)
 }
 
 func (s *TeamRepositoryTestSuite) TestCreateTeamWhenAlreadyExists(c *C) {

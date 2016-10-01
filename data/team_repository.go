@@ -25,7 +25,7 @@ type TeamRepositoryInterface interface {
 	save(team *models.Team) error
 	createTeam(externalID, externalName string) (*models.Team, error)
 	addProject(team *models.Team, externalProjectID, externalProjectName string) error
-	addUser(team *models.Team, externalUserID, externalUserName string) error
+	//addUser(team *models.Team, externalUserID, externalUserName string) error
 }
 
 // NewTeamRepository is a factory method
@@ -58,22 +58,6 @@ func (r *TeamRepository) FindByExternalID(externalTeamID string) (*models.Team, 
 	return team, err
 }
 
-// CreateTeam creates a new team
-func (r *TeamRepository) createTeam(externalID, externalName string) (*models.Team, error) {
-
-	team := &models.Team{
-		ID:               bson.NewObjectId(),
-		CreatedAt:        time.Now(),
-		ExternalTeamID:   externalID,
-		ExternalTeamName: externalName,
-		Projects:         []*models.Project{},
-		Users:            []*models.TeamUser{},
-	}
-
-	err := r.collection.Insert(team)
-	return team, err
-}
-
 func (r *TeamRepository) addProject(team *models.Team, externalProjectID, externalProjectName string) error {
 	testTeam := &models.Team{}
 	err := r.collection.Find(bson.M{"projects.ext_id": externalProjectID}).One(testTeam)
@@ -95,21 +79,17 @@ func (r *TeamRepository) addProject(team *models.Team, externalProjectID, extern
 	return nil
 }
 
-func (r *TeamRepository) addUser(team *models.Team, externalUserID, externalUserName string) error {
-	testTeam := &models.Team{}
-	err := r.collection.Find(bson.M{"users.ext_id": externalUserID}).One(testTeam)
-	if err != nil && err == mgo.ErrNotFound {
-		user := models.TeamUser{
-			ID:               bson.NewObjectId(),
-			ExternalUserID:   externalUserID,
-			ExternalUserName: externalUserName,
-			CreatedAt:        time.Now(),
-		}
+// CreateTeam creates a new team - this method used for tests only!
+func (r *TeamRepository) createTeam(externalID, externalName string) (*models.Team, error) {
 
-		err = r.collection.Update(bson.M{"_id": team.ID}, bson.M{"$push": bson.M{"users": user}})
-		if err != nil {
-			return err
-		}
+	team := &models.Team{
+		ID:               bson.NewObjectId(),
+		CreatedAt:        time.Now(),
+		ExternalTeamID:   externalID,
+		ExternalTeamName: externalName,
+		Projects:         []*models.Project{},
 	}
-	return nil
+
+	err := r.collection.Insert(team)
+	return team, err
 }

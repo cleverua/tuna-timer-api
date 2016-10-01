@@ -1,6 +1,7 @@
 package data
 
 import (
+	"errors"
 	"github.com/nlopes/slack"
 	"github.com/tuna-timer/tuna-timer-api/models"
 	"gopkg.in/mgo.v2"
@@ -8,15 +9,15 @@ import (
 
 // TeamService todo
 type TeamService struct {
-	session    *mgo.Session
-	repository TeamRepositoryInterface
+	repository     TeamRepositoryInterface
+	userRepository *UserRepository
 }
 
 // NewTeamService todo
 func NewTeamService(session *mgo.Session) *TeamService {
 	return &TeamService{
-		session:    session,
-		repository: NewTeamRepository(session),
+		repository:     NewTeamRepository(session),
+		userRepository: NewUserRepository(session),
 	}
 }
 
@@ -44,18 +45,15 @@ func (s *TeamService) CreateOrUpdateWithSlackOAuthResponse(slackOAuthResponse *s
 }
 
 // EnsureTeamSetUp creates Team, User and Project if either is not in database yet
-func (s *TeamService) EnsureTeamSetUp(slackCommand *models.SlackCustomCommand) (*models.Team, *models.Project, *models.TeamUser, error) {
+func (s *TeamService) EnsureTeamSetUp(slackCommand *models.SlackCustomCommand) (*models.Team, *models.Project, error) {
 
 	team, err := s.repository.FindByExternalID(slackCommand.TeamID)
 	if err != nil {
-		return nil, nil, nil, err
+		return nil, nil, err
 	}
 
 	if team == nil {
-		team, err = s.repository.createTeam(slackCommand.TeamID, slackCommand.TeamDomain)
-		if err != nil {
-			return nil, nil, nil, err
-		}
+		return nil, nil, errors.New("Team not found!")
 	}
 
 	var reloadTeam = false
@@ -64,16 +62,7 @@ func (s *TeamService) EnsureTeamSetUp(slackCommand *models.SlackCustomCommand) (
 	if existingProject == nil {
 		err = s.repository.addProject(team, slackCommand.ChannelID, slackCommand.ChannelName)
 		if err != nil {
-			return nil, nil, nil, err
-		}
-		reloadTeam = true
-	}
-
-	existingUser := s.findUser(team, slackCommand.UserID)
-	if existingUser == nil {
-		err = s.repository.addUser(team, slackCommand.UserID, slackCommand.UserName)
-		if err != nil {
-			return nil, nil, nil, err
+			return nil, nil, err
 		}
 		reloadTeam = true
 	}
@@ -82,9 +71,8 @@ func (s *TeamService) EnsureTeamSetUp(slackCommand *models.SlackCustomCommand) (
 		// not catching the error here since we've once already created or loaded the Team successfully
 		team, _ = s.repository.FindByExternalID(slackCommand.TeamID)
 		existingProject = s.findProject(team, slackCommand.ChannelID)
-		existingUser = s.findUser(team, slackCommand.UserID)
 	}
-	return team, existingProject, existingUser, nil
+	return team, existingProject, nil
 }
 
 func (s *TeamService) findProject(team *models.Team, externalProjectID string) *models.Project {
@@ -92,17 +80,6 @@ func (s *TeamService) findProject(team *models.Team, externalProjectID string) *
 	for _, project := range team.Projects {
 		if project.ExternalProjectID == externalProjectID {
 			result = project
-			break
-		}
-	}
-	return result
-}
-
-func (s *TeamService) findUser(team *models.Team, externalUserID string) *models.TeamUser {
-	var result *models.TeamUser
-	for _, user := range team.Users {
-		if user.ExternalUserID == externalUserID {
-			result = user
 			break
 		}
 	}

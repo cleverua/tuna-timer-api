@@ -13,15 +13,10 @@ import (
 	"gopkg.in/mgo.v2"
 )
 
-//EnsureTeamExists
-func (s *TeamServiceTestSuite) TestEnsureTeamExistsNewTeam(c *C) {
+func (s *TeamServiceTestSuite) TestEnsureTeamNoTeamExist(c *C) {
 	cmd := getSlackCustomCommand()
-	team, project, user, err := s.service.EnsureTeamSetUp(cmd)
-	c.Assert(err, IsNil)
-
-	assertTeam(c, team)
-	assertProject(c, project)
-	assertUser(c, user)
+	_, _, err := s.service.EnsureTeamSetUp(cmd)
+	c.Assert(err, NotNil)
 }
 
 func (s *TeamServiceTestSuite) TestEnsureTeamExists(c *C) {
@@ -29,12 +24,11 @@ func (s *TeamServiceTestSuite) TestEnsureTeamExists(c *C) {
 	existingTeam, err := s.repository.createTeam("team-id", "team-domain")
 	c.Assert(err, IsNil)
 
-	team, project, user, err := s.service.EnsureTeamSetUp(cmd)
+	team, project, err := s.service.EnsureTeamSetUp(cmd)
 	c.Assert(err, IsNil)
 
 	assertTeam(c, team)
 	assertProject(c, project)
-	assertUser(c, user)
 
 	c.Assert(existingTeam.ID, Equals, team.ID)
 }
@@ -48,15 +42,11 @@ func (s *TeamServiceTestSuite) TestEnsureTeamExistsWhenTeamAndUserAndProjectExis
 	err = s.repository.addProject(existingTeam, "channel-id", "channel-name")
 	c.Assert(err, IsNil)
 
-	err = s.repository.addUser(existingTeam, "user-id", "user-name")
-	c.Assert(err, IsNil)
-
-	team, project, user, err := s.service.EnsureTeamSetUp(cmd)
+	team, project, err := s.service.EnsureTeamSetUp(cmd)
 	c.Assert(err, IsNil)
 
 	assertTeam(c, team)
 	assertProject(c, project)
-	assertUser(c, user)
 
 	c.Assert(existingTeam.ID, Equals, team.ID)
 }
@@ -78,25 +68,25 @@ func (s *TeamServiceTestSuite) TestEnsureTeamExistsFailureOnFindTeam(c *C) {
 	cmd := getSlackCustomCommand()
 
 	// - FindTeam failure case
-	_, _, _, err := s.service.EnsureTeamSetUp(cmd)
+	_, _, err := s.service.EnsureTeamSetUp(cmd)
 	c.Assert(err, NotNil)
 
 	// - Create team failure case
 	modifiedRepository.findByExternalIDSuccess = true
 	modifiedRepository.createTeamSuccess = false
-	_, _, _, err = s.service.EnsureTeamSetUp(cmd)
+	_, _, err = s.service.EnsureTeamSetUp(cmd)
 	c.Assert(err, NotNil)
 
 	// - Add project failure case
 	modifiedRepository.createTeamSuccess = true
 	modifiedRepository.addProjectSuccess = false
-	_, _, _, err = s.service.EnsureTeamSetUp(cmd)
+	_, _, err = s.service.EnsureTeamSetUp(cmd)
 	c.Assert(err, NotNil)
 
 	// - Add user failure case
 	modifiedRepository.addProjectSuccess = true
 	modifiedRepository.addUserSuccess = false
-	_, _, _, err = s.service.EnsureTeamSetUp(cmd)
+	_, _, err = s.service.EnsureTeamSetUp(cmd)
 	c.Assert(err, NotNil)
 }
 
@@ -171,10 +161,8 @@ func assertTeam(c *C, team *models.Team) {
 	c.Assert(team.ExternalTeamName, Equals, "team-domain")
 	c.Assert(team.CreatedAt, NotNil)
 	c.Assert(len(team.Projects), Equals, 1)
-	c.Assert(len(team.Users), Equals, 1)
 
 	assertProject(c, team.Projects[0])
-	assertUser(c, team.Users[0])
 }
 
 func assertProject(c *C, project *models.Project) {
@@ -221,13 +209,6 @@ func (r *testTeamRepositoryImpl) addProject(team *models.Team, externalProjectID
 		return errors.New("TestTeamRepositoryImpl error")
 	}
 	return r.repository.addProject(team, externalProjectID, externalProjectName)
-}
-
-func (r *testTeamRepositoryImpl) addUser(team *models.Team, externalUserID, externalUserName string) error {
-	if !r.addUserSuccess {
-		return errors.New("TestTeamRepositoryImpl error")
-	}
-	return r.repository.addUser(team, externalUserID, externalUserName)
 }
 
 func (r *testTeamRepositoryImpl) save(team *models.Team) error {

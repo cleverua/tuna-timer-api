@@ -16,6 +16,7 @@ type Status struct {
 	session      *mgo.Session
 	teamService  *data.TeamService
 	timerService *data.TimerService
+	userService  *data.UserService
 	report       *models.StatusCommandReport
 	ctx          context.Context
 }
@@ -27,6 +28,7 @@ func NewStatus(ctx context.Context) *Status {
 		session:      session,
 		teamService:  data.NewTeamService(session),
 		timerService: data.NewTimerService(session),
+		userService:  data.NewUserService(session),
 		report:       &models.StatusCommandReport{},
 		ctx:          ctx,
 	}
@@ -37,7 +39,12 @@ func NewStatus(ctx context.Context) *Status {
 // Handle - SlackCustomCommandHandler interface
 // todo test it!
 func (c *Status) Handle(ctx context.Context, slackCommand models.SlackCustomCommand) *ResponseToSlack {
-	team, project, teamUser, err := c.teamService.EnsureTeamSetUp(&slackCommand)
+	team, project, err := c.teamService.EnsureTeamSetUp(&slackCommand)
+	if err != nil {
+		// todo: format a decent Slack error message so user knows what's wrong and how to solve the issue
+	}
+
+	teamUser, err := c.userService.EnsureUser(team, slackCommand.UserID)
 	if err != nil {
 		// todo: format a decent Slack error message so user knows what's wrong and how to solve the issue
 	}

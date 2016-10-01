@@ -8,14 +8,12 @@ import (
 
 // TimerService - the structure of the service
 type TimerService struct {
-	session    *mgo.Session
 	repository *TimerRepository
 }
 
 // NewTimerService constructs an instance of the service
 func NewTimerService(session *mgo.Session) *TimerService {
 	return &TimerService{
-		session:    session,
 		repository: NewTimerRepository(session),
 	}
 }
