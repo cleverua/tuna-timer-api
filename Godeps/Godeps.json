@@ -40,6 +40,11 @@
 			"Rev": "dd1049a3738432dfc49417e2ae5bd97e132ecac6"
 		},
 		{
+			"ImportPath": "github.com/robfig/cron",
+			"Comment": "v1-47-g9585fd5",
+			"Rev": "9585fd555638e77bba25f25db5c44b41f264aeb7"
+		},
+		{
 			"ImportPath": "golang.org/x/net/websocket",
 			"Rev": "1358eff22f0dd0c54fc521042cc607f6ff4b531a"
 		},

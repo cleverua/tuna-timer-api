@@ -11,6 +11,10 @@ import (
 	"github.com/tuna-timer/tuna-timer-api/utils"
 	"github.com/tuna-timer/tuna-timer-api/web"
 	"time"
+
+	"github.com/robfig/cron"
+	"gopkg.in/mgo.v2"
+	"github.com/tuna-timer/tuna-timer-api/jobs"
 )
 
 const version = "0.1.0"
@@ -50,7 +54,21 @@ func main() {
 		web.RecoveryMiddleware,
 	)
 
+	dbJobsEngine := launchBGJobEngine(environment, session)
+	defer dbJobsEngine.Stop()
+
 	log.Fatal(http.ListenAndServe(":8080", defaultMiddleware.Then(router)))
+}
+
+func launchBGJobEngine(env *utils.Environment, session *mgo.Session) *cron.Cron {
+	log.Println("Setting up and launching the background jobs engine")
+	bgJobEngine := cron.New()
+
+	// Runs 1/2 hourly at the beginning of each hour and at 30th minute of each hour
+	// ---------------- s  m   h d m
+	bgJobEngine.AddJob("0 0,30 * * *", jobs.NewProlongTimersJob(env, session.Clone()))
+	bgJobEngine.Start()
+	return bgJobEngine
 }
 
 func getEnvironmentName() string {
@@ -60,3 +78,5 @@ func getEnvironmentName() string {
 	}
 	return env
 }
+
+
