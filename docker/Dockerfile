@@ -2,7 +2,7 @@ FROM alpine:latest
 
 # Bash needed by `wait-for-it.sh` script
 RUN apk add --no-cache bash \
-    apk add --no-cache ca-certificates
+    ca-certificates
 
 ADD assets /assets
 ADD slack-time-linux-amd64 /
