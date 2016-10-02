@@ -72,6 +72,7 @@ func (env *Environment) MigrateDatabase(session *mgo.Session) error {
 	timers.EnsureIndex(mgo.Index{Key: []string{"created_at"}})
 	timers.EnsureIndex(mgo.Index{Key: []string{"finished_at"}})
 	timers.EnsureIndex(mgo.Index{Key: []string{"deleted_at"}})
+	timers.EnsureIndex(mgo.Index{Key: []string{"tz_offset"}})
 
 	users := session.DB("").C("team_users")
 	users.Create(&mgo.CollectionInfo{})

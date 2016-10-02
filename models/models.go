@@ -49,6 +49,7 @@ type Timer struct {
 	ProjectExternalName string        `json:"project_ext_name" bson:"project_ext_name"`
 	ProjectExternalID   string        `json:"project_ext_id" bson:"project_ext_id"`
 	TeamUserID          string        `json:"team_user_id" bson:"team_user_id"`
+	TeamUserTZOffset    int           `json:"tz_offset" bson:"tz_offset"`
 	TaskName            string        `json:"task_name" bson:"task_name"`
 	TaskHash            string        `json:"task_hash" bson:"task_hash"`
 	CreatedAt           time.Time     `json:"created_at" bson:"created_at"`

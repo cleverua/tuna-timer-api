@@ -5,7 +5,7 @@ func WhichTimezoneIsMidnightAt(utcHour, utcMinute int) int {
 
 	// we're handling just one corner case here for Mumbai TZ which is +5:30
 	if utcHour == 18 && utcMinute == 30 {
-		return (5 * 60 + 30) * 60
+		return (5*60 + 30) * 60
 	}
 
 	midnightAtOffset := utcHour * -1 * 60 * 60

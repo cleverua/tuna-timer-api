@@ -7,6 +7,7 @@ import (
 	"gopkg.in/mgo.v2"
 
 	"fmt"
+	"github.com/nlopes/slack"
 	"github.com/tuna-timer/tuna-timer-api/models"
 	"github.com/tuna-timer/tuna-timer-api/utils"
 	. "gopkg.in/check.v1"
@@ -22,7 +23,15 @@ func (s *TimerRepositoryTestSuite) TestUpdate(c *C) {
 		ExternalProjectID:   "0987654321",
 	}
 
-	timer, err := s.repo.create("team", project, "user", "task")
+	user := &models.TeamUser{
+		ID:             bson.NewObjectId(),
+		ExternalUserID: "user",
+		SlackUserInfo: &slack.User{
+			TZOffset: 10800,
+		},
+	}
+
+	timer, err := s.repo.create("team", project, user, "task")
 	c.Assert(err, IsNil)
 	c.Assert(timer, NotNil)
 	c.Assert(timer.Minutes, Equals, 0)
@@ -44,7 +53,16 @@ func (s *TimerRepositoryTestSuite) TestCreateTimer(c *C) {
 		ExternalProjectID:   "0987654321",
 	}
 
-	timer, err := s.repo.create("team", project, "user", "task")
+	userID := bson.NewObjectId()
+	user := &models.TeamUser{
+		ID:             userID,
+		ExternalUserID: "user",
+		SlackUserInfo: &slack.User{
+			TZOffset: 10800,
+		},
+	}
+
+	timer, err := s.repo.create("team", project, user, "task")
 	c.Assert(err, IsNil)
 	c.Assert(timer, NotNil)
 
@@ -59,9 +77,9 @@ func (s *TimerRepositoryTestSuite) TestCreateTimer(c *C) {
 	c.Assert(timerFromDB.ProjectID, Equals, project.ID.Hex())
 	c.Assert(timerFromDB.ProjectExternalID, Equals, "0987654321")
 	c.Assert(timerFromDB.ProjectExternalName, Equals, "project")
-	c.Assert(timerFromDB.TeamUserID, Equals, "user")
+	c.Assert(timerFromDB.TeamUserID, Equals, userID.Hex())
 	c.Assert(timerFromDB.TaskName, Equals, "task")
-
+	c.Assert(timerFromDB.TeamUserTZOffset, Equals, 10800)
 }
 
 func (s *TimerRepositoryTestSuite) TestFindActiveTimerByTeamAndUserNotExist(c *C) {

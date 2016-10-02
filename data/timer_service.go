@@ -33,8 +33,8 @@ func (s *TimerService) StopTimer(timer *models.Timer) error {
 }
 
 // StartTimer creates a new timer
-func (s *TimerService) StartTimer(teamID string, project *models.Project, teamUserID string, taskName string) (*models.Timer, error) {
-	return s.repository.create(teamID, project, teamUserID, taskName)
+func (s *TimerService) StartTimer(teamID string, project *models.Project, user *models.TeamUser, taskName string) (*models.Timer, error) {
+	return s.repository.create(teamID, project, user, taskName)
 }
 
 // TotalMinutesForTaskToday calculates the total number of minutes the user was/is working on particular task today

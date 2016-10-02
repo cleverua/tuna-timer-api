@@ -21,4 +21,3 @@ func NewProlongTimersJob(env *utils.Environment, session *mgo.Session) *ProlongT
 func (j *ProlongTimersJob) Run() {
 	fmt.Println("ProlongTimersJob launched!")
 }
-

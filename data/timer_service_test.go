@@ -11,6 +11,7 @@ import (
 	. "gopkg.in/check.v1"
 	"gopkg.in/mgo.v2/bson"
 	"time"
+	"github.com/nlopes/slack"
 )
 
 func (s *TimerServiceTestSuite) TestGetActiveTimer(c *C) {
@@ -84,7 +85,16 @@ func (s *TimerServiceTestSuite) TestStartTimer(c *C) {
 		ExternalProjectID:   "0987654321",
 	}
 
-	timer, err := s.service.StartTimer("team", project, "user", "task")
+	userID:= bson.NewObjectId()
+	user := &models.TeamUser{
+		ID: userID,
+		ExternalUserID:"user",
+		SlackUserInfo: &slack.User{
+			TZOffset: 10800,
+		},
+	}
+
+	timer, err := s.service.StartTimer("team", project, user, "task")
 	c.Assert(err, IsNil)
 	c.Assert(timer, NotNil)
 
@@ -94,7 +104,7 @@ func (s *TimerServiceTestSuite) TestStartTimer(c *C) {
 
 	c.Assert(loadedTimer.TeamID, Equals, "team")
 	c.Assert(loadedTimer.ProjectID, Equals, projectID.Hex())
-	c.Assert(loadedTimer.TeamUserID, Equals, "user")
+	c.Assert(loadedTimer.TeamUserID, Equals, userID.Hex())
 	c.Assert(loadedTimer.TaskName, Equals, "task")
 	c.Assert(loadedTimer.TaskHash, NotNil)
 	c.Assert(loadedTimer.CreatedAt, NotNil)

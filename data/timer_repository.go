@@ -66,7 +66,7 @@ func (r *TimerRepository) findActiveByUser(userID string) (*models.Timer, error)
 	return result, err
 }
 
-func (r *TimerRepository) create(teamID string, project *models.Project, userID string, taskName string) (*models.Timer, error) {
+func (r *TimerRepository) create(teamID string, project *models.Project, user *models.TeamUser, taskName string) (*models.Timer, error) {
 
 	timer := &models.Timer{
 		ID:                  bson.NewObjectId(),
@@ -74,7 +74,8 @@ func (r *TimerRepository) create(teamID string, project *models.Project, userID 
 		ProjectID:           project.ID.Hex(),
 		ProjectExternalName: project.ExternalProjectName,
 		ProjectExternalID:   project.ExternalProjectID,
-		TeamUserID:          userID,
+		TeamUserID:          user.ID.Hex(),
+		TeamUserTZOffset:    user.SlackUserInfo.TZOffset,
 		CreatedAt:           time.Now(),
 		TaskName:            taskName,
 		TaskHash:            taskSHA256(teamID, project.ID.Hex(), taskName),

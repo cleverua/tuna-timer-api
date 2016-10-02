@@ -55,7 +55,7 @@ func main() {
 	)
 
 	dbJobsEngine := launchBGJobEngine(environment, session)
-	defer dbJobsEngine.Stop()
+	defer dbJobsEngine.Stop() // does it leak mongo session?
 
 	log.Fatal(http.ListenAndServe(":8080", defaultMiddleware.Then(router)))
 }
