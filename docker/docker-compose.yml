@@ -5,16 +5,24 @@ services:
     environment:
       SLACK_TIME_ENV: 'production'
       DATABASE_URL: 'mongodb://db:27017/tuna_timer'
+      SLACK_CLIENT_ID: ''
+      SLACK_CLIENT_SECRET: ''
+      SLACK_VERIFICATION_TOKEN: ''
     depends_on:
       - db
     entrypoint: ['/wait-for-it.sh', 'db:27017', '--strict', '--', '/slack-time-linux-amd64']
   db:
     image: mongo:3.2
+    #volumes:
+    #  - $HOME/mongodb-data:/data/db
   proxy:
-    image: abiosoft/caddy
+    image: abiosoft/caddy:0.9.3
     ports:
       - "9090:9090"
+      #- "80:80"
+      #- "443:443"
     volumes:
       - ./Caddyfile:/etc/Caddyfile
+      #- $HOME/.caddy:/root/.caddy
     depends_on:
       - app
