@@ -86,9 +86,9 @@ func (s *TeamRepositoryTestSuite) TestCreateTeamWhenAlreadyExists(c *C) {
 
 func (s *TeamRepositoryTestSuite) TestSave(c *C) {
 	t := &models.Team{
-		ExternalTeamID:     "team-id",
-		ExternalTeamName:   "team-name",
-		SlackOAuthResponse: nil,
+		ExternalTeamID:   "team-id",
+		ExternalTeamName: "team-name",
+		SlackOAuth:       nil,
 	}
 	err := s.repository.save(t)
 	c.Assert(err, IsNil)

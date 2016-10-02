@@ -107,7 +107,7 @@ func (r *TeamServiceTestSuite) TestCreateOrUpdateWithSlackOAuthResponseNew(c *C)
 
 	c.Assert(team.ExternalTeamName, Equals, "ext-name")
 
-	details := team.SlackOAuthResponse
+	details := team.SlackOAuth
 	c.Assert(details, NotNil)
 	c.Assert(details.AccessToken, Equals, "access-token")
 	c.Assert(details.Scope, Equals, "scope")
@@ -133,7 +133,7 @@ func (r *TeamServiceTestSuite) TestCreateOrUpdateWithSlackOAuthResponseExisting(
 
 	c.Assert(team.ExternalTeamName, Equals, "ext-name-changed")
 
-	details := team.SlackOAuthResponse
+	details := team.SlackOAuth
 	c.Assert(details, NotNil)
 	c.Assert(details.AccessToken, Equals, "access-token")
 	c.Assert(details.Scope, Equals, "scope")
@@ -171,14 +171,6 @@ func assertProject(c *C, project *models.Project) {
 	c.Assert(project.ExternalProjectID, Equals, "channel-id")
 	c.Assert(project.ExternalProjectName, Equals, "channel-name")
 	c.Assert(project.CreatedAt, NotNil)
-}
-
-func assertUser(c *C, user *models.TeamUser) {
-	c.Assert(user, NotNil)
-	c.Assert(user.ID, NotNil)
-	c.Assert(user.ExternalUserID, Equals, "user-id")
-	c.Assert(user.ExternalUserName, Equals, "user-name")
-	c.Assert(user.CreatedAt, NotNil)
 }
 
 // testTeamRepositoryImpl allows is a TeamRepositoryInterface that is able to simulate returned errors

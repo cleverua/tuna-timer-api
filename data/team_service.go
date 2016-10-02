@@ -29,12 +29,13 @@ func (s *TeamService) CreateOrUpdateWithSlackOAuthResponse(slackOAuthResponse *s
 
 	if team == nil {
 		team = &models.Team{
+			ExternalSystem: "slack",
 			ExternalTeamID: slackOAuthResponse.TeamID,
 		}
 	}
 
 	team.ExternalTeamName = slackOAuthResponse.TeamName
-	team.SlackOAuthResponse = slackOAuthResponse
+	team.SlackOAuth = slackOAuthResponse
 
 	err = s.repository.save(team)
 	if err != nil {

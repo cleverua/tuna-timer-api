@@ -16,7 +16,7 @@ func (s *UserRepositoryTestSuite) TestFindByExternalID(c *C) {
 		TeamID:           "team-id",
 		ExternalUserID:   "ext-id",
 		ExternalUserName: "ext-name",
-		SlackUserData: &slack.User{
+		SlackUserInfo: &slack.User{
 			IsAdmin: true,
 		},
 	}
@@ -31,7 +31,7 @@ func (s *UserRepositoryTestSuite) TestFindByExternalID(c *C) {
 
 	c.Assert(loadedUser.ExternalUserID, Equals, "ext-id")
 	c.Assert(loadedUser.ExternalUserName, Equals, "ext-name")
-	c.Assert(loadedUser.SlackUserData.IsAdmin, Equals, true)
+	c.Assert(loadedUser.SlackUserInfo.IsAdmin, Equals, true)
 }
 
 func (s *UserRepositoryTestSuite) TestSave(c *C) {
@@ -39,7 +39,7 @@ func (s *UserRepositoryTestSuite) TestSave(c *C) {
 		TeamID:           "team-id",
 		ExternalUserID:   "ext-id",
 		ExternalUserName: "ext-name",
-		SlackUserData: &slack.User{
+		SlackUserInfo: &slack.User{
 			IsAdmin: true,
 		},
 	}
@@ -47,7 +47,7 @@ func (s *UserRepositoryTestSuite) TestSave(c *C) {
 	u, err := s.repository.save(user)
 	c.Assert(err, IsNil)
 
-	u.SlackUserData.IsAdmin = false
+	u.SlackUserInfo.IsAdmin = false
 	_, err = s.repository.save(u)
 	c.Assert(err, IsNil)
 
@@ -56,7 +56,7 @@ func (s *UserRepositoryTestSuite) TestSave(c *C) {
 	c.Assert(loadedUser, NotNil)
 
 	c.Assert(loadedUser.ExternalUserName, Equals, "ext-name")
-	c.Assert(loadedUser.SlackUserData.IsAdmin, Equals, false)
+	c.Assert(loadedUser.SlackUserInfo.IsAdmin, Equals, false)
 }
 
 func (s *UserRepositoryTestSuite) TestFindByExternalIDNotExist(c *C) {

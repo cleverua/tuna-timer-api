@@ -1,45 +1,79 @@
 package data
 
 import (
+	"github.com/nlopes/slack"
 	"github.com/tuna-timer/tuna-timer-api/models"
 	"gopkg.in/mgo.v2"
-	"github.com/nlopes/slack"
-	"gopkg.in/mgo.v2/bson"
 	"time"
 )
 
 type UserService struct {
 	repository *UserRepository
+	slackAPI   userServerSlackAPI
 }
 
 func NewUserService(session *mgo.Session) *UserService {
 	return &UserService{
 		repository: NewUserRepository(session),
+		slackAPI:   &userServiceSlackAPIImpl{},
 	}
 }
 
 func (s *UserService) EnsureUser(team *models.Team, externalUserID string) (*models.TeamUser, error) {
-	slackAPI := slack.New(team.SlackOAuthResponse.AccessToken)
-	slackAPI.SetDebug(true)
-
-	slackUserData, err := slackAPI.GetUserInfo(externalUserID)
+	user, err := s.repository.FindByExternalID(externalUserID)
 	if err != nil {
 		return nil, err
 	}
 
-	user := &models.TeamUser{
-		ID: bson.NewObjectId(),
-		CreatedAt: time.Now(),
-		ExternalUserID:externalUserID,
-		ExternalUserName:slackUserData.Name,
-		SlackUserData:slackUserData,
-		TeamID: team.ID.Hex(),
-	}
+	if user == nil {
 
-	user, err = s.repository.save(user);
-	if err != nil {
-		return nil, err
+		slackUserData, err := s.slackAPI.GetUserInfo(team, externalUserID)
+		if err != nil {
+			return nil, err
+		}
+
+		user = &models.TeamUser{
+			CreatedAt:        time.Now(),
+			ExternalUserID:   externalUserID,
+			ExternalUserName: slackUserData.Name,
+			SlackUserInfo:    slackUserData,
+			TeamID:           team.ID.Hex(),
+		}
+
+		user, err = s.repository.save(user)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return user, nil
+}
+
+// UpdateSlackUserInfo - finds or creates TeamUser record with associated user data gathered from Slack
+//func (s *UserService) UpdateSlackUserInfo(team *models.Team, user *models.TeamUser) (*models.TeamUser, error) {
+//	info, err := s.slackAPI.GetUserInfo(team, user.ExternalUserID)
+//	if err != nil {
+//		return nil, err
+//	}
+//
+//	user.SlackUserInfo = info
+//	user, err = s.repository.save(user)
+//	if err != nil {
+//		return nil, err
+//	}
+//
+//	return user, nil
+//}
+
+// A wrapper around slack API used by this service. Unit tests will inject their own impl. of this to bypass network calls to Slack
+type userServerSlackAPI interface {
+	GetUserInfo(team *models.Team, externalUserID string) (*slack.User, error)
+}
+
+type userServiceSlackAPIImpl struct{}
+
+func (u *userServiceSlackAPIImpl) GetUserInfo(team *models.Team, externalUserID string) (*slack.User, error) {
+	slackAPI := slack.New(team.SlackOAuth.AccessToken)
+	slackAPI.SetDebug(true)
+	return slackAPI.GetUserInfo(externalUserID)
 }

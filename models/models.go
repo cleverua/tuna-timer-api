@@ -14,12 +14,20 @@ type Team struct {
 	// slack channel ID or
 	// skype group ID or
 	// hipchat channel ID
-	ExternalTeamID   string `json:"ext_id" bson:"ext_id"`
-	ExternalTeamName string `json:"ext_name" bson:"ext_name"`
-	//Users              []*TeamUser          `json:"users" bson:"users"`
-	Projects           []*Project           `json:"projects" bson:"projects"`
-	CreatedAt          time.Time            `json:"created_at" bson:"created_at"`
-	SlackOAuthResponse *slack.OAuthResponse `json:"slack_oauth" bson:"slack_oauth"`
+	ExternalSystem   string               `json:"system" bson:"system"`
+	ExternalTeamID   string               `json:"ext_id" bson:"ext_id"`
+	ExternalTeamName string               `json:"ext_name" bson:"ext_name"`
+	Projects         []*Project           `json:"projects" bson:"projects"`
+	CreatedAt        time.Time            `json:"created_at" bson:"created_at"`
+	SlackOAuth       *slack.OAuthResponse `json:"slack_oauth" bson:"slack_oauth"`
+}
+
+// Project - is a project you can associate tasks with and tracks their time. It is embedded in Team
+type Project struct {
+	ID                  bson.ObjectId `json:"id" bson:"_id,omitempty"`
+	ExternalProjectID   string        `json:"ext_id" bson:"ext_id"`
+	ExternalProjectName string        `json:"ext_name" bson:"ext_name"`
+	CreatedAt           time.Time     `json:"created_at" bson:"created_at"`
 }
 
 // TeamUser represents a Slack user that belongs to a team.
@@ -27,18 +35,10 @@ type Team struct {
 type TeamUser struct {
 	ID               bson.ObjectId `json:"id" bson:"_id,omitempty"`
 	TeamID           string        `json:"team_id" bson:"team_id"`
-	SlackUserData    *slack.User   `json:"slack_user_data" bson:"slack_user_data"`
+	SlackUserInfo    *slack.User   `json:"slack_user_info" bson:"slack_user_info"`
 	ExternalUserID   string        `json:"ext_id" bson:"ext_id"`
 	ExternalUserName string        `json:"ext_name" bson:"ext_name"`
 	CreatedAt        time.Time     `json:"created_at" bson:"created_at"`
-}
-
-// Project - is a project you can associate tasks with and tracks their time
-type Project struct {
-	ID                  bson.ObjectId `json:"id" bson:"_id,omitempty"`
-	ExternalProjectID   string        `json:"ext_id" bson:"ext_id"`
-	ExternalProjectName string        `json:"ext_name" bson:"ext_name"`
-	CreatedAt           time.Time     `json:"created_at" bson:"created_at"`
 }
 
 // Timer - a time record that has start and finish dates. Belongs to a slack user and a task
