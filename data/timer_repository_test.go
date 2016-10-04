@@ -280,6 +280,48 @@ func (s *TimerRepositoryTestSuite) TestCompletedTasksForUser(c *C) {
 	c.Assert(m[1].Name, Equals, "task-name2")
 }
 
+func (s *TimerRepositoryTestSuite) TestFindActiveByTimezoneOffset(c *C) {
+	s.repo.createTimer(&models.Timer{
+		ID:         bson.NewObjectId(),
+		FinishedAt: nil,
+		DeletedAt: nil,
+		TeamUserTZOffset: 10,
+		TaskHash: "match",
+	})
+	s.repo.createTimer(&models.Timer{
+		ID:         bson.NewObjectId(),
+		FinishedAt: nil,
+		DeletedAt: nil,
+		TeamUserTZOffset: 10,
+		TaskHash: "match",
+	})
+	s.repo.createTimer(&models.Timer{
+		ID:         bson.NewObjectId(),
+		FinishedAt: nil,
+		DeletedAt: nil,
+		TeamUserTZOffset: 20,
+		TaskHash: "not match",
+	})
+
+	now := time.Now()
+	s.repo.createTimer(&models.Timer{
+		ID:         bson.NewObjectId(),
+		FinishedAt: &now,
+		DeletedAt: nil,
+		TeamUserTZOffset: 10,
+		TaskHash: "not match",
+	})
+
+	timers, err := s.repo.findActiveByTimezoneOffset(10)
+	c.Assert(err, IsNil)
+	c.Assert(len(timers), Equals, 2)
+
+	for _, timer := range timers {
+		c.Assert(timer.TaskHash, Equals, "match")
+	}
+}
+
+
 // Suite lifecycle and callbacks
 func (s *TimerRepositoryTestSuite) SetUpSuite(c *C) {
 	e := utils.NewEnvironment(utils.TestEnv, "1.0.0")

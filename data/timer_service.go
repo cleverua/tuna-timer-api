@@ -2,6 +2,7 @@ package data
 
 import (
 	"github.com/tuna-timer/tuna-timer-api/models"
+	"github.com/tuna-timer/tuna-timer-api/utils"
 	"gopkg.in/mgo.v2"
 	"time"
 )
@@ -83,6 +84,26 @@ func (s *TimerService) GetCompletedTasksForDay(userID string, day time.Time) ([]
 	}
 
 	return tasks, nil
+}
+
+func (s *TimerService) CompleteActiveTimersAtMidnight(utcNow *time.Time) error {
+	timezoneOffset := utils.WhichTimezoneIsMidnightAt(utcNow.Hour(), utcNow.Minute())
+	timers, err := s.repository.findActiveByTimezoneOffset(timezoneOffset)
+	if err != nil {
+		return err
+	}
+
+	for _, timer := range timers {
+		endDate := time.Date(timer.CreatedAt.Year(), timer.CreatedAt.Month(), timer.CreatedAt.Day(), utcNow.Hour()-1, 59, 59, 0, time.UTC)
+		timer.Minutes = int(endDate.Sub(timer.CreatedAt).Minutes())
+		timer.FinishedAt = &endDate
+		err = s.repository.update(timer)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (s *TimerService) CalculateMinutesForActiveTimer(timer *models.Timer) int {

@@ -6,12 +6,12 @@ import (
 
 	"gopkg.in/mgo.v2"
 
+	"github.com/nlopes/slack"
 	"github.com/tuna-timer/tuna-timer-api/models"
 	"github.com/tuna-timer/tuna-timer-api/utils"
 	. "gopkg.in/check.v1"
 	"gopkg.in/mgo.v2/bson"
 	"time"
-	"github.com/nlopes/slack"
 )
 
 func (s *TimerServiceTestSuite) TestGetActiveTimer(c *C) {
@@ -85,10 +85,10 @@ func (s *TimerServiceTestSuite) TestStartTimer(c *C) {
 		ExternalProjectID:   "0987654321",
 	}
 
-	userID:= bson.NewObjectId()
+	userID := bson.NewObjectId()
 	user := &models.TeamUser{
-		ID: userID,
-		ExternalUserID:"user",
+		ID:             userID,
+		ExternalUserID: "user",
 		SlackUserInfo: &slack.User{
 			TZOffset: 10800,
 		},
@@ -247,6 +247,53 @@ func (s *TimerServiceTestSuite) TestGetCompletedTasksForDay(c *C) {
 	c.Assert(len(v), Equals, 1)
 	c.Assert(v[0].Minutes, Equals, 7)
 
+}
+
+// CompleteActiveTimersAtMidnight
+func (s *TimerServiceTestSuite) TestCompleteActiveTimersAtMidnight(c *C) {
+
+	t1ID := bson.NewObjectId()
+	s.repo.createTimer(&models.Timer{
+		ID:         t1ID,
+		TeamID:     "team",
+		ProjectID:  "project",
+		TeamUserID: "user",
+		TaskHash:   "task1",
+		CreatedAt:  utils.PT("2016 Sep 12 20:40:00"),
+		FinishedAt: nil,
+		TeamUserTZOffset: 10800, // +3 Kiev
+	})
+
+	t2ID := bson.NewObjectId()
+	s.repo.createTimer(&models.Timer{
+		ID:         t2ID,
+		TeamID:     "team",
+		ProjectID:  "project",
+		TeamUserID: "user",
+		TaskHash:   "task2",
+		CreatedAt:  utils.PT("2016 Sep 12 10:35:00"),
+		FinishedAt: nil,
+		TeamUserTZOffset: -10800, // Rio
+	})
+
+	// let now be 21:00 UTC which is midnight in Kiev (+3 UTC)
+	now := utils.PT("2016 Sep 12 21:00:00")
+
+	// a side check just to make sure we're on the right track
+	c.Assert(utils.WhichTimezoneIsMidnightAt(now.Hour(), now.Minute()), Equals, 10800)
+
+	err := s.service.CompleteActiveTimersAtMidnight(&now)
+	c.Assert(err, IsNil)
+
+	timer, err := s.repo.findByID(t1ID.Hex())
+	c.Assert(err, IsNil)
+	c.Assert(timer.FinishedAt, NotNil)
+	c.Assert(timer.Minutes, Equals, 20-1)
+
+	timer, err = s.repo.findByID(t2ID.Hex())
+	c.Assert(err, IsNil)
+	c.Assert(timer.FinishedAt, IsNil)
+	c.Assert(timer.Minutes, Equals, 0)
 }
 
 // Suite lifecycle and callbacks

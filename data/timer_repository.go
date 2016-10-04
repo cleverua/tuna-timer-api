@@ -33,6 +33,17 @@ func (r *TimerRepository) findByID(timerID string) (*models.Timer, error) {
 	return result, err
 }
 
+func (r *TimerRepository) findActiveByTimezoneOffset(timezoneOffset int) ([]*models.Timer, error) {
+	result := []*models.Timer{}
+
+	err := r.collection.Find(bson.M{
+		"tz_offset":   timezoneOffset,
+		"finished_at": nil,
+		"deleted_at":  nil}).All(&result)
+
+	return result, err
+}
+
 func (r *TimerRepository) findActiveByTeamAndUser(teamID, userID string) (*models.Timer, error) {
 
 	result := &models.Timer{}
