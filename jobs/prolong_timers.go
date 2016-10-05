@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"github.com/tuna-timer/tuna-timer-api/utils"
 	"gopkg.in/mgo.v2"
+	"github.com/tuna-timer/tuna-timer-api/data"
+	"time"
 )
 
 type ProlongTimersJob struct {
@@ -20,4 +22,11 @@ func NewProlongTimersJob(env *utils.Environment, session *mgo.Session) *ProlongT
 
 func (j *ProlongTimersJob) Run() {
 	fmt.Println("ProlongTimersJob launched!")
+
+	now := time.Now()
+
+	service := data.NewTimerService(j.session)
+	service.CompleteActiveTimersAtMidnight(&now)
+
+	fmt.Println("ProlongTimersJob finished!")
 }

@@ -5,6 +5,7 @@ import (
 	"github.com/tuna-timer/tuna-timer-api/utils"
 	"gopkg.in/mgo.v2"
 	"time"
+	"log"
 )
 
 // TimerService - the structure of the service
@@ -93,7 +94,11 @@ func (s *TimerService) CompleteActiveTimersAtMidnight(utcNow *time.Time) error {
 		return err
 	}
 
+	log.Printf("Found %d timer(s) to complete", len(timers))
+
 	for _, timer := range timers {
+		log.Printf("Completing %s timer", timer.TaskName)
+
 		endDate := time.Date(timer.CreatedAt.Year(), timer.CreatedAt.Month(), timer.CreatedAt.Day(), utcNow.Hour()-1, 59, 59, 0, time.UTC)
 		timer.Minutes = int(endDate.Sub(timer.CreatedAt).Minutes())
 		timer.FinishedAt = &endDate
