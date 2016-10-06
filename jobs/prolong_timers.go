@@ -2,9 +2,9 @@ package jobs
 
 import (
 	"fmt"
+	"github.com/tuna-timer/tuna-timer-api/data"
 	"github.com/tuna-timer/tuna-timer-api/utils"
 	"gopkg.in/mgo.v2"
-	"github.com/tuna-timer/tuna-timer-api/data"
 	"time"
 )
 

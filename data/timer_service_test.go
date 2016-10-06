@@ -200,17 +200,24 @@ func (s *TimerServiceTestSuite) TestTotalMinutesForUserTodayWhenOneTasksLastsSin
 	c.Assert(s.service.TotalUserMinutesForDay("user", time.Now()), Equals, actual)
 }
 
-func (s *TimerServiceTestSuite) TestGetCompletedTasksForDay(c *C) {
+func (s *TimerServiceTestSuite) TestGetCompletedTasksForDayPositiveTZOffset(c *C) {
 
 	now := time.Now()
+
+	user := &models.TeamUser{
+		ID: bson.NewObjectId(),
+		SlackUserInfo: &slack.User{
+			TZOffset: 10800, // UTC+3 Kiev
+		},
+	}
 
 	s.repo.createTimer(&models.Timer{
 		ID:         bson.NewObjectId(),
 		TeamID:     "team",
 		ProjectID:  "project",
-		TeamUserID: "user",
+		TeamUserID: user.ID.Hex(),
 		TaskHash:   "task",
-		CreatedAt:  utils.PT("2016 Sep 12 10:35:00"),
+		CreatedAt:  utils.PT("2016 Sep 12 8:00:00"), // which is 11:00 in Kiev
 		FinishedAt: &now,
 		Minutes:    2,
 	})
@@ -219,9 +226,9 @@ func (s *TimerServiceTestSuite) TestGetCompletedTasksForDay(c *C) {
 		ID:         bson.NewObjectId(),
 		TeamID:     "team",
 		ProjectID:  "project",
-		TeamUserID: "user",
+		TeamUserID: user.ID.Hex(),
 		TaskHash:   "task",
-		CreatedAt:  utils.PT("2016 Sep 12 23:59:59"),
+		CreatedAt:  utils.PT("2016 Sep 12 19:30:00"), // which is 22:30 in Kiev
 		FinishedAt: &now,
 		Minutes:    3,
 	})
@@ -230,23 +237,83 @@ func (s *TimerServiceTestSuite) TestGetCompletedTasksForDay(c *C) {
 		ID:         bson.NewObjectId(),
 		TeamID:     "team",
 		ProjectID:  "project",
-		TeamUserID: "user",
+		TeamUserID: user.ID.Hex(),
 		TaskHash:   "task",
-		CreatedAt:  utils.PT("2016 Sep 13 00:00:00"),
+		CreatedAt:  utils.PT("2016 Sep 12 22:00:00"), // which is 1am of the next day in Kiev
 		FinishedAt: &now,
 		Minutes:    7,
 	})
 
-	v, err := s.service.GetCompletedTasksForDay("user", utils.PT("2016 Sep 12 23:59:59"))
+	targetDate := utils.PT("2016 Sep 12 00:00:00")
+	v, err := s.service.GetCompletedTasksForDay(targetDate.Year(), targetDate.Month(), targetDate.Day(), user)
 	c.Assert(err, IsNil)
 	c.Assert(len(v), Equals, 1)
 	c.Assert(v[0].Minutes, Equals, 5)
 
-	v, err = s.service.GetCompletedTasksForDay("user", utils.PT("2016 Sep 13 23:59:59"))
+	targetDate = utils.PT("2016 Sep 13 00:00:00")
+
+	v, err = s.service.GetCompletedTasksForDay(targetDate.Year(), targetDate.Month(), targetDate.Day(), user)
 	c.Assert(err, IsNil)
 	c.Assert(len(v), Equals, 1)
 	c.Assert(v[0].Minutes, Equals, 7)
+}
 
+func (s *TimerServiceTestSuite) TestGetCompletedTasksForDayNegativeTZOffset(c *C) {
+
+	now := time.Now()
+
+	user := &models.TeamUser{
+		ID: bson.NewObjectId(),
+		SlackUserInfo: &slack.User{
+			TZOffset: -18000, // UTC-5 Nashville
+		},
+	}
+
+	s.repo.createTimer(&models.Timer{
+		ID:         bson.NewObjectId(),
+		TeamID:     "team",
+		ProjectID:  "project",
+		TeamUserID: user.ID.Hex(),
+		TaskHash:   "task",
+		CreatedAt:  utils.PT("2016 Sep 12 15:00:00"), // which is 10:00 in Nashville
+		FinishedAt: &now,
+		Minutes:    2,
+	})
+
+	s.repo.createTimer(&models.Timer{
+		ID:         bson.NewObjectId(),
+		TeamID:     "team",
+		ProjectID:  "project",
+		TeamUserID: user.ID.Hex(),
+		TaskHash:   "task",
+		CreatedAt:  utils.PT("2016 Sep 13 03:30:00"), // which is 22:30 in Nashville
+		FinishedAt: &now,
+		Minutes:    3,
+	})
+
+	s.repo.createTimer(&models.Timer{
+		ID:         bson.NewObjectId(),
+		TeamID:     "team",
+		ProjectID:  "project",
+		TeamUserID: user.ID.Hex(),
+		TaskHash:   "task",
+		CreatedAt:  utils.PT("2016 Sep 13 06:00:00"), // which is 1am of the next day in Nashville
+		FinishedAt: &now,
+		Minutes:    7,
+	})
+
+	targetDate := utils.PT("2016 Sep 12 00:00:00")
+	v, err := s.service.GetCompletedTasksForDay(targetDate.Year(), targetDate.Month(), targetDate.Day(), user)
+	c.Assert(err, IsNil)
+	c.Assert(len(v), Equals, 1)
+	c.Assert(v[0].Minutes, Equals, 5)
+
+	targetDate = utils.PT("2016 Sep 13 00:00:00")
+
+	v, err = s.service.GetCompletedTasksForDay(targetDate.Year(), targetDate.Month(), targetDate.Day(), user)
+	c.Assert(err, IsNil)
+	c.Assert(len(v), Equals, 1)
+	c.Assert(v[0].Minutes, Equals, 7)
 }
 
 // CompleteActiveTimersAtMidnight
@@ -254,25 +321,25 @@ func (s *TimerServiceTestSuite) TestCompleteActiveTimersAtMidnight(c *C) {
 
 	t1ID := bson.NewObjectId()
 	s.repo.createTimer(&models.Timer{
-		ID:         t1ID,
-		TeamID:     "team",
-		ProjectID:  "project",
-		TeamUserID: "user",
-		TaskHash:   "task1",
-		CreatedAt:  utils.PT("2016 Sep 12 20:40:00"),
-		FinishedAt: nil,
+		ID:               t1ID,
+		TeamID:           "team",
+		ProjectID:        "project",
+		TeamUserID:       "user",
+		TaskHash:         "task1",
+		CreatedAt:        utils.PT("2016 Sep 12 20:40:00"),
+		FinishedAt:       nil,
 		TeamUserTZOffset: 10800, // +3 Kiev
 	})
 
 	t2ID := bson.NewObjectId()
 	s.repo.createTimer(&models.Timer{
-		ID:         t2ID,
-		TeamID:     "team",
-		ProjectID:  "project",
-		TeamUserID: "user",
-		TaskHash:   "task2",
-		CreatedAt:  utils.PT("2016 Sep 12 10:35:00"),
-		FinishedAt: nil,
+		ID:               t2ID,
+		TeamID:           "team",
+		ProjectID:        "project",
+		TeamUserID:       "user",
+		TaskHash:         "task2",
+		CreatedAt:        utils.PT("2016 Sep 12 10:35:00"),
+		FinishedAt:       nil,
 		TeamUserTZOffset: -10800, // Rio
 	})
 

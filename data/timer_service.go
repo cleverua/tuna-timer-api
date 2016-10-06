@@ -4,8 +4,8 @@ import (
 	"github.com/tuna-timer/tuna-timer-api/models"
 	"github.com/tuna-timer/tuna-timer-api/utils"
 	"gopkg.in/mgo.v2"
-	"time"
 	"log"
+	"time"
 )
 
 // TimerService - the structure of the service
@@ -72,13 +72,15 @@ func (s *TimerService) TotalUserMinutesForDay(userID string, day time.Time) int 
 	return result
 }
 
-// GetCompletedTasksForDay
-func (s *TimerService) GetCompletedTasksForDay(userID string, day time.Time) ([]*models.TaskAggregation, error) {
+// GetCompletedTasksForDay - returns the list of tasks the user had completed during given work day by his/her timezone
+// - year, month, day - is the day to get the list of completed tasks for
+// - user - whose tasks the viewer is interested in
+func (s *TimerService) GetCompletedTasksForDay(year int, month time.Month, day int, user *models.TeamUser) ([]*models.TaskAggregation, error) {
+	tzOffset := user.SlackUserInfo.TZOffset
+	startDate := time.Date(year, month, day, 0, 0, 0, 0, time.UTC).Add(time.Duration(tzOffset) * time.Second * -1)
+	endDate := time.Date(year, month, day, 23, 59, 59, 0, time.UTC).Add(time.Duration(tzOffset) * time.Second * -1)
 
-	startDate := day.Truncate(24 * time.Hour)
-	endDate := time.Date(day.Year(), day.Month(), day.Day(), 23, 59, 59, 0, time.UTC)
-
-	tasks, err := s.repository.completedTasksForUser(userID, startDate, endDate)
+	tasks, err := s.repository.completedTasksForUser(user.ID.Hex(), startDate, endDate)
 
 	if err != nil {
 		return nil, err
@@ -100,8 +102,9 @@ func (s *TimerService) CompleteActiveTimersAtMidnight(utcNow *time.Time) error {
 		log.Printf("Completing %s timer", timer.TaskName)
 
 		endDate := time.Date(timer.CreatedAt.Year(), timer.CreatedAt.Month(), timer.CreatedAt.Day(), utcNow.Hour()-1, 59, 59, 0, time.UTC)
-		timer.Minutes = int(endDate.Sub(timer.CreatedAt).Minutes())
 		timer.FinishedAt = &endDate
+
+		timer.Minutes = int(endDate.Sub(timer.CreatedAt).Minutes())
 		err = s.repository.update(timer)
 		if err != nil {
 			return err

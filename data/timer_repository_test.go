@@ -282,34 +282,34 @@ func (s *TimerRepositoryTestSuite) TestCompletedTasksForUser(c *C) {
 
 func (s *TimerRepositoryTestSuite) TestFindActiveByTimezoneOffset(c *C) {
 	s.repo.createTimer(&models.Timer{
-		ID:         bson.NewObjectId(),
-		FinishedAt: nil,
-		DeletedAt: nil,
+		ID:               bson.NewObjectId(),
+		FinishedAt:       nil,
+		DeletedAt:        nil,
 		TeamUserTZOffset: 10,
-		TaskHash: "match",
+		TaskHash:         "match",
 	})
 	s.repo.createTimer(&models.Timer{
-		ID:         bson.NewObjectId(),
-		FinishedAt: nil,
-		DeletedAt: nil,
+		ID:               bson.NewObjectId(),
+		FinishedAt:       nil,
+		DeletedAt:        nil,
 		TeamUserTZOffset: 10,
-		TaskHash: "match",
+		TaskHash:         "match",
 	})
 	s.repo.createTimer(&models.Timer{
-		ID:         bson.NewObjectId(),
-		FinishedAt: nil,
-		DeletedAt: nil,
+		ID:               bson.NewObjectId(),
+		FinishedAt:       nil,
+		DeletedAt:        nil,
 		TeamUserTZOffset: 20,
-		TaskHash: "not match",
+		TaskHash:         "not match",
 	})
 
 	now := time.Now()
 	s.repo.createTimer(&models.Timer{
-		ID:         bson.NewObjectId(),
-		FinishedAt: &now,
-		DeletedAt: nil,
+		ID:               bson.NewObjectId(),
+		FinishedAt:       &now,
+		DeletedAt:        nil,
 		TeamUserTZOffset: 10,
-		TaskHash: "not match",
+		TaskHash:         "not match",
 	})
 
 	timers, err := s.repo.findActiveByTimezoneOffset(10)
@@ -320,7 +320,6 @@ func (s *TimerRepositoryTestSuite) TestFindActiveByTimezoneOffset(c *C) {
 		c.Assert(timer.TaskHash, Equals, "match")
 	}
 }
-
 
 // Suite lifecycle and callbacks
 func (s *TimerRepositoryTestSuite) SetUpSuite(c *C) {

@@ -49,22 +49,23 @@ func (c *Status) Handle(ctx context.Context, slackCommand models.SlackCustomComm
 		// todo: format a decent Slack error message so user knows what's wrong and how to solve the issue
 	}
 
-	day := time.Now()
+	day := time.Now().Add(time.Duration(teamUser.SlackUserInfo.TZOffset) * time.Minute)
 	c.report.PeriodName = "today"
 
-	if slackCommand.Text == "yesterday" {
-		day = day.AddDate(0, 0, -1)
-		c.report.PeriodName = "yesterday"
-	}
+	//if slackCommand.Text == "yesterday" {
+	//	day = day.AddDate(0, 0, -1)
+	//	c.report.PeriodName = "yesterday"
+	//}
 
 	c.report.Team = team
 	c.report.Project = project
 	c.report.TeamUser = teamUser
 
-	tasks, err := c.timerService.GetCompletedTasksForDay(teamUser.ID.Hex(), day)
+	tasks, err := c.timerService.GetCompletedTasksForDay(day.Year(), day.Month(), day.Day(), teamUser)
 	if err != nil {
 		// todo: format a decent Slack error message so user knows what's wrong and how to solve the issue
 	}
+	c.report.Tasks = tasks
 
 	if c.report.PeriodName == "today" {
 		alreadyStartedTimer, _ := c.timerService.GetActiveTimer(team.ID.Hex(), teamUser.ID.Hex())
@@ -76,7 +77,6 @@ func (c *Status) Handle(ctx context.Context, slackCommand models.SlackCustomComm
 		}
 	}
 
-	c.report.Tasks = tasks
 	c.report.UserTotalForPeriod = c.timerService.TotalUserMinutesForDay(teamUser.ID.Hex(), time.Now())
 
 	return c.response()
