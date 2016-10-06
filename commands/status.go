@@ -49,7 +49,7 @@ func (c *Status) Handle(ctx context.Context, slackCommand models.SlackCustomComm
 		// todo: format a decent Slack error message so user knows what's wrong and how to solve the issue
 	}
 
-	day := time.Now().Add(time.Duration(teamUser.SlackUserInfo.TZOffset) * time.Minute)
+	day := time.Now().Add(time.Duration(teamUser.SlackUserInfo.TZOffset) * time.Second)
 	c.report.PeriodName = "today"
 
 	if slackCommand.Text == "yesterday" {
