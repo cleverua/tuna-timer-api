@@ -52,10 +52,10 @@ func (c *Status) Handle(ctx context.Context, slackCommand models.SlackCustomComm
 	day := time.Now().Add(time.Duration(teamUser.SlackUserInfo.TZOffset) * time.Minute)
 	c.report.PeriodName = "today"
 
-	//if slackCommand.Text == "yesterday" {
-	//	day = day.AddDate(0, 0, -1)
-	//	c.report.PeriodName = "yesterday"
-	//}
+	if slackCommand.Text == "yesterday" {
+		day = day.AddDate(0, 0, -1)
+		c.report.PeriodName = "yesterday"
+	}
 
 	c.report.Team = team
 	c.report.Project = project
