@@ -76,9 +76,16 @@ func (s *TimerService) TotalUserMinutesForDay(userID string, day time.Time) int 
 // - year, month, day - is the day to get the list of completed tasks for
 // - user - whose tasks the viewer is interested in
 func (s *TimerService) GetCompletedTasksForDay(year int, month time.Month, day int, user *models.TeamUser) ([]*models.TaskAggregation, error) {
+	log.Printf("GetCompletedTasksForDay, Year: %d, Month: %d, Day: %d", year, month, day)
+
 	tzOffset := user.SlackUserInfo.TZOffset
+	log.Printf("GetCompletedTasksForDay, tzOffset: %d", tzOffset)
+
 	startDate := time.Date(year, month, day, 0, 0, 0, 0, time.UTC).Add(time.Duration(tzOffset) * time.Second * -1)
 	endDate := time.Date(year, month, day, 23, 59, 59, 0, time.UTC).Add(time.Duration(tzOffset) * time.Second * -1)
+
+	log.Printf("GetCompletedTasksForDay, startDate: %+v", startDate)
+	log.Printf("GetCompletedTasksForDay, endDate: %+v", endDate)
 
 	tasks, err := s.repository.completedTasksForUser(user.ID.Hex(), startDate, endDate)
 
