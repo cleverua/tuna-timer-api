@@ -66,6 +66,7 @@ func (c *Status) Handle(ctx context.Context, slackCommand models.SlackCustomComm
 		// todo: format a decent Slack error message so user knows what's wrong and how to solve the issue
 	}
 	c.report.Tasks = tasks
+	c.report.UserTotalForPeriod = c.timerService.TotalCompletedMinutesForDay(day.Year(), day.Month(), day.Day(), teamUser)
 
 	if c.report.PeriodName == "today" {
 		alreadyStartedTimer, _ := c.timerService.GetActiveTimer(team.ID.Hex(), teamUser.ID.Hex())
@@ -74,10 +75,9 @@ func (c *Status) Handle(ctx context.Context, slackCommand models.SlackCustomComm
 			alreadyStartedTimer.Minutes = c.timerService.CalculateMinutesForActiveTimer(alreadyStartedTimer)
 			c.report.AlreadyStartedTimer = alreadyStartedTimer
 			c.report.AlreadyStartedTimerTotalForToday = c.timerService.TotalMinutesForTaskToday(alreadyStartedTimer)
+			c.report.UserTotalForPeriod += c.report.AlreadyStartedTimerTotalForToday
 		}
 	}
-
-	c.report.UserTotalForPeriod = c.timerService.TotalUserMinutesForDay(day.Year(), day.Month(), day.Day(), teamUser)
 
 	return c.response()
 }

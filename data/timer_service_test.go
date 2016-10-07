@@ -147,7 +147,7 @@ func (s *TimerServiceTestSuite) TestTotalMinutesForTodayAddsTimeForUnfinishedTas
 	c.Assert(s.service.TotalMinutesForTaskToday(timer), Equals, 15)
 }
 
-func (s *TimerServiceTestSuite) TestTotalMinutesForUserToday(c *C) {
+func (s *TimerServiceTestSuite) TestTotalCompletedMinutesForDay(c *C) {
 	now := time.Now()
 
 	user := &models.TeamUser{
@@ -191,10 +191,10 @@ func (s *TimerServiceTestSuite) TestTotalMinutesForUserToday(c *C) {
 	})
 
 	targetDate := utils.PT("2016 Sep 12 00:00:00")
-	c.Assert(s.service.TotalUserMinutesForDay(targetDate.Year(), targetDate.Month(), targetDate.Day(), user), Equals, 5)
+	c.Assert(s.service.TotalCompletedMinutesForDay(targetDate.Year(), targetDate.Month(), targetDate.Day(), user), Equals, 5)
 
 	targetDate = utils.PT("2016 Sep 13 00:00:00")
-	c.Assert(s.service.TotalUserMinutesForDay(targetDate.Year(), targetDate.Month(), targetDate.Day(), user), Equals, 7)
+	c.Assert(s.service.TotalCompletedMinutesForDay(targetDate.Year(), targetDate.Month(), targetDate.Day(), user), Equals, 7)
 }
 
 func (s *TimerServiceTestSuite) TestGetCompletedTasksForDayPositiveTZOffset(c *C) {
