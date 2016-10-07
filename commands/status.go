@@ -77,7 +77,7 @@ func (c *Status) Handle(ctx context.Context, slackCommand models.SlackCustomComm
 		}
 	}
 
-	c.report.UserTotalForPeriod = c.timerService.TotalUserMinutesForDay(teamUser.ID.Hex(), time.Now())
+	c.report.UserTotalForPeriod = c.timerService.TotalUserMinutesForDay(day.Year(), day.Month(), day.Day(), teamUser)
 
 	return c.response()
 }

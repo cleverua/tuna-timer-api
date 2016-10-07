@@ -150,54 +150,51 @@ func (s *TimerServiceTestSuite) TestTotalMinutesForTodayAddsTimeForUnfinishedTas
 func (s *TimerServiceTestSuite) TestTotalMinutesForUserToday(c *C) {
 	now := time.Now()
 
-	duration, _ := time.ParseDuration("5m")
-	secondTimerStartedAt := now.Add(duration * -1) // 5 minutes ago
+	user := &models.TeamUser{
+		ID: bson.NewObjectId(),
+		SlackUserInfo: &slack.User{
+			TZOffset: 10800, // UTC+3 Kiev
+		},
+	}
 
 	s.repo.createTimer(&models.Timer{
 		ID:         bson.NewObjectId(),
 		TeamID:     "team",
 		ProjectID:  "project",
-		TeamUserID: "user",
+		TeamUserID: user.ID.Hex(),
 		TaskHash:   "task",
-		CreatedAt:  now,
+		CreatedAt:  utils.PT("2016 Sep 12 8:00:00"), // which is 11:00 in Kiev
 		FinishedAt: &now,
-		Minutes:    10,
+		Minutes:    2,
 	})
 
 	s.repo.createTimer(&models.Timer{
 		ID:         bson.NewObjectId(),
 		TeamID:     "team",
 		ProjectID:  "project",
-		TeamUserID: "user",
+		TeamUserID: user.ID.Hex(),
 		TaskHash:   "task",
-		CreatedAt:  secondTimerStartedAt,
-		FinishedAt: nil,
-		Minutes:    0,
+		CreatedAt:  utils.PT("2016 Sep 12 19:30:00"), // which is 22:30 in Kiev
+		FinishedAt: &now,
+		Minutes:    3,
 	})
-
-	c.Assert(s.service.TotalUserMinutesForDay("user", time.Now()), Equals, 15)
-	c.Assert(s.service.TotalUserMinutesForDay("this user has no tasks", time.Now()), Equals, 0)
-}
-
-func (s *TimerServiceTestSuite) TestTotalMinutesForUserTodayWhenOneTasksLastsSinceYesterday(c *C) {
-	now := time.Now()
-
-	duration, _ := time.ParseDuration("25h")
-	startedAt := now.Add(duration * -1) // 25 hours ago ago
 
 	s.repo.createTimer(&models.Timer{
 		ID:         bson.NewObjectId(),
 		TeamID:     "team",
 		ProjectID:  "project",
-		TeamUserID: "user",
+		TeamUserID: user.ID.Hex(),
 		TaskHash:   "task",
-		CreatedAt:  startedAt,
-		FinishedAt: nil,
-		Minutes:    0,
+		CreatedAt:  utils.PT("2016 Sep 12 22:00:00"), // which is 1am of the next day in Kiev
+		FinishedAt: &now,
+		Minutes:    7,
 	})
 
-	actual := now.Hour()*60 + now.Minute()
-	c.Assert(s.service.TotalUserMinutesForDay("user", time.Now()), Equals, actual)
+	targetDate := utils.PT("2016 Sep 12 00:00:00")
+	c.Assert(s.service.TotalUserMinutesForDay(targetDate.Year(), targetDate.Month(), targetDate.Day(), user), Equals, 5)
+
+	targetDate = utils.PT("2016 Sep 13 00:00:00")
+	c.Assert(s.service.TotalUserMinutesForDay(targetDate.Year(), targetDate.Month(), targetDate.Day(), user), Equals, 7)
 }
 
 func (s *TimerServiceTestSuite) TestGetCompletedTasksForDayPositiveTZOffset(c *C) {
@@ -251,7 +248,6 @@ func (s *TimerServiceTestSuite) TestGetCompletedTasksForDayPositiveTZOffset(c *C
 	c.Assert(v[0].Minutes, Equals, 5)
 
 	targetDate = utils.PT("2016 Sep 13 00:00:00")
-
 	v, err = s.service.GetCompletedTasksForDay(targetDate.Year(), targetDate.Month(), targetDate.Day(), user)
 	c.Assert(err, IsNil)
 	c.Assert(len(v), Equals, 1)

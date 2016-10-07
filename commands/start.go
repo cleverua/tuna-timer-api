@@ -84,7 +84,8 @@ func (c *Start) Handle(ctx context.Context, slackCommand models.SlackCustomComma
 		c.report.StartedTaskTotalForToday = c.timerService.TotalMinutesForTaskToday(c.report.StartedTimer)
 	}
 
-	c.report.UserTotalForToday = c.timerService.TotalUserMinutesForDay(teamUser.ID.Hex(), time.Now())
+	day := time.Now().Add(time.Duration(teamUser.SlackUserInfo.TZOffset) * time.Second)
+	c.report.UserTotalForToday = c.timerService.TotalUserMinutesForDay(day.Year(), day.Month(), day.Day(), teamUser)
 
 	return c.response()
 }

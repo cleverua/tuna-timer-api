@@ -55,12 +55,19 @@ func (s *TimerService) TotalMinutesForTaskToday(timer *models.Timer) int {
 }
 
 // UserTotalMinutesForToday calculates the total number of minute this user contributed to any project today
-func (s *TimerService) TotalUserMinutesForDay(userID string, day time.Time) int {
-	startDate := day.Truncate(24 * time.Hour)
+func (s *TimerService) TotalUserMinutesForDay(year int, month time.Month, day int, user *models.TeamUser) int {
 
-	result := s.repository.totalMinutesForUser(userID, startDate, day)
+	log.Printf("TotalUserMinutesForDay, Year: %d, Month: %d, Day: %d", year, month, day)
 
-	activeTimer, _ := s.repository.findActiveByUser(userID)
+	tzOffset := user.SlackUserInfo.TZOffset
+	log.Printf("TotalUserMinutesForDay, tzOffset: %d", tzOffset)
+
+	startDate := time.Date(year, month, day, 0, 0, 0, 0, time.UTC).Add(time.Duration(tzOffset) * time.Second * -1)
+	endDate := time.Date(year, month, day, 23, 59, 59, 0, time.UTC).Add(time.Duration(tzOffset) * time.Second * -1)
+
+	result := s.repository.totalMinutesForUser(user.ID.Hex(), startDate, endDate)
+
+	activeTimer, _ := s.repository.findActiveByUser(user.ID.Hex())
 	if activeTimer != nil {
 		if activeTimer.CreatedAt.Unix() <= startDate.Unix() {
 			activeTimer.CreatedAt = startDate
