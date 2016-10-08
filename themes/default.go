@@ -43,7 +43,6 @@ func (t *DefaultSlackMessageTheme) FormatError(errorMessage string) string {
 		Attachments: []slack.Attachment{
 			{
 				Color:      t.ErrorColor,
-				AuthorName: "Error!",
 				Text:       errorMessage,
 				MarkdownIn: t.MarkdownEnabledFor,
 				ThumbURL:   t.asset(t.ErrorIcon),
