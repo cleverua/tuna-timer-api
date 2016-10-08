@@ -136,8 +136,7 @@ func (h *Handlers) SendSampleMessageFromBot(w http.ResponseWriter, r *http.Reque
 	accessToken := team.SlackOAuth.Bot.BotAccessToken
 	slackAPI := slack.New(accessToken)
 
-	slackAPI.PostMessage("C2BUNME3E", "You're about stopping a timer...", slack.PostMessageParameters{
-		Text: "This is text from PostMessageParameters",
+	slackAPI.PostMessage("U02BC0MM9", "You're about stopping a timer...", slack.PostMessageParameters{
 		Attachments: []slack.Attachment {
 			{
 				Text: "Would you like to stop the timer?",
