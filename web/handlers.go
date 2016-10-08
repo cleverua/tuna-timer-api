@@ -46,7 +46,7 @@ func NewHandlers(env *utils.Environment, mongoSession *mgo.Session) *Handlers {
 // Timer handles Slack /timer command
 func (h *Handlers) Timer(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	
+
 	now := time.Now()
 
 	slackCommand := models.SlackCustomCommand{
