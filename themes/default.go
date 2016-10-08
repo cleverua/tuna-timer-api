@@ -46,7 +46,7 @@ func (t *DefaultSlackMessageTheme) FormatError(errorMessage string) string {
 				AuthorName: "Error!",
 				Text:       errorMessage,
 				MarkdownIn: t.MarkdownEnabledFor,
-				ThumbURL:   t.ErrorIcon,
+				ThumbURL:   t.asset(t.ErrorIcon),
 			},
 		},
 	}
