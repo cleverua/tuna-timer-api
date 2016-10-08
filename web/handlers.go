@@ -17,6 +17,7 @@ import (
 	"log"
 	//"github.com/tuna-timer/tuna-timer-api/data"
 	"github.com/tuna-timer/tuna-timer-api/data"
+	"github.com/nlopes/slack"
 )
 
 // Handlers is a collection of net/http handlers to serve the API
@@ -125,6 +126,19 @@ func (h *Handlers) Health(w http.ResponseWriter, r *http.Request) {
 	h.status["uptime"] = uptime.String() //is it good or not if I modify the map here?
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(h.status)
+}
+
+func (h *Handlers) SendSampleMessageFromBot(w http.ResponseWriter, r *http.Request) {
+
+	teamRepo := data.NewTeamRepository(h.mongoSession)
+	team, _ := teamRepo.FindByExternalID("T02BC0MM7")
+
+	accessToken := team.SlackOAuth.Bot.BotAccessToken
+	slackAPI := slack.New(accessToken)
+
+	slackAPI.PostMessage("C2BUNME3E", "This is message text", slack.PostMessageParameters{
+		Text: "This is text from PostMessageParameters",
+	})
 }
 
 // ClearAllData - is supposed to be called by the QA team during early testing stage
