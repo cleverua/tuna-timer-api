@@ -10,14 +10,14 @@ import (
 
 	"context"
 
+	"github.com/nlopes/slack"
 	"github.com/tuna-timer/tuna-timer-api/commands"
+	"github.com/tuna-timer/tuna-timer-api/data"
 	"github.com/tuna-timer/tuna-timer-api/models"
+	"github.com/tuna-timer/tuna-timer-api/themes"
 	"github.com/tuna-timer/tuna-timer-api/utils"
 	"gopkg.in/mgo.v2/bson"
 	"log"
-	//"github.com/tuna-timer/tuna-timer-api/data"
-	"github.com/nlopes/slack"
-	"github.com/tuna-timer/tuna-timer-api/data"
 )
 
 // Handlers is a collection of net/http handlers to serve the API
@@ -59,20 +59,21 @@ func (h *Handlers) Timer(w http.ResponseWriter, r *http.Request) {
 		UserID:      r.PostFormValue("user_id"),
 		UserName:    r.PostFormValue("user_name"),
 	}
-
 	slackCommand = utils.NormalizeSlackCustomCommand(slackCommand)
 
 	session := h.mongoSession.Clone()
 	defer session.Close()
-
 	ctx := utils.PutMongoSessionInContext(r.Context(), session)
 
 	selfBaseURL := utils.GetSelfURLFromRequest(r)
 	ctx = utils.PutSelfBaseURLInContext(ctx, selfBaseURL)
 
+	theme := themes.NewDefaultSlackMessageTheme(ctx)
+	ctx = utils.PutThemeInContext(ctx, theme)
+
 	command, err := h.commandLookupFunction(ctx, slackCommand)
-	if err != nil { //todo it is going to be a nicely formatted slack message sent back to user
-		w.Write([]byte(fmt.Sprintf("Unknown command: %s!", slackCommand.SubCommand)))
+	if err != nil {
+		w.Write([]byte(theme.FormatError(err.Error())))
 		return
 	}
 

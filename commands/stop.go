@@ -19,6 +19,7 @@ type Stop struct {
 	userService  *data.UserService
 	report       *models.StopCommandReport
 	ctx          context.Context
+	theme        themes.SlackMessageTheme
 }
 
 func NewStop(ctx context.Context) *Stop {
@@ -31,6 +32,7 @@ func NewStop(ctx context.Context) *Stop {
 		userService:  data.NewUserService(session),
 		report:       &models.StopCommandReport{},
 		ctx:          ctx,
+		theme:        utils.GetThemeFromContext(ctx).(themes.SlackMessageTheme),
 	}
 
 	return start
@@ -76,10 +78,7 @@ func (c *Stop) Handle(ctx context.Context, slackCommand models.SlackCustomComman
 }
 
 func (c *Stop) response() *ResponseToSlack {
-	var theme themes.SlackMessageTheme = themes.NewDefaultSlackMessageTheme(c.ctx)
-	content := theme.FormatStopCommand(c.report)
-
 	return &ResponseToSlack{
-		Body: []byte(content),
+		Body: []byte(c.theme.FormatStopCommand(c.report)),
 	}
 }

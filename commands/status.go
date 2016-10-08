@@ -19,6 +19,7 @@ type Status struct {
 	userService  *data.UserService
 	report       *models.StatusCommandReport
 	ctx          context.Context
+	theme        themes.SlackMessageTheme
 }
 
 func NewStatus(ctx context.Context) *Status {
@@ -31,6 +32,7 @@ func NewStatus(ctx context.Context) *Status {
 		userService:  data.NewUserService(session),
 		report:       &models.StatusCommandReport{},
 		ctx:          ctx,
+		theme:        utils.GetThemeFromContext(ctx).(themes.SlackMessageTheme),
 	}
 
 	return status
@@ -83,10 +85,7 @@ func (c *Status) Handle(ctx context.Context, slackCommand models.SlackCustomComm
 }
 
 func (c *Status) response() *ResponseToSlack {
-	var theme themes.SlackMessageTheme = themes.NewDefaultSlackMessageTheme(c.ctx)
-	content := theme.FormatStatusCommand(c.report)
-
 	return &ResponseToSlack{
-		Body: []byte(content),
+		Body: []byte(c.theme.FormatStatusCommand(c.report)),
 	}
 }

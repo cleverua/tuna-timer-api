@@ -7,27 +7,19 @@ import (
 )
 
 const (
-	// CommandNameStart holds the name of 'start' command
-	CommandNameStart = "start"
-
-	// CommandNameStop holds the name of 'stop' command
-	CommandNameStop = "stop"
-
-	// CommandNameStatus holds the name of 'status' command
+	CommandNameStart  = "start"
+	CommandNameStop   = "stop"
 	CommandNameStatus = "status"
 )
 
-// SlackCustomCommandHandlerResult todo
 type ResponseToSlack struct {
 	Body []byte
 }
 
-// SlackCustomCommandHandler todo
 type SlackCustomCommandHandler interface {
 	Handle(ctx context.Context, slackCommand models.SlackCustomCommand) *ResponseToSlack
 }
 
-// LookupHandler todo
 func LookupHandler(ctx context.Context, slackCommand models.SlackCustomCommand) (SlackCustomCommandHandler, error) {
 	subCommand := slackCommand.SubCommand
 
@@ -41,5 +33,5 @@ func LookupHandler(ctx context.Context, slackCommand models.SlackCustomCommand) 
 		cmd := NewStatus(ctx)
 		return cmd, nil
 	}
-	return nil, fmt.Errorf("Failed to look up a handler for `%s` name", subCommand)
+	return nil, fmt.Errorf("Unknown command `%s`!", subCommand)
 }

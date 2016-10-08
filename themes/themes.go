@@ -13,7 +13,7 @@ type SlackMessageTheme interface {
 	FormatError(errorMessage string) string
 }
 
-type slackThemeTemplate struct {
+type SlackThemeTemplate struct {
 	Text        string             `json:"text"`
 	Attachments []slack.Attachment `json:"attachments"`
 }

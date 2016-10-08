@@ -20,6 +20,7 @@ type Start struct {
 	userService  *data.UserService
 	report       *models.StartCommandReport
 	ctx          context.Context
+	theme        themes.SlackMessageTheme
 }
 
 func NewStart(ctx context.Context) *Start {
@@ -32,6 +33,7 @@ func NewStart(ctx context.Context) *Start {
 		userService:  data.NewUserService(session),
 		report:       &models.StartCommandReport{},
 		ctx:          ctx,
+		theme:        utils.GetThemeFromContext(ctx).(themes.SlackMessageTheme),
 	}
 
 	return start
@@ -99,19 +101,13 @@ func (c *Start) Handle(ctx context.Context, slackCommand models.SlackCustomComma
 }
 
 func (c *Start) response() *ResponseToSlack {
-	var theme themes.SlackMessageTheme = themes.NewDefaultSlackMessageTheme(c.ctx)
-	content := theme.FormatStartCommand(c.report)
-
 	return &ResponseToSlack{
-		Body: []byte(content),
+		Body: []byte(c.theme.FormatStartCommand(c.report)),
 	}
 }
 
 func (c *Start) errorResponse(errorMessage string) *ResponseToSlack {
-	var theme themes.SlackMessageTheme = themes.NewDefaultSlackMessageTheme(c.ctx)
-	content := theme.FormatError(errorMessage)
-
 	return &ResponseToSlack{
-		Body: []byte(content),
+		Body: []byte(c.theme.FormatError(errorMessage)),
 	}
 }

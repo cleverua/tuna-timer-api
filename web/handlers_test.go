@@ -18,6 +18,7 @@ import (
 	"github.com/tuna-timer/tuna-timer-api/models"
 	"github.com/tuna-timer/tuna-timer-api/utils"
 
+	"github.com/tuna-timer/tuna-timer-api/themes"
 	. "gopkg.in/check.v1"
 	"gopkg.in/mgo.v2"
 )
@@ -103,7 +104,11 @@ func (s *TestHandlersSuite) TestTimerCommandLookupFailure(c *C) {
 
 	handler.ServeHTTP(recorder, req)
 
-	c.Assert(recorder.Body.String(), Equals, "Unknown command: foobar!")
+	jsonResponse := recorder.Body.String()
+	message := themes.SlackThemeTemplate{}
+	json.Unmarshal([]byte(jsonResponse), &message)
+
+	c.Assert(message.Attachments[0].Text, Equals, "Simulated failure")
 }
 
 func (s *TestHandlersSuite) TestHealth(c *C) {
