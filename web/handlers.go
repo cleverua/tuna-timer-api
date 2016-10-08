@@ -136,8 +136,44 @@ func (h *Handlers) SendSampleMessageFromBot(w http.ResponseWriter, r *http.Reque
 	accessToken := team.SlackOAuth.Bot.BotAccessToken
 	slackAPI := slack.New(accessToken)
 
-	slackAPI.PostMessage("C2BUNME3E", "This is message text", slack.PostMessageParameters{
+	slackAPI.PostMessage("C2BUNME3E", "You're about stopping a timer...", slack.PostMessageParameters{
 		Text: "This is text from PostMessageParameters",
+		Attachments: []slack.Attachment {
+			{
+				Text: "Would you like to stop the timer?",
+				AuthorName: "Pavlo",
+				Actions: []slack.AttachmentAction {
+					{
+						Text: "Yes, I'd like to stop it",
+						Name: "yes",
+						Type: "button",
+						Style: "danger",
+						Confirm: []slack.ConfirmationField {
+							{
+								Text: "Are you sure?",
+								DismissText: "Cancel",
+								OkText: "Yes!",
+								Title: "Are you sure you want to stop the timer?",
+							},
+						},
+					},
+					{
+						Text: "I am not sure yet",
+						Name: "not sure",
+						Type: "button",
+						Style: "default",
+					},
+					{
+						Text: "No, let's keep it!",
+						Name: "no",
+						Type: "button",
+						Style: "primary",
+					},
+				},
+
+
+			},
+		},
 	})
 }
 
