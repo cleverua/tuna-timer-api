@@ -24,9 +24,11 @@ var defaultThemeConfig = themeConfig{
 	StartCommandThumbURL:   "/assets/themes/default/ic_current.png",
 	StartCommandColor:      "F5A623",
 	StopCommandThumbURL:    "/assets/themes/default/ic_completed.png",
-	StopCommandColor:       "#4A90E2",
+	StopCommandColor:       "#7ED321",
 	StatusCommandThumbURL:  "/assets/themes/default/ic_status.png",
 	StatusCommandColor:     "#9B9B9B",
+	ErrorIcon:              "/assets/themes/default/ic_error.png",
+	ErrorColor:             "#D0021B",
 }
 
 func NewDefaultSlackMessageTheme(ctx context.Context) *DefaultSlackMessageTheme {
@@ -34,6 +36,27 @@ func NewDefaultSlackMessageTheme(ctx context.Context) *DefaultSlackMessageTheme 
 		themeConfig: defaultThemeConfig,
 		ctx:         ctx,
 	}
+}
+
+func (t *DefaultSlackMessageTheme) FormatError(errorMessage string) string {
+	tpl := slackThemeTemplate{
+		Attachments: []slack.Attachment{
+			{
+				Color:      t.ErrorColor,
+				AuthorName: "Error!",
+				Text:       errorMessage,
+				MarkdownIn: t.MarkdownEnabledFor,
+				ThumbURL:   t.ErrorIcon,
+			},
+		},
+	}
+
+	result, err := json.Marshal(tpl)
+	if err != nil {
+		// todo return { "text": err.String() }
+	}
+
+	return string(result)
 }
 
 func (t *DefaultSlackMessageTheme) FormatStatusCommand(data *models.StatusCommandReport) string {

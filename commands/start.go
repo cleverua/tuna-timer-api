@@ -3,6 +3,7 @@ package commands
 import (
 	"context"
 
+	"fmt"
 	"github.com/tuna-timer/tuna-timer-api/data"
 	"github.com/tuna-timer/tuna-timer-api/models"
 	"github.com/tuna-timer/tuna-timer-api/themes"
@@ -46,6 +47,13 @@ func NewStart(ctx context.Context) *Start {
 
 // Handle - SlackCustomCommandHandler interface
 func (c *Start) Handle(ctx context.Context, slackCommand models.SlackCustomCommand) *ResponseToSlack {
+
+	if slackCommand.Text == "" {
+		return c.errorResponse(
+			fmt.Sprintf("Task name not provided! The correct command would look like: \n>`%s start My super exciting task`", slackCommand.Command),
+		)
+	}
+
 	team, project, err := c.teamService.EnsureTeamSetUp(&slackCommand)
 	if err != nil {
 		// todo: format a decent Slack error message so user knows what's wrong and how to solve the issue
@@ -93,6 +101,15 @@ func (c *Start) Handle(ctx context.Context, slackCommand models.SlackCustomComma
 func (c *Start) response() *ResponseToSlack {
 	var theme themes.SlackMessageTheme = themes.NewDefaultSlackMessageTheme(c.ctx)
 	content := theme.FormatStartCommand(c.report)
+
+	return &ResponseToSlack{
+		Body: []byte(content),
+	}
+}
+
+func (c *Start) errorResponse(errorMessage string) *ResponseToSlack {
+	var theme themes.SlackMessageTheme = themes.NewDefaultSlackMessageTheme(c.ctx)
+	content := theme.FormatError(errorMessage)
 
 	return &ResponseToSlack{
 		Body: []byte(content),

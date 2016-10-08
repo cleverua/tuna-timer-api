@@ -16,8 +16,8 @@ import (
 	"gopkg.in/mgo.v2/bson"
 	"log"
 	//"github.com/tuna-timer/tuna-timer-api/data"
-	"github.com/tuna-timer/tuna-timer-api/data"
 	"github.com/nlopes/slack"
+	"github.com/tuna-timer/tuna-timer-api/data"
 )
 
 // Handlers is a collection of net/http handlers to serve the API
@@ -138,40 +138,38 @@ func (h *Handlers) SendSampleMessageFromBot(w http.ResponseWriter, r *http.Reque
 
 	slackAPI.PostMessage("U02BC0MM9", "You're about stopping a timer...", slack.PostMessageParameters{
 		AsUser: true,
-		Attachments: []slack.Attachment {
+		Attachments: []slack.Attachment{
 			{
-				Text: "Would you like to stop the timer?",
+				Text:       "Would you like to stop the timer?",
 				AuthorName: "Pavlo",
-				Actions: []slack.AttachmentAction {
+				Actions: []slack.AttachmentAction{
 					{
-						Text: "Yes, I'd like to stop it",
-						Name: "yes",
-						Type: "button",
+						Text:  "Yes, I'd like to stop it",
+						Name:  "yes",
+						Type:  "button",
 						Style: "danger",
-						Confirm: []slack.ConfirmationField {
+						Confirm: []slack.ConfirmationField{
 							{
-								Text: "Are you sure?",
+								Text:        "Are you sure?",
 								DismissText: "Cancel",
-								OkText: "Yes!",
-								Title: "Are you sure you want to stop the timer?",
+								OkText:      "Yes!",
+								Title:       "Are you sure you want to stop the timer?",
 							},
 						},
 					},
 					{
-						Text: "I am not sure yet",
-						Name: "not sure",
-						Type: "button",
+						Text:  "I am not sure yet",
+						Name:  "not sure",
+						Type:  "button",
 						Style: "default",
 					},
 					{
-						Text: "No, let's keep it!",
-						Name: "no",
-						Type: "button",
+						Text:  "No, let's keep it!",
+						Name:  "no",
+						Type:  "button",
 						Style: "primary",
 					},
 				},
-
-
 			},
 		},
 	})

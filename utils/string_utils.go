@@ -24,7 +24,7 @@ func NormalizeSlackCustomCommand(cmd models.SlackCustomCommand) models.SlackCust
 		cmd.SubCommand = strings.TrimSpace(sub)
 		cmd.Text = strings.TrimSpace(command)
 	} else {
-		cmd.SubCommand = cmd.Text
+		cmd.SubCommand = text
 		cmd.Text = ""
 	}
 

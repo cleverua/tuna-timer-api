@@ -10,6 +10,7 @@ type SlackMessageTheme interface {
 	FormatStartCommand(data *models.StartCommandReport) string
 	FormatStopCommand(data *models.StopCommandReport) string
 	FormatStatusCommand(data *models.StatusCommandReport) string
+	FormatError(errorMessage string) string
 }
 
 type slackThemeTemplate struct {
@@ -28,4 +29,6 @@ type themeConfig struct {
 	StopCommandColor       string
 	StatusCommandThumbURL  string
 	StatusCommandColor     string
+	ErrorIcon              string
+	ErrorColor             string
 }

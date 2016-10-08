@@ -26,6 +26,12 @@ func (s *StringUtilsTestSuite) TestNormalizeSlackCustomCommand(c *C) {
 	})
 	c.Assert(cmd.Text, Equals, "")
 	c.Assert(cmd.SubCommand, Equals, "status")
+
+	cmd = NormalizeSlackCustomCommand(models.SlackCustomCommand{
+		Text: "start ",
+	})
+	c.Assert(cmd.Text, Equals, "")
+	c.Assert(cmd.SubCommand, Equals, "start")
 }
 
 func (s *StringUtilsTestSuite) TestGetSelfURLFromRequest(c *C) {
