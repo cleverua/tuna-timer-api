@@ -45,6 +45,8 @@ func NewHandlers(env *utils.Environment, mongoSession *mgo.Session) *Handlers {
 
 // Timer handles Slack /timer command
 func (h *Handlers) Timer(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	
 	now := time.Now()
 
 	slackCommand := models.SlackCustomCommand{
@@ -78,7 +80,6 @@ func (h *Handlers) Timer(w http.ResponseWriter, r *http.Request) {
 	}
 
 	result := command.Handle(ctx, slackCommand)
-	w.Header().Set("Content-Type", "application/json")
 	w.Write(result.Body)
 
 	//todo: rather defer it
