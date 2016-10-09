@@ -12,5 +12,5 @@ func WhichTimezoneIsMidnightAt(utcHour, utcMinute int) int {
 	if utcHour >= 11 {
 		midnightAtOffset = (24 - utcHour) * 60 * 60
 	}
-	return midnightAtOffset + utcMinute * 60
+	return midnightAtOffset + utcMinute*60
 }

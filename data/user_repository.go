@@ -36,6 +36,8 @@ func (r *UserRepository) save(user *models.TeamUser) (*models.TeamUser, error) {
 	if user.ID == "" {
 		user.ID = bson.NewObjectId()
 		user.CreatedAt = time.Now()
+		user.ModelVersion = models.ModelVersionTeamUser
+
 		return user, r.collection.Insert(user)
 	}
 	return user, r.collection.Update(bson.M{"_id": user.ID}, user)

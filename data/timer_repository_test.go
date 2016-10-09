@@ -35,6 +35,7 @@ func (s *TimerRepositoryTestSuite) TestUpdate(c *C) {
 	c.Assert(err, IsNil)
 	c.Assert(timer, NotNil)
 	c.Assert(timer.Minutes, Equals, 0)
+	c.Assert(timer.ModelVersion, Equals, models.ModelVersionTimer)
 
 	timer.Minutes = 50
 

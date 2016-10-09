@@ -57,6 +57,8 @@ func (s *UserRepositoryTestSuite) TestSave(c *C) {
 
 	c.Assert(loadedUser.ExternalUserName, Equals, "ext-name")
 	c.Assert(loadedUser.SlackUserInfo.IsAdmin, Equals, false)
+
+	c.Assert(loadedUser.ModelVersion, Equals, models.ModelVersionTeamUser)
 }
 
 func (s *UserRepositoryTestSuite) TestFindByExternalIDNotExist(c *C) {

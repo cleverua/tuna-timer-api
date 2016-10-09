@@ -7,6 +7,12 @@ import (
 	"gopkg.in/mgo.v2/bson"
 )
 
+const (
+	ModelVersionTeam     = 1
+	ModelVersionTeamUser = 1
+	ModelVersionTimer    = 1
+)
+
 // Team represents a Slack team
 type Team struct {
 	ID bson.ObjectId `json:"id" bson:"_id,omitempty"`
@@ -20,6 +26,7 @@ type Team struct {
 	Projects         []*Project           `json:"projects" bson:"projects"`
 	CreatedAt        time.Time            `json:"created_at" bson:"created_at"`
 	SlackOAuth       *slack.OAuthResponse `json:"slack_oauth" bson:"slack_oauth"`
+	ModelVersion     int                  `json:"ver" bson:"ver"`
 }
 
 // Project - is a project you can associate tasks with and tracks their time. It is embedded in Team
@@ -39,6 +46,7 @@ type TeamUser struct {
 	ExternalUserID   string        `json:"ext_id" bson:"ext_id"`
 	ExternalUserName string        `json:"ext_name" bson:"ext_name"`
 	CreatedAt        time.Time     `json:"created_at" bson:"created_at"`
+	ModelVersion     int           `json:"ver" bson:"ver"`
 }
 
 // Timer - a time record that has start and finish dates. Belongs to a slack user and a task
@@ -56,6 +64,7 @@ type Timer struct {
 	FinishedAt          *time.Time    `json:"finished_at" bson:"finished_at"`
 	Minutes             int           `json:"minutes" bson:"minutes"`
 	DeletedAt           *time.Time    `json:"deleted_at" bson:"deleted_at"`
+	ModelVersion        int           `json:"ver" bson:"ver"`
 }
 
 // SlackCustomCommand todo

@@ -73,6 +73,7 @@ func (s *TeamRepositoryTestSuite) TestCreateTeam(c *C) {
 	c.Assert(team.ExternalTeamName, Equals, "external-name")
 	c.Assert(team.CreatedAt, NotNil)
 	c.Assert(len(team.Projects), Equals, 0)
+	c.Assert(team.ModelVersion, Equals, models.ModelVersionTeam)
 }
 
 func (s *TeamRepositoryTestSuite) TestCreateTeamWhenAlreadyExists(c *C) {

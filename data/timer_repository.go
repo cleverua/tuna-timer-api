@@ -91,6 +91,7 @@ func (r *TimerRepository) create(teamID string, project *models.Project, user *m
 		TaskName:            taskName,
 		TaskHash:            taskSHA256(teamID, project.ID.Hex(), taskName),
 		Minutes:             0,
+		ModelVersion:        models.ModelVersionTimer,
 	}
 
 	return r.createTimer(timer)

@@ -40,7 +40,7 @@ func (s *StringUtilsTestSuite) TestWhichTimezoneIsMidnightAt(c *C) {
 	utcHour = 18
 	utcMinute := 30
 	c.Assert(WhichTimezoneIsMidnightAt(utcHour, utcMinute), Equals, 19800)
-	
+
 	utcHour = 21
 	utcMinute = 30
 	c.Assert(WhichTimezoneIsMidnightAt(utcHour, utcMinute), Equals, 10800+30*60)
