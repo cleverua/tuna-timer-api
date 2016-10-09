@@ -17,15 +17,6 @@
 			"Rev": "0a192a193177452756c362c20087ddafcf6829c4"
 		},
 		{
-			"ImportPath": "github.com/jinzhu/gorm",
-			"Comment": "v1.0-64-gf26fa24",
-			"Rev": "f26fa242cc1bf884f9a4f98849f70fb8e73f441f"
-		},
-		{
-			"ImportPath": "github.com/jinzhu/inflection",
-			"Rev": "74387dc39a75e970e7a3ae6a3386b5bd2e5c5cff"
-		},
-		{
 			"ImportPath": "github.com/justinas/alice",
 			"Comment": "1.0.0-14-g20ab232",
 			"Rev": "20ab2325b829575b43d6d8d3a6f6933356b19e95"

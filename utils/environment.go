@@ -28,12 +28,6 @@ const (
 const (
 	// ConfigFile - path to YML config file
 	ConfigFile string = "config.yml"
-
-	// MigrationsFolder - the folder to look migration SQLs in
-	MigrationsFolder string = "models/migrations/"
-
-	// gormLogSQL - Whether GORM SQL logging is enabled or not
-	gormLogSQL bool = false
 )
 
 // Environment is a thing that holds env. specific stuff
