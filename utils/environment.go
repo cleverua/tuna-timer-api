@@ -19,6 +19,13 @@ const (
 )
 
 const (
+	MongoCollectionTeams     = "teams"
+	MongoCollectionTimers    = "timers"
+	MongoCollectionTeamUsers = "team_users"
+	MongoCollectionPasses    = "passes"
+)
+
+const (
 	// ConfigFile - path to YML config file
 	ConfigFile string = "config.yml"
 
@@ -54,15 +61,14 @@ func NewEnvironment(environment string, appVersion string) *Environment {
 func (env *Environment) MigrateDatabase(session *mgo.Session) error {
 	log.Println("Migrating database...")
 
-	teams := session.DB("").C("teams")
-
+	teams := session.DB("").C(MongoCollectionTeams)
 	teams.Create(&mgo.CollectionInfo{})
 	teams.EnsureIndex(mgo.Index{
 		Unique: true,
 		Key:    []string{"ext_id"},
 	})
 
-	timers := session.DB("").C("timers")
+	timers := session.DB("").C(MongoCollectionTimers)
 	timers.Create(&mgo.CollectionInfo{})
 	timers.EnsureIndex(mgo.Index{Key: []string{"team_id"}})
 	timers.EnsureIndex(mgo.Index{Key: []string{"project_id"}})
@@ -74,12 +80,20 @@ func (env *Environment) MigrateDatabase(session *mgo.Session) error {
 	timers.EnsureIndex(mgo.Index{Key: []string{"deleted_at"}})
 	timers.EnsureIndex(mgo.Index{Key: []string{"tz_offset"}})
 
-	users := session.DB("").C("team_users")
+	users := session.DB("").C(MongoCollectionTeamUsers)
 	users.Create(&mgo.CollectionInfo{})
 	users.EnsureIndex(mgo.Index{
 		Unique: true,
 		Key:    []string{"ext_id"},
 	})
+
+	passes := session.DB("").C(MongoCollectionPasses)
+	passes.Create(&mgo.CollectionInfo{})
+	passes.EnsureIndex(mgo.Index{
+		Unique: true,
+		Key:    []string{"token"},
+	})
+	passes.EnsureIndex(mgo.Index{Key: []string{"expires_at"}})
 
 	log.Println("Database migrated!")
 	return nil

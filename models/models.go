@@ -11,6 +11,7 @@ const (
 	ModelVersionTeam     = 1
 	ModelVersionTeamUser = 1
 	ModelVersionTimer    = 1
+	ModelVersionPass     = 1
 )
 
 // Team represents a Slack team
@@ -65,6 +66,19 @@ type Timer struct {
 	Minutes             int           `json:"minutes" bson:"minutes"`
 	DeletedAt           *time.Time    `json:"deleted_at" bson:"deleted_at"`
 	ModelVersion        int           `json:"ver" bson:"ver"`
+}
+
+// Pass - a one time login token that is used by frontend to get JWT from the backend
+type Pass struct {
+	ID           bson.ObjectId `json:"id" bson:"_id,omitempty"`
+	Token        string        `json:"token" bson:"token"`
+	TeamID       string        `json:"team_id" bson:"team_id"`
+	ProjectID    string        `json:"project_id" bson:"project_id"`
+	TeamUserID   string        `json:"team_user_id" bson:"team_user_id"`
+	CreatedAt    time.Time     `json:"created_at" bson:"created_at"`
+	ExpiresAt    time.Time     `json:"expires_at" bson:"expires_at"`
+	ClaimedAt    *time.Time    `json:"claimed_at" bson:"claimed_at"`
+	ModelVersion int           `json:"ver" bson:"ver"`
 }
 
 // SlackCustomCommand todo

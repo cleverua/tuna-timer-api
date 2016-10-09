@@ -45,9 +45,8 @@ func NewHandlers(env *utils.Environment, mongoSession *mgo.Session) *Handlers {
 
 // Timer handles Slack /timer command
 func (h *Handlers) Timer(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-
 	now := time.Now()
+	defer func() { log.Printf("Timer command took %s", time.Since(now).String()) }()
 
 	slackCommand := models.SlackCustomCommand{
 		ChannelID:   r.PostFormValue("channel_id"),
@@ -73,6 +72,7 @@ func (h *Handlers) Timer(w http.ResponseWriter, r *http.Request) {
 	theme := themes.NewDefaultSlackMessageTheme(ctx)
 	ctx = utils.PutThemeInContext(ctx, theme)
 
+	w.Header().Set("Content-Type", "application/json")
 	command, err := h.commandLookupFunction(ctx, slackCommand)
 	if err != nil {
 		w.Write([]byte(theme.FormatError(err.Error())))
@@ -81,14 +81,14 @@ func (h *Handlers) Timer(w http.ResponseWriter, r *http.Request) {
 
 	result := command.Handle(ctx, slackCommand)
 	w.Write(result.Body)
-
-	//todo: rather defer it
-	log.Printf("Timer command took %s", time.Since(now).String())
 }
 
 // SlackOauth2Redirect handles the OAuth2 redirect from Slack and exchanges the `code` with `accessToken`
 // https://api.slack.com/methods/oauth.access
 func (h *Handlers) SlackOauth2Redirect(w http.ResponseWriter, r *http.Request) {
+	now := time.Now()
+	defer func() { log.Printf("SlackOauth2Redirect took %s", time.Since(now).String()) }()
+
 	code := r.URL.Query().Get("code")
 	clientID := h.env.Config.UString("slack.client_id")
 	clientSecret := h.env.Config.UString("slack.client_secret")
