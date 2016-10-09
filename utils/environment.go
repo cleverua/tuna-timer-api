@@ -19,6 +19,10 @@ const (
 )
 
 const (
+	PassExpiresInMinutes = 5
+)
+
+const (
 	MongoCollectionTeams     = "teams"
 	MongoCollectionTimers    = "timers"
 	MongoCollectionTeamUsers = "team_users"

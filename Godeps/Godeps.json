@@ -36,6 +36,11 @@
 			"Rev": "9585fd555638e77bba25f25db5c44b41f264aeb7"
 		},
 		{
+			"ImportPath": "github.com/satori/go.uuid",
+			"Comment": "v1.1.0-6-gb061729",
+			"Rev": "b061729afc07e77a8aa4fad0a2fd840958f1942a"
+		},
+		{
 			"ImportPath": "golang.org/x/net/websocket",
 			"Rev": "1358eff22f0dd0c54fc521042cc607f6ff4b531a"
 		},
