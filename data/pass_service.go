@@ -3,10 +3,10 @@ package data
 import (
 	"github.com/satori/go.uuid"
 	"github.com/tuna-timer/tuna-timer-api/models"
+	"github.com/tuna-timer/tuna-timer-api/utils"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 	"time"
-	"github.com/tuna-timer/tuna-timer-api/utils"
 )
 
 type PassService struct {
@@ -19,7 +19,20 @@ func NewPassService(session *mgo.Session) *PassService {
 	}
 }
 
-func (s *PassService) CreatePass(team *models.Team, user *models.TeamUser, projectID string) (*models.Pass, error) {
+func (s *PassService) EnsurePass(team *models.Team, user *models.TeamUser, project *models.Project) (*models.Pass, error) {
+	pass, _ := s.repository.FindActiveByUserID(user.ID.Hex())
+
+	if pass == nil {
+		return s.createPass(team, user, project.ID.Hex())
+	}
+
+	pass.ExpiresAt = time.Now().Add(utils.PassExpiresInMinutes * time.Minute)
+	err := s.repository.update(pass)
+
+	return pass, err
+}
+
+func (s *PassService) createPass(team *models.Team, user *models.TeamUser, projectID string) (*models.Pass, error) {
 	now := time.Now()
 
 	pass := &models.Pass{

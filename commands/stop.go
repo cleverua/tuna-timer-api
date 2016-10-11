@@ -17,6 +17,7 @@ type Stop struct {
 	teamService  *data.TeamService
 	timerService *data.TimerService
 	userService  *data.UserService
+	passService  *data.PassService
 	report       *models.StopCommandReport
 	ctx          context.Context
 	theme        themes.SlackMessageTheme
@@ -30,6 +31,7 @@ func NewStop(ctx context.Context) *Stop {
 		teamService:  data.NewTeamService(session),
 		timerService: data.NewTimerService(session),
 		userService:  data.NewUserService(session),
+		passService:  data.NewPassService(session),
 		report:       &models.StopCommandReport{},
 		ctx:          ctx,
 		theme:        utils.GetThemeFromContext(ctx).(themes.SlackMessageTheme),
@@ -56,9 +58,15 @@ func (c *Stop) Handle(ctx context.Context, slackCommand models.SlackCustomComman
 		// todo: format a decent Slack error message so user knows what's wrong and how to solve the issue
 	}
 
+	pass, err := c.passService.EnsurePass(team, teamUser, project)
+	if err != nil {
+		// todo: format a decent Slack error message so user knows what's wrong and how to solve the issue
+	}
+
 	c.report.Team = team
 	c.report.Project = project
 	c.report.TeamUser = teamUser
+	c.report.Pass = pass
 
 	timerToStop, err := c.timerService.GetActiveTimer(team.ID.Hex(), teamUser.ID.Hex())
 	if err != nil {

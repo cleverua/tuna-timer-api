@@ -17,6 +17,7 @@ type Status struct {
 	teamService  *data.TeamService
 	timerService *data.TimerService
 	userService  *data.UserService
+	passService  *data.PassService
 	report       *models.StatusCommandReport
 	ctx          context.Context
 	theme        themes.SlackMessageTheme
@@ -30,6 +31,7 @@ func NewStatus(ctx context.Context) *Status {
 		teamService:  data.NewTeamService(session),
 		timerService: data.NewTimerService(session),
 		userService:  data.NewUserService(session),
+		passService:  data.NewPassService(session),
 		report:       &models.StatusCommandReport{},
 		ctx:          ctx,
 		theme:        utils.GetThemeFromContext(ctx).(themes.SlackMessageTheme),
@@ -51,6 +53,16 @@ func (c *Status) Handle(ctx context.Context, slackCommand models.SlackCustomComm
 		// todo: format a decent Slack error message so user knows what's wrong and how to solve the issue
 	}
 
+	pass, err := c.passService.EnsurePass(team, teamUser, project)
+	if err != nil {
+		// todo: format a decent Slack error message so user knows what's wrong and how to solve the issue
+	}
+
+	c.report.Team = team
+	c.report.Project = project
+	c.report.TeamUser = teamUser
+	c.report.Pass = pass
+
 	day := time.Now().Add(time.Duration(teamUser.SlackUserInfo.TZOffset) * time.Second)
 	c.report.PeriodName = "today"
 
@@ -58,10 +70,6 @@ func (c *Status) Handle(ctx context.Context, slackCommand models.SlackCustomComm
 		day = day.AddDate(0, 0, -1)
 		c.report.PeriodName = "yesterday"
 	}
-
-	c.report.Team = team
-	c.report.Project = project
-	c.report.TeamUser = teamUser
 
 	tasks, err := c.timerService.GetCompletedTasksForDay(day.Year(), day.Month(), day.Day(), teamUser)
 	if err != nil {

@@ -35,6 +35,22 @@ func (r *PassRepository) FindByToken(token string) (*models.Pass, error) {
 	return pass, err
 }
 
+func (r *PassRepository) FindActiveByUserID(userID string) (*models.Pass, error) {
+	pass := &models.Pass{}
+
+	err := r.collection.Find(bson.M{
+		"team_user_id": userID,
+		"expires_at":   bson.M{"$gt": time.Now()},
+		"claimed_at":   nil,
+	}).One(pass)
+
+	if err != nil && err == mgo.ErrNotFound {
+		pass = nil
+		err = nil
+	}
+	return pass, err
+}
+
 func (r *PassRepository) insert(pass *models.Pass) error {
 	return r.collection.Insert(pass)
 }

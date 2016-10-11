@@ -91,6 +91,7 @@ func (env *Environment) MigrateDatabase(session *mgo.Session) error {
 		Unique: true,
 		Key:    []string{"token"},
 	})
+	passes.EnsureIndex(mgo.Index{Key: []string{"team_user_id"}})
 	passes.EnsureIndex(mgo.Index{Key: []string{"expires_at"}})
 
 	log.Println("Database migrated!")

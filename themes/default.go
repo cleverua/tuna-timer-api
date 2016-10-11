@@ -90,13 +90,13 @@ func (t *DefaultSlackMessageTheme) FormatStatusCommand(data *models.StatusComman
 
 		if buffer.Len() > 0 {
 			statusAttachment.Text = buffer.String()
-			statusAttachment.Footer = "<http://www.foo.com|Open in Application>"
+			statusAttachment.Footer = fmt.Sprintf("<http://www.google.com?pid=%s|Open in Application>", data.Pass.Token)
 			tpl.Attachments = append(tpl.Attachments, statusAttachment)
 		}
 	}
 
 	if data.AlreadyStartedTimer != nil {
-		sa := t.attachmentForCurrentTask(data.AlreadyStartedTimer, data.AlreadyStartedTimerTotalForToday)
+		sa := t.attachmentForCurrentTask(data.AlreadyStartedTimer, data.AlreadyStartedTimerTotalForToday, data.Pass.Token)
 		tpl.Attachments = append(tpl.Attachments, sa)
 	}
 
@@ -120,7 +120,7 @@ func (t *DefaultSlackMessageTheme) FormatStopCommand(data *models.StopCommandRep
 	}
 
 	if data.StoppedTimer != nil {
-		sa := t.attachmentForStoppedTask(data.StoppedTimer, data.StoppedTaskTotalForToday)
+		sa := t.attachmentForStoppedTask(data.StoppedTimer, data.StoppedTaskTotalForToday, data.Pass.Token)
 		tpl.Attachments = append(tpl.Attachments, sa)
 	}
 
@@ -140,17 +140,17 @@ func (t *DefaultSlackMessageTheme) FormatStartCommand(data *models.StartCommandR
 	}
 
 	if data.StoppedTimer != nil {
-		sa := t.attachmentForStoppedTask(data.StoppedTimer, data.StoppedTaskTotalForToday)
+		sa := t.attachmentForStoppedTask(data.StoppedTimer, data.StoppedTaskTotalForToday, data.Pass.Token)
 		tpl.Attachments = append(tpl.Attachments, sa)
 	}
 
 	if data.StartedTimer != nil {
-		sa := t.attachmentForNewTask(data.StartedTimer, data.StartedTaskTotalForToday)
+		sa := t.attachmentForNewTask(data.StartedTimer, data.StartedTaskTotalForToday, data.Pass.Token)
 		tpl.Attachments = append(tpl.Attachments, sa)
 	}
 
 	if data.AlreadyStartedTimer != nil {
-		sa := t.attachmentForNewTask(data.AlreadyStartedTimer, data.AlreadyStartedTimerTotalForToday)
+		sa := t.attachmentForNewTask(data.AlreadyStartedTimer, data.AlreadyStartedTimerTotalForToday, data.Pass.Token)
 		tpl.Attachments = append(tpl.Attachments, sa)
 	}
 
@@ -164,7 +164,7 @@ func (t *DefaultSlackMessageTheme) FormatStartCommand(data *models.StartCommandR
 	return string(result)
 }
 
-func (t *DefaultSlackMessageTheme) attachmentForNewTask(timer *models.Timer, taskTotalForToday int) slack.Attachment {
+func (t *DefaultSlackMessageTheme) attachmentForNewTask(timer *models.Timer, taskTotalForToday int, token string) slack.Attachment {
 	sa := t.defaultAttachment()
 	sa.Text = t.task(timer.TaskName, taskTotalForToday)
 	sa.ThumbURL = t.asset(t.StartCommandThumbURL)
@@ -172,12 +172,12 @@ func (t *DefaultSlackMessageTheme) attachmentForNewTask(timer *models.Timer, tas
 	sa.AuthorName = "Started:"
 
 	sa.Footer = fmt.Sprintf(
-		"Project: %s > Task: %s > <http://www.google.com|Edit in Application>", t.channelLinkForTimer(timer), timer.TaskHash)
+		"Project: %s > Task: %s > <http://www.google.com?pid=%s|Edit in Application>", t.channelLinkForTimer(timer), timer.TaskHash, token)
 
 	return sa
 }
 
-func (t *DefaultSlackMessageTheme) attachmentForCurrentTask(timer *models.Timer, totalForToday int) slack.Attachment {
+func (t *DefaultSlackMessageTheme) attachmentForCurrentTask(timer *models.Timer, totalForToday int, token string) slack.Attachment {
 	sa := t.defaultAttachment()
 	sa.Text = t.task(timer.TaskName, totalForToday)
 	sa.ThumbURL = t.asset(t.StartCommandThumbURL)
@@ -185,13 +185,13 @@ func (t *DefaultSlackMessageTheme) attachmentForCurrentTask(timer *models.Timer,
 	sa.AuthorName = "Current:"
 
 	sa.Footer = fmt.Sprintf(
-		"Project: %s > Task: %s > <http://www.google.com|Open in Application>", t.channelLinkForTimer(timer), timer.TaskHash)
+		"Project: %s > Task: %s > <http://www.google.com?pid=%s|Open in Application>", t.channelLinkForTimer(timer), timer.TaskHash, token)
 
 	sa.Fields = []slack.AttachmentField{}
 	return sa
 }
 
-func (t *DefaultSlackMessageTheme) attachmentForStoppedTask(timer *models.Timer, totalForToday int) slack.Attachment {
+func (t *DefaultSlackMessageTheme) attachmentForStoppedTask(timer *models.Timer, totalForToday int, token string) slack.Attachment {
 	sa := t.defaultAttachment()
 	sa.AuthorName = "Completed:"
 
@@ -200,7 +200,7 @@ func (t *DefaultSlackMessageTheme) attachmentForStoppedTask(timer *models.Timer,
 	sa.Color = t.StopCommandColor
 
 	sa.Footer = fmt.Sprintf(
-		"Project: %s > Task: %s > <http://www.google.com|Open in Application>", t.channelLinkForTimer(timer), timer.TaskHash)
+		"Project: %s > Task: %s > <http://www.google.com?pid=%s|Open in Application>", t.channelLinkForTimer(timer), timer.TaskHash, token)
 
 	sa.Fields = []slack.AttachmentField{}
 	return sa

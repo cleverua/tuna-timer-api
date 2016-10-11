@@ -6,6 +6,7 @@ type StartCommandReport struct {
 	Team                             *Team
 	Project                          *Project
 	TeamUser                         *TeamUser
+	Pass                             *Pass
 	StoppedTimer                     *Timer
 	StartedTimer                     *Timer
 	AlreadyStartedTimer              *Timer
@@ -20,6 +21,7 @@ type StopCommandReport struct {
 	Team                     *Team
 	Project                  *Project
 	TeamUser                 *TeamUser
+	Pass                     *Pass
 	StoppedTimer             *Timer
 	StoppedTaskTotalForToday int
 	UserTotalForToday        int
@@ -29,6 +31,7 @@ type StatusCommandReport struct {
 	Team                             *Team
 	Project                          *Project
 	TeamUser                         *TeamUser
+	Pass                             *Pass
 	Tasks                            []*TaskAggregation
 	AlreadyStartedTimer              *Timer
 	AlreadyStartedTimerTotalForToday int
