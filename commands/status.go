@@ -77,7 +77,7 @@ func (c *Status) Handle(ctx context.Context, slackCommand models.SlackCustomComm
 			alreadyStartedTimer.Minutes = c.timerService.CalculateMinutesForActiveTimer(alreadyStartedTimer)
 			c.report.AlreadyStartedTimer = alreadyStartedTimer
 			c.report.AlreadyStartedTimerTotalForToday = c.timerService.TotalMinutesForTaskToday(alreadyStartedTimer)
-			c.report.UserTotalForPeriod += c.report.AlreadyStartedTimerTotalForToday
+			c.report.UserTotalForPeriod += alreadyStartedTimer.Minutes
 		}
 	}
 
