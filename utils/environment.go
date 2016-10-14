@@ -19,7 +19,8 @@ const (
 )
 
 const (
-	PassExpiresInMinutes = 5
+	PassExpiresInMinutes          = 5
+	ClaimedPassesToPurgeAfterDays = 7
 )
 
 const (

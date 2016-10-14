@@ -15,9 +15,13 @@ import (
 	"github.com/robfig/cron"
 	"gopkg.in/mgo.v2"
 	"github.com/tuna-timer/tuna-timer-api/jobs"
+	"fmt"
 )
 
-const version = "0.1.0"
+const (
+	version = "0.1.0"
+    port    = "8080"
+)
 
 func main() {
 
@@ -61,7 +65,9 @@ func main() {
 	dbJobsEngine := launchBGJobEngine(environment, session)
 	defer dbJobsEngine.Stop() // does it leak mongo session?
 
-	log.Fatal(http.ListenAndServe(":8080", defaultMiddleware.Then(router)))
+	log.Printf("All startup routines completed successfully, app is listening on %s port\n", port)
+
+	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", port), defaultMiddleware.Then(router)))
 }
 
 func launchBGJobEngine(env *utils.Environment, session *mgo.Session) *cron.Cron {
@@ -70,7 +76,14 @@ func launchBGJobEngine(env *utils.Environment, session *mgo.Session) *cron.Cron 
 
 	// Runs 1/2 hourly at the beginning of each hour and at 30th minute of each hour
 	// ---------------- s  m   h d m
-	bgJobEngine.AddJob("0 0,30 * * *", jobs.NewProlongTimersJob(env, session.Clone()))
+	bgJobEngine.AddJob("0 0,30 * * *", jobs.NewStopTimersAtMidnight(env, session.Clone()))
+	log.Println("--- Scheduled StopTimersAtMidnight job")
+
+	// Runs once an hour at 15 minutes
+	// ---------------- s  m   h d m
+	bgJobEngine.AddJob("0 25 * * *", jobs.NewClearPasses(env, session.Clone()))
+	log.Println("--- Scheduled ClearPasses job")
+
 	bgJobEngine.Start()
 	return bgJobEngine
 }

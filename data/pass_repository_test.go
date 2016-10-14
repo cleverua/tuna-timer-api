@@ -23,7 +23,7 @@ func (s *PassRepositoryTestSuite) TestFindByToken(c *C) {
 	err := s.repository.insert(p1)
 	c.Assert(err, IsNil)
 
-	p1Test, err := s.repository.FindByToken("token")
+	p1Test, err := s.repository.FindActivePassByToken("token")
 	c.Assert(err, IsNil)
 	c.Assert(p1Test, NotNil)
 
@@ -42,7 +42,7 @@ func (s *PassRepositoryTestSuite) TestFindByTokenDoesNotGetExpired(c *C) {
 	err := s.repository.insert(p1)
 	c.Assert(err, IsNil)
 
-	p1Test, err := s.repository.FindByToken("token")
+	p1Test, err := s.repository.FindActivePassByToken("token")
 	c.Assert(err, IsNil)
 	c.Assert(p1Test, IsNil)
 }
@@ -61,7 +61,7 @@ func (s *PassRepositoryTestSuite) TestFindByTokenDoesNotGetClaimed(c *C) {
 	err := s.repository.insert(p1)
 	c.Assert(err, IsNil)
 
-	p1Test, err := s.repository.FindByToken("token")
+	p1Test, err := s.repository.FindActivePassByToken("token")
 	c.Assert(err, IsNil)
 	c.Assert(p1Test, IsNil)
 }
@@ -111,6 +111,136 @@ func (s *PassRepositoryTestSuite) TestFindActiveByUserID(c *C) {
 
 	c.Assert(pass.Token, Equals, "p1token")
 	c.Assert(pass.Token, Equals, "p1token")
+}
+
+func (s *PassRepositoryTestSuite) TestRemoveExpiredPasses(c *C) {
+
+	now := time.Now()
+
+	p1 := &models.Pass{ //should be removed as its expiresAt is in the past
+		ID:         bson.NewObjectId(),
+		Token:      "p1token",
+		CreatedAt:  now.Add(-5 * time.Minute),
+		ExpiresAt:  now.Add(-3 * time.Minute),
+		ClaimedAt:  nil,
+		TeamUserID: "user-id",
+	}
+
+	p2 := &models.Pass{ //should NOT be removed as its expiresAt is in the future
+		ID:         bson.NewObjectId(),
+		Token:      "p2token",
+		CreatedAt:  now,
+		ExpiresAt:  now.Add(5 * time.Minute),
+		ClaimedAt:  nil,
+		TeamUserID: "user-id",
+	}
+
+	claimedAt := now.Add(2 * time.Minute)
+	p3 := &models.Pass{ //should NOT be removed as it is claimed
+		ID:         bson.NewObjectId(),
+		Token:      "p3token",
+		CreatedAt:  now,
+		ExpiresAt:  now.Add(5 * time.Minute),
+		ClaimedAt:  &claimedAt,
+		TeamUserID: "user-id",
+	}
+
+	err := s.repository.insert(p1)
+	c.Assert(err, IsNil)
+
+	err = s.repository.insert(p2)
+	c.Assert(err, IsNil)
+
+	err = s.repository.insert(p3)
+	c.Assert(err, IsNil)
+
+	err = s.repository.removeExpiredPasses()
+	c.Assert(err, IsNil)
+
+	p1, err = s.repository.findByID(p1.ID.Hex())
+	c.Assert(err, IsNil)
+	c.Assert(p1, IsNil) // not found
+
+	p2, err = s.repository.findByID(p2.ID.Hex())
+	c.Assert(err, IsNil)
+	c.Assert(p2, NotNil) // found
+
+	p3, err = s.repository.findByID(p3.ID.Hex())
+	c.Assert(err, IsNil)
+	c.Assert(p3, NotNil) // found
+}
+
+func (s *PassRepositoryTestSuite) TestFindByID(c *C) {
+	p1 := &models.Pass{
+		ID:         bson.NewObjectId(),
+		Token:      "p1token",
+		CreatedAt:  time.Now(),
+		ExpiresAt:  time.Now(),
+		ClaimedAt:  nil,
+		TeamUserID: "user-id",
+	}
+
+	p2 := &models.Pass{
+		ID:         bson.NewObjectId(),
+		Token:      "p2token",
+		CreatedAt:  time.Now(),
+		ExpiresAt:  time.Now(),
+		ClaimedAt:  nil,
+		TeamUserID: "user-id",
+	}
+
+	err := s.repository.insert(p1)
+	c.Assert(err, IsNil)
+	err = s.repository.insert(p2)
+	c.Assert(err, IsNil)
+
+	p, err := s.repository.findByID(p1.ID.Hex())
+	c.Assert(err, IsNil)
+	c.Assert(p, NotNil)
+	c.Assert(p.Token, Equals, "p1token")
+
+	p, err = s.repository.findByID(bson.NewObjectId().Hex())
+	c.Assert(err, IsNil)
+	c.Assert(p, IsNil)
+}
+
+func (s *PassRepositoryTestSuite) TestRemovePassesClaimedBefore(c *C) {
+
+	now := time.Now()
+
+	fiveMinutesInPast := now.Add(-5 * time.Minute)
+	p1 := &models.Pass{
+		ID:         bson.NewObjectId(),
+		Token:      "p1token",
+		CreatedAt:  now,
+		ExpiresAt:  now,
+		ClaimedAt:  &fiveMinutesInPast,
+		TeamUserID: "user-id",
+	}
+
+	fiveMinutesInFuture := now.Add(5 * time.Minute)
+	p2 := &models.Pass{
+		ID:         bson.NewObjectId(),
+		Token:      "p2token",
+		CreatedAt:  now,
+		ExpiresAt:  now,
+		ClaimedAt:  &fiveMinutesInFuture,
+		TeamUserID: "user-id",
+	}
+
+	s.repository.insert(p1)
+	s.repository.insert(p2)
+
+	err := s.repository.removePassesClaimedBefore(time.Now())
+	c.Assert(err, IsNil)
+
+	p1, err = s.repository.findByID(p1.ID.Hex())
+	c.Assert(err, IsNil)
+	c.Assert(p1, IsNil)
+
+	p2, err = s.repository.findByID(p2.ID.Hex())
+	c.Assert(err, IsNil)
+	c.Assert(p2, NotNil)
 }
 
 // Suite lifecycle and callbacks

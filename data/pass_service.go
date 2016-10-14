@@ -32,6 +32,16 @@ func (s *PassService) EnsurePass(team *models.Team, user *models.TeamUser, proje
 	return pass, err
 }
 
+func (s *PassService) RemoveStalePasses() error {
+	err := s.repository.removeExpiredPasses()
+	if err != nil {
+		return err
+	}
+
+	return s.repository.removePassesClaimedBefore(time.Now().Add(
+		-utils.ClaimedPassesToPurgeAfterDays * 24 * 60 * time.Minute))
+}
+
 func (s *PassService) createPass(team *models.Team, user *models.TeamUser, projectID string) (*models.Pass, error) {
 	now := time.Now()
 

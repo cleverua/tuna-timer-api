@@ -8,19 +8,19 @@ import (
 	"time"
 )
 
-type ProlongTimersJob struct {
+type StopTimersAtMidnight struct {
 	env     *utils.Environment
 	session *mgo.Session
 }
 
-func NewProlongTimersJob(env *utils.Environment, session *mgo.Session) *ProlongTimersJob {
-	return &ProlongTimersJob{
+func NewStopTimersAtMidnight(env *utils.Environment, session *mgo.Session) *StopTimersAtMidnight {
+	return &StopTimersAtMidnight{
 		env:     env,
 		session: session,
 	}
 }
 
-func (j *ProlongTimersJob) Run() {
+func (j *StopTimersAtMidnight) Run() {
 	log.Println("ProlongTimersJob launched!")
 
 	now := time.Now()

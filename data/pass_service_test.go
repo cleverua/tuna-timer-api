@@ -105,6 +105,64 @@ func (s *PassServiceTestSuite) TestEnsurePassExistingOne(c *C) {
 	c.Assert(isZeroSeconds, Equals, true)
 }
 
+func (s *PassServiceTestSuite) RemoveStalePasses(c *C) {
+
+	now := time.Now()
+
+	p1 := &models.Pass{ //should be removed as its expiresAt is in the past
+		ID:         bson.NewObjectId(),
+		Token:      "p1token",
+		CreatedAt:  now.Add(-5 * time.Minute),
+		ExpiresAt:  now.Add(-3 * time.Minute),
+		ClaimedAt:  nil,
+		TeamUserID: "user-id",
+	}
+
+	p2 := &models.Pass{ //should NOT be removed as its expiresAt is in the future
+		ID:         bson.NewObjectId(),
+		Token:      "p2token",
+		CreatedAt:  now,
+		ExpiresAt:  now.Add(5 * time.Minute),
+		ClaimedAt:  nil,
+		TeamUserID: "user-id",
+	}
+
+	claimedAt := now.Add(-15 * 60 * 24 * time.Minute)
+	p3 := &models.Pass{ //should be removed as it is claimedAt is in a distant past
+		ID:         bson.NewObjectId(),
+		Token:      "p3token",
+		CreatedAt:  now,
+		ExpiresAt:  now.Add(5 * time.Minute),
+		ClaimedAt:  &claimedAt,
+		TeamUserID: "user-id",
+	}
+
+	err := s.repository.insert(p1)
+	c.Assert(err, IsNil)
+
+	err = s.repository.insert(p2)
+	c.Assert(err, IsNil)
+
+	err = s.repository.insert(p3)
+	c.Assert(err, IsNil)
+
+	err = s.service.RemoveStalePasses()
+	c.Assert(err, IsNil)
+
+	pass, err := s.repository.findByID(p1.ID.Hex())
+	c.Assert(err, IsNil)
+	c.Assert(pass, IsNil)
+
+	pass, err = s.repository.findByID(p2.ID.Hex())
+	c.Assert(err, IsNil)
+	c.Assert(pass, NotNil)
+
+	pass, err = s.repository.findByID(p3.ID.Hex())
+	c.Assert(err, IsNil)
+	c.Assert(pass, IsNil)
+
+}
+
 func (s *PassServiceTestSuite) SetUpSuite(c *C) {
 	e := utils.NewEnvironment(utils.TestEnv, "1.0.0")
 

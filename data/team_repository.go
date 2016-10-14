@@ -25,7 +25,6 @@ type TeamRepositoryInterface interface {
 	save(team *models.Team) error
 	createTeam(externalID, externalName string) (*models.Team, error)
 	addProject(team *models.Team, externalProjectID, externalProjectName string) error
-	//addUser(team *models.Team, externalUserID, externalUserName string) error
 }
 
 // NewTeamRepository is a factory method
