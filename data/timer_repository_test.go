@@ -17,10 +17,10 @@ import (
 )
 
 func TestTimerRepository(t *testing.T) {
-	gosuite.Run(t, &TimerRepositoryTestSuite{})
+	gosuite.Run(t, &TimerRepositoryTestSuite{Is: is.New(t)})
 }
 
-func (s *TimerRepositoryTestSuite) GSTUpdate(t *testing.T) {
+func (s *TimerRepositoryTestSuite) TestUpdate(t *testing.T) {
 
 	project := &models.Project{
 		ID:                  bson.NewObjectId(),
@@ -52,7 +52,7 @@ func (s *TimerRepositoryTestSuite) GSTUpdate(t *testing.T) {
 	s.Equal(loadedTimer.Minutes, 50)
 }
 
-func (s *TimerRepositoryTestSuite) GSTCreateTimer(t *testing.T) {
+func (s *TimerRepositoryTestSuite) TestCreateTimer(t *testing.T) {
 	project := &models.Project{
 		ID:                  bson.NewObjectId(),
 		ExternalProjectName: "project",
@@ -88,13 +88,13 @@ func (s *TimerRepositoryTestSuite) GSTCreateTimer(t *testing.T) {
 	s.Equal(timerFromDB.TeamUserTZOffset, 10800)
 }
 
-func (s *TimerRepositoryTestSuite) GSTFindActiveTimerByTeamAndUserNotExist(t *testing.T) {
+func (s *TimerRepositoryTestSuite) TestFindActiveTimerByTeamAndUserNotExist(t *testing.T) {
 	timer, err := s.repo.findActiveByTeamAndUser("does not", "matter")
 	s.Nil(err)
 	s.Nil(timer)
 }
 
-func (s *TimerRepositoryTestSuite) GSTFindActiveTimerByTeamAndUserExists(t *testing.T) {
+func (s *TimerRepositoryTestSuite) TestFindActiveTimerByTeamAndUserExists(t *testing.T) {
 
 	newID := bson.NewObjectId()
 	timer := &models.Timer{
@@ -114,7 +114,7 @@ func (s *TimerRepositoryTestSuite) GSTFindActiveTimerByTeamAndUserExists(t *test
 	s.Equal(timerFromDB.ID.Hex(), newID.Hex())
 }
 
-func (s *TimerRepositoryTestSuite) GSTFindActiveTimerByTeamAndUserButAlreadyFinished(t *testing.T) {
+func (s *TimerRepositoryTestSuite) TestFindActiveTimerByTeamAndUserButAlreadyFinished(t *testing.T) {
 
 	newID := bson.NewObjectId()
 	finishedAt := time.Now()
@@ -135,7 +135,7 @@ func (s *TimerRepositoryTestSuite) GSTFindActiveTimerByTeamAndUserButAlreadyFini
 	s.Nil(timerFromDB)
 }
 
-func (s *TimerRepositoryTestSuite) GSTFindActiveTimerByTeamAndUserButAlreadyDeleted(t *testing.T) {
+func (s *TimerRepositoryTestSuite) TestFindActiveTimerByTeamAndUserButAlreadyDeleted(t *testing.T) {
 
 	newID := bson.NewObjectId()
 	deletedAt := time.Now()
@@ -156,7 +156,7 @@ func (s *TimerRepositoryTestSuite) GSTFindActiveTimerByTeamAndUserButAlreadyDele
 	s.Nil(timerFromDB)
 }
 
-func (s *TimerRepositoryTestSuite) GSTTotalMinutesMethods(t *testing.T) {
+func (s *TimerRepositoryTestSuite) TestTotalMinutesMethods(t *testing.T) {
 
 	now := time.Now()
 	// creates 10 timers one minute each
@@ -230,7 +230,7 @@ func (s *TimerRepositoryTestSuite) GSTTotalMinutesMethods(t *testing.T) {
 	s.Equal(m, 2)
 }
 
-func (s *TimerRepositoryTestSuite) GSTCompletedTasksForUser(t *testing.T) {
+func (s *TimerRepositoryTestSuite) TestCompletedTasksForUser(t *testing.T) {
 
 	now := time.Now()
 
@@ -287,7 +287,7 @@ func (s *TimerRepositoryTestSuite) GSTCompletedTasksForUser(t *testing.T) {
 	s.Equal(m[1].Name, "task-name2")
 }
 
-func (s *TimerRepositoryTestSuite) GSTFindActiveByTimezoneOffset(t *testing.T) {
+func (s *TimerRepositoryTestSuite) TestFindActiveByTimezoneOffset(t *testing.T) {
 	s.repo.createTimer(&models.Timer{
 		ID:               bson.NewObjectId(),
 		FinishedAt:       nil,
@@ -328,7 +328,7 @@ func (s *TimerRepositoryTestSuite) GSTFindActiveByTimezoneOffset(t *testing.T) {
 	}
 }
 
-func (s *TimerRepositoryTestSuite) SetUpSuite(t *testing.T) {
+func (s *TimerRepositoryTestSuite) SetUpSuite() {
 	e := utils.NewEnvironment(utils.TestEnv, "1.0.0")
 
 	session, err := utils.ConnectToDatabase(e.Config)
@@ -341,7 +341,6 @@ func (s *TimerRepositoryTestSuite) SetUpSuite(t *testing.T) {
 	s.env = e
 	s.session = session.Clone()
 	s.repo = NewTimerRepository(s.session)
-	s.Is = is.New(t)
 }
 
 func (s *TimerRepositoryTestSuite) TearDownSuite() {

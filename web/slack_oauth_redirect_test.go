@@ -14,10 +14,10 @@ import (
 )
 
 func TestSlackOauthHandlers(t *testing.T) {
-	gosuite.Run(t, &SlackOauthHandlersSuite{})
+	gosuite.Run(t, &SlackOauthHandlersSuite{Is: is.New(t)})
 }
 
-func (s *SlackOauthHandlersSuite) GSTSlackOauth2RedirectEmptyCode(t *testing.T) {
+func (s *SlackOauthHandlersSuite) TestSlackOauth2RedirectEmptyCode(t *testing.T) {
 	req, err := http.NewRequest("GET", "/api/v1/slack/oauth2redirect", nil)
 	s.Nil(err)
 
@@ -31,7 +31,7 @@ func (s *SlackOauthHandlersSuite) GSTSlackOauth2RedirectEmptyCode(t *testing.T) 
 	}
 }
 
-func (s *SlackOauthHandlersSuite) GSTSlackOauth2Redirect(t *testing.T) {
+func (s *SlackOauthHandlersSuite) TestSlackOauth2Redirect(t *testing.T) {
 	req, err := http.NewRequest("GET", "/api/v1/slack/oauth2redirect?code=2386021721.86286901378.a1666ad872&state=", nil)
 	s.Nil(err)
 
@@ -74,7 +74,7 @@ type SlackOauthHandlersSuite struct {
 	*is.Is
 }
 
-func (s *SlackOauthHandlersSuite) SetUpSuite(t *testing.T) {
+func (s *SlackOauthHandlersSuite) SetUpSuite() {
 
 	e := utils.NewEnvironment(utils.TestEnv, "1.0.0")
 	session, err := utils.ConnectToDatabase(e.Config)
@@ -85,7 +85,6 @@ func (s *SlackOauthHandlersSuite) SetUpSuite(t *testing.T) {
 	e.MigrateDatabase(session)
 	s.env = e
 	s.session = session.Clone()
-	s.Is = is.New(t)
 }
 
 func (s *SlackOauthHandlersSuite) TearDownSuite() {

@@ -13,7 +13,7 @@ import (
 )
 
 func TestUserService(t *testing.T) {
-	gosuite.Run(t, &UserServiceTestSuite{})
+	gosuite.Run(t, &UserServiceTestSuite{Is: is.New(t)})
 }
 
 type userServiceSlackAPIImplTest struct {
@@ -32,7 +32,7 @@ func newUserServiceSlackAPIImplTest(user *slack.User, err error) *userServiceSla
 	}
 }
 
-func (s *UserServiceTestSuite) GSTEnsureUserNew(t *testing.T) {
+func (s *UserServiceTestSuite) TestEnsureUserNew(t *testing.T) {
 
 	teamID := bson.NewObjectId()
 	team := &models.Team{
@@ -57,7 +57,7 @@ func (s *UserServiceTestSuite) GSTEnsureUserNew(t *testing.T) {
 	s.True(user.SlackUserInfo.IsAdmin)
 }
 
-func (s *UserServiceTestSuite) GSTEnsureUserExisting(t *testing.T) {
+func (s *UserServiceTestSuite) TestEnsureUserExisting(t *testing.T) {
 
 	service := NewUserService(s.session)
 	service.repository.save(&models.TeamUser{
@@ -78,7 +78,7 @@ type UserServiceTestSuite struct {
 	repository *UserRepository
 }
 
-func (s *UserServiceTestSuite) SetUpSuite(t *testing.T) {
+func (s *UserServiceTestSuite) SetUpSuite() {
 	log.Println("UserServiceTestSuite#SetUpSuite")
 
 	e := utils.NewEnvironment(utils.TestEnv, "1.0.0")
@@ -93,7 +93,6 @@ func (s *UserServiceTestSuite) SetUpSuite(t *testing.T) {
 	s.env = e
 	s.session = session.Clone()
 	s.repository = NewUserRepository(session)
-	s.Is = is.New(t)
 }
 
 func (s *UserServiceTestSuite) TearDownSuite() {

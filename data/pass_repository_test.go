@@ -13,10 +13,10 @@ import (
 )
 
 func TestPassRepository(t *testing.T) {
-	gosuite.Run(t, &PassRepositoryTestSuite{})
+	gosuite.Run(t, &PassRepositoryTestSuite{Is: is.New(t)})
 }
 
-func (s *PassRepositoryTestSuite) GSTFindByToken(t *testing.T) {
+func (s *PassRepositoryTestSuite) TestFindByToken(t *testing.T) {
 	p1 := &models.Pass{
 		ID:           bson.NewObjectId(),
 		Token:        "token",
@@ -35,7 +35,7 @@ func (s *PassRepositoryTestSuite) GSTFindByToken(t *testing.T) {
 	s.Equal(p1.ID, p1Test.ID)
 }
 
-func (s *PassRepositoryTestSuite) GSTFindByTokenDoesNotGetExpired(t *testing.T) {
+func (s *PassRepositoryTestSuite) TestFindByTokenDoesNotGetExpired(t *testing.T) {
 	p1 := &models.Pass{
 		ID:           bson.NewObjectId(),
 		Token:        "token",
@@ -52,7 +52,7 @@ func (s *PassRepositoryTestSuite) GSTFindByTokenDoesNotGetExpired(t *testing.T) 
 	s.Nil(p1Test)
 }
 
-func (s *PassRepositoryTestSuite) GSTFindByTokenDoesNotGetClaimed(t *testing.T) {
+func (s *PassRepositoryTestSuite) TestFindByTokenDoesNotGetClaimed(t *testing.T) {
 	now := time.Now()
 
 	p1 := &models.Pass{
@@ -71,7 +71,7 @@ func (s *PassRepositoryTestSuite) GSTFindByTokenDoesNotGetClaimed(t *testing.T) 
 	s.Nil(p1Test)
 }
 
-func (s *PassRepositoryTestSuite) GSTFindActiveByUserID(t *testing.T) {
+func (s *PassRepositoryTestSuite) TestFindActiveByUserID(t *testing.T) {
 
 	now := time.Now()
 
@@ -116,7 +116,7 @@ func (s *PassRepositoryTestSuite) GSTFindActiveByUserID(t *testing.T) {
 	s.Equal("p1token", pass.Token)
 }
 
-func (s *PassRepositoryTestSuite) GSTRemoveExpiredPasses(t *testing.T) {
+func (s *PassRepositoryTestSuite) TestRemoveExpiredPasses(t *testing.T) {
 
 	now := time.Now()
 
@@ -173,7 +173,7 @@ func (s *PassRepositoryTestSuite) GSTRemoveExpiredPasses(t *testing.T) {
 	s.NotNil(p3)
 }
 
-func (s *PassRepositoryTestSuite) GSTFindByID(t *testing.T) {
+func (s *PassRepositoryTestSuite) TestFindByID(t *testing.T) {
 	p1 := &models.Pass{
 		ID:         bson.NewObjectId(),
 		Token:      "p1token",
@@ -208,7 +208,7 @@ func (s *PassRepositoryTestSuite) GSTFindByID(t *testing.T) {
 	s.Nil(p)
 }
 
-func (s *PassRepositoryTestSuite) GSTRemovePassesClaimedBefore(t *testing.T) {
+func (s *PassRepositoryTestSuite) TestRemovePassesClaimedBefore(t *testing.T) {
 
 	now := time.Now()
 
@@ -255,7 +255,7 @@ type PassRepositoryTestSuite struct {
 	userRepository *UserRepository
 }
 
-func (s *PassRepositoryTestSuite) SetUpSuite(t *testing.T) {
+func (s *PassRepositoryTestSuite) SetUpSuite() {
 	e := utils.NewEnvironment(utils.TestEnv, "1.0.0")
 
 	session, err := utils.ConnectToDatabase(e.Config)
@@ -269,7 +269,6 @@ func (s *PassRepositoryTestSuite) SetUpSuite(t *testing.T) {
 	s.session = session.Clone()
 	s.repository = NewPassRepository(s.session)
 	s.userRepository = NewUserRepository(session)
-	s.Is = is.New(t)
 }
 
 func (s *PassRepositoryTestSuite) TearDownSuite() {

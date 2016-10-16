@@ -11,10 +11,10 @@ import (
 )
 
 func TestTeamRepository(t *testing.T) {
-	gosuite.Run(t, &TeamRepositoryTestSuite{})
+	gosuite.Run(t, &TeamRepositoryTestSuite{Is: is.New(t)})
 }
 
-func (s *TeamRepositoryTestSuite) GSTAddProject(t *testing.T) {
+func (s *TeamRepositoryTestSuite) TestAddProject(t *testing.T) {
 	team, err := s.repository.createTeam("external-id", "external-name")
 	s.Nil(err)
 	s.NotNil(team)
@@ -32,7 +32,7 @@ func (s *TeamRepositoryTestSuite) GSTAddProject(t *testing.T) {
 	s.Equal("external-project-name", testProject.ExternalProjectName)
 }
 
-func (s *TeamRepositoryTestSuite) GSTAddProjectExists(t *testing.T) {
+func (s *TeamRepositoryTestSuite) TestAddProjectExists(t *testing.T) {
 	team, err := s.repository.createTeam("external-id", "external-name")
 	s.Nil(err)
 	s.NotNil(team)
@@ -48,7 +48,7 @@ func (s *TeamRepositoryTestSuite) GSTAddProjectExists(t *testing.T) {
 }
 
 // Find By External ID
-func (s *TeamRepositoryTestSuite) GSTFindByExternalID(t *testing.T) {
+func (s *TeamRepositoryTestSuite) TestFindByExternalID(t *testing.T) {
 	team, err := s.repository.createTeam("external-id", "external-name")
 
 	s.Nil(err)
@@ -61,14 +61,14 @@ func (s *TeamRepositoryTestSuite) GSTFindByExternalID(t *testing.T) {
 	s.Equal(team.ID, resultTeam.ID)
 }
 
-func (s *TeamRepositoryTestSuite) GSTFindByExternalIDNotExist(t *testing.T) {
+func (s *TeamRepositoryTestSuite) TestFindByExternalIDNotExist(t *testing.T) {
 	resultTeam, err := s.repository.FindByExternalID("external-id")
 	s.Nil(err)
 	s.Nil(resultTeam)
 }
 
 // CREATE TEAM
-func (s *TeamRepositoryTestSuite) GSTCreateTeam(t *testing.T) {
+func (s *TeamRepositoryTestSuite) TestCreateTeam(t *testing.T) {
 	team, err := s.repository.createTeam("external-id", "external-name")
 	s.Nil(err)
 	s.NotNil(team)
@@ -80,7 +80,7 @@ func (s *TeamRepositoryTestSuite) GSTCreateTeam(t *testing.T) {
 	s.Equal(models.ModelVersionTeam, team.ModelVersion)
 }
 
-func (s *TeamRepositoryTestSuite) GSTCreateTeamWhenAlreadyExists(t *testing.T) {
+func (s *TeamRepositoryTestSuite) TestCreateTeamWhenAlreadyExists(t *testing.T) {
 	_, err := s.repository.createTeam("external-id", "external-name")
 	s.Nil(err)
 	_, err = s.repository.createTeam("external-id", "external-name")
@@ -88,7 +88,7 @@ func (s *TeamRepositoryTestSuite) GSTCreateTeamWhenAlreadyExists(t *testing.T) {
 	s.True(mgo.IsDup(err))
 }
 
-func (s *TeamRepositoryTestSuite) GSTSave(t *testing.T) {
+func (s *TeamRepositoryTestSuite) TestSave(t *testing.T) {
 	tt := &models.Team{
 		ExternalTeamID:   "team-id",
 		ExternalTeamName: "team-name",
@@ -100,7 +100,7 @@ func (s *TeamRepositoryTestSuite) GSTSave(t *testing.T) {
 	s.NotNil(team)
 }
 
-func (s *TeamRepositoryTestSuite) GSTSaveUpdatesExisting(t *testing.T) {
+func (s *TeamRepositoryTestSuite) TestSaveUpdatesExisting(t *testing.T) {
 
 	team, err := s.repository.createTeam("external-id", "external-name")
 	s.Nil(err)
@@ -122,7 +122,7 @@ type TeamRepositoryTestSuite struct {
 	repository *TeamRepository
 }
 
-func (s *TeamRepositoryTestSuite) SetUpSuite(t *testing.T) {
+func (s *TeamRepositoryTestSuite) SetUpSuite() {
 	e := utils.NewEnvironment(utils.TestEnv, "1.0.0")
 
 	session, err := utils.ConnectToDatabase(e.Config)
@@ -135,7 +135,6 @@ func (s *TeamRepositoryTestSuite) SetUpSuite(t *testing.T) {
 	s.env = e
 	s.session = session.Clone()
 	s.repository = NewTeamRepository(s.session)
-	s.Is = is.New(t)
 }
 
 func (s *TeamRepositoryTestSuite) TearDownSuite() {

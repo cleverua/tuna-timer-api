@@ -32,7 +32,7 @@
 		},
 		{
 			"ImportPath": "github.com/pavlo/gosuite",
-			"Rev": "001ca93308c5ae56dce9d6defb34a9ae94f673a3"
+			"Rev": "46841fa8c4e516451916af986df59c74911b87d4"
 		},
 		{
 			"ImportPath": "github.com/robfig/cron",

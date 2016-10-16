@@ -13,10 +13,10 @@ import (
 )
 
 func TestPassService(t *testing.T) {
-	gosuite.Run(t, &PassServiceTestSuite{})
+	gosuite.Run(t, &PassServiceTestSuite{Is: is.New(t)})
 }
 
-func (s *PassServiceTestSuite) GSTCreatePass(t *testing.T) {
+func (s *PassServiceTestSuite) TestCreatePass(t *testing.T) {
 	teamID := bson.NewObjectId()
 	team := &models.Team{
 		ID: teamID,
@@ -39,7 +39,7 @@ func (s *PassServiceTestSuite) GSTCreatePass(t *testing.T) {
 	s.Equal(models.ModelVersionPass, pass.ModelVersion)
 }
 
-func (s *PassServiceTestSuite) GSTEnsurePassNewPassCase(t *testing.T) {
+func (s *PassServiceTestSuite) TestEnsurePassNewPassCase(t *testing.T) {
 	teamID := bson.NewObjectId()
 	team := &models.Team{
 		ID: teamID,
@@ -67,7 +67,7 @@ func (s *PassServiceTestSuite) GSTEnsurePassNewPassCase(t *testing.T) {
 	s.Nil(pass.ClaimedAt)
 }
 
-func (s *PassServiceTestSuite) GSTEnsurePassExistingOne(t *testing.T) {
+func (s *PassServiceTestSuite) TestEnsurePassExistingOne(t *testing.T) {
 	teamID := bson.NewObjectId()
 	team := &models.Team{
 		ID: teamID,
@@ -105,7 +105,7 @@ func (s *PassServiceTestSuite) GSTEnsurePassExistingOne(t *testing.T) {
 	s.True(utils.PassExpiresInMinutes*time.Minute.Seconds() - ensuredPass.ExpiresAt.Sub(time.Now()).Seconds() < 0.01)
 }
 
-func (s *PassServiceTestSuite) GSTRemoveStalePasses(t *testing.T) {
+func (s *PassServiceTestSuite) TestRemoveStalePasses(t *testing.T) {
 
 	now := time.Now()
 
@@ -170,7 +170,7 @@ type PassServiceTestSuite struct {
 	repository *PassRepository
 }
 
-func (s *PassServiceTestSuite) SetUpSuite(t *testing.T) {
+func (s *PassServiceTestSuite) SetUpSuite() {
 	e := utils.NewEnvironment(utils.TestEnv, "1.0.0")
 
 	session, err := utils.ConnectToDatabase(e.Config)
@@ -184,7 +184,6 @@ func (s *PassServiceTestSuite) SetUpSuite(t *testing.T) {
 	s.session = session.Clone()
 	s.service = NewPassService(s.session)
 	s.repository = NewPassRepository(session)
-	s.Is = is.New(t)
 }
 func (s *PassServiceTestSuite) TearDownSuite() {
 	s.session.Close()

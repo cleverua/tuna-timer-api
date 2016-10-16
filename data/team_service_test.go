@@ -13,16 +13,16 @@ import (
 )
 
 func TestTeamService(t *testing.T) {
-	gosuite.Run(t, &TeamServiceTestSuite{})
+	gosuite.Run(t, &TeamServiceTestSuite{Is: is.New(t)})
 }
 
-func (s *TeamServiceTestSuite) GSTEnsureTeamNoTeamExist(t *testing.T) {
+func (s *TeamServiceTestSuite) TestEnsureTeamNoTeamExist(t *testing.T) {
 	cmd := getSlackCustomCommand()
 	_, _, err := s.service.EnsureTeamSetUp(cmd)
 	s.NotNil(err)
 }
 
-func (s *TeamServiceTestSuite) GSTEnsureTeamExists(t *testing.T) {
+func (s *TeamServiceTestSuite) TestEnsureTeamExists(t *testing.T) {
 	cmd := getSlackCustomCommand()
 	existingTeam, err := s.repository.createTeam("team-id", "team-domain")
 	s.Nil(err)
@@ -40,7 +40,7 @@ func (s *TeamServiceTestSuite) GSTEnsureTeamExists(t *testing.T) {
 	s.Equal(existingTeam.ID, team.ID)
 }
 
-func (s *TeamServiceTestSuite) GSTEnsureTeamExistsWhenTeamAndUserAndProjectExist(t *testing.T) {
+func (s *TeamServiceTestSuite) TestEnsureTeamExistsWhenTeamAndUserAndProjectExist(t *testing.T) {
 	cmd := getSlackCustomCommand()
 
 	existingTeam, err := s.repository.createTeam("team-id", "team-domain")
@@ -62,7 +62,7 @@ func (s *TeamServiceTestSuite) GSTEnsureTeamExistsWhenTeamAndUserAndProjectExist
 	s.Equal(team.ID, existingTeam.ID)
 }
 
-func (s *TeamServiceTestSuite) GSTEnsureTeamExistsFailureOnFindTeam(t *testing.T) {
+func (s *TeamServiceTestSuite) TestEnsureTeamExistsFailureOnFindTeam(t *testing.T) {
 	modifiedRepository := &testTeamRepositoryImpl{
 		findByExternalIDSuccess: false,
 		createTeamSuccess:       true,
@@ -105,7 +105,7 @@ func (s *TeamServiceTestSuite) GSTEnsureTeamExistsFailureOnFindTeam(t *testing.T
 	s.NotNil(err)
 }
 
-func (s *TeamServiceTestSuite) GSTCreateOrUpdateWithSlackOAuthResponseNew(t *testing.T) {
+func (s *TeamServiceTestSuite) TestCreateOrUpdateWithSlackOAuthResponseNew(t *testing.T) {
 	oauthResponse := &slack.OAuthResponse{
 		TeamID:      "ext-id",
 		TeamName:    "ext-name",
@@ -136,7 +136,7 @@ func (s *TeamServiceTestSuite) GSTCreateOrUpdateWithSlackOAuthResponseNew(t *tes
 	s.Equal(details.Scope, "scope")
 }
 
-func (s *TeamServiceTestSuite) GSTCreateOrUpdateWithSlackOAuthResponseExisting(t *testing.T) {
+func (s *TeamServiceTestSuite) TestCreateOrUpdateWithSlackOAuthResponseExisting(t *testing.T) {
 	_, err := s.repository.createTeam("ext-id", "ext-name")
 	s.Nil(err)
 	//c.Assert(err, IsNil)
@@ -259,7 +259,7 @@ type TeamServiceTestSuite struct {
 	repository TeamRepositoryInterface
 }
 
-func (s *TeamServiceTestSuite) SetUpSuite(t *testing.T) {
+func (s *TeamServiceTestSuite) SetUpSuite() {
 	e := utils.NewEnvironment(utils.TestEnv, "1.0.0")
 
 	session, err := utils.ConnectToDatabase(e.Config)
@@ -273,7 +273,6 @@ func (s *TeamServiceTestSuite) SetUpSuite(t *testing.T) {
 	s.session = session.Clone()
 	s.service = NewTeamService(s.session)
 	s.repository = NewTeamRepository(s.session)
-	s.Is = is.New(t)
 }
 
 func (s *TeamServiceTestSuite) TearDownSuite() {

@@ -15,10 +15,10 @@ import (
 )
 
 func TestUserRepository(t *testing.T) {
-	gosuite.Run(t, &UserRepositoryTestSuite{})
+	gosuite.Run(t, &UserRepositoryTestSuite{Is: is.New(t)})
 }
 
-func (s *UserRepositoryTestSuite) GSTFindByExternalID(t *testing.T) {
+func (s *UserRepositoryTestSuite) TestFindByExternalID(t *testing.T) {
 	user := &models.TeamUser{
 		TeamID:           "team-id",
 		ExternalUserID:   "ext-id",
@@ -40,7 +40,7 @@ func (s *UserRepositoryTestSuite) GSTFindByExternalID(t *testing.T) {
 	s.True(loadedUser.SlackUserInfo.IsAdmin)
 }
 
-func (s *UserRepositoryTestSuite) GSTSave(t *testing.T) {
+func (s *UserRepositoryTestSuite) TestSave(t *testing.T) {
 	user := &models.TeamUser{
 		TeamID:           "team-id",
 		ExternalUserID:   "ext-id",
@@ -65,13 +65,13 @@ func (s *UserRepositoryTestSuite) GSTSave(t *testing.T) {
 	s.Equal(loadedUser.ModelVersion, models.ModelVersionTeamUser)
 }
 
-func (s *UserRepositoryTestSuite) GSTFindByExternalIDNotExist(t *testing.T) {
+func (s *UserRepositoryTestSuite) TestFindByExternalIDNotExist(t *testing.T) {
 	resultTeam, err := s.repository.FindByExternalID("external-id")
 	s.Nil(err)
 	s.Nil(resultTeam)
 }
 
-func (s *UserRepositoryTestSuite) SetUpSuite(t *testing.T) {
+func (s *UserRepositoryTestSuite) SetUpSuite() {
 	e := utils.NewEnvironment(utils.TestEnv, "1.0.0")
 
 	session, err := utils.ConnectToDatabase(e.Config)
@@ -84,7 +84,6 @@ func (s *UserRepositoryTestSuite) SetUpSuite(t *testing.T) {
 	s.env = e
 	s.session = session.Clone()
 	s.repository = NewUserRepository(s.session)
-	s.Is = is.New(t)
 }
 
 func (s *UserRepositoryTestSuite) TearDownSuite() {

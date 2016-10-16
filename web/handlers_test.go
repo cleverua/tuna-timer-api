@@ -22,10 +22,10 @@ import (
 
 
 func TestHandlers(t *testing.T) {
-	gosuite.Run(t, &TestHandlersSuite{})
+	gosuite.Run(t, &TestHandlersSuite{Is: is.New(t)})
 }
 
-func (s *TestHandlersSuite) GSTHandlersTimer(t *testing.T) {
+func (s *TestHandlersSuite) TestHandlersTimer(t *testing.T) {
 	v := url.Values{}
 	v.Set("token", "gIkuvaNzQIHg97ATvDxqgjtO")
 	v.Set("team_id", "T0001")
@@ -68,7 +68,7 @@ func (s *TestHandlersSuite) GSTHandlersTimer(t *testing.T) {
 	s.Equal(mockCmd.executed, true)
 }
 
-func (s *TestHandlersSuite) GSTHandlersTimerCommandLookupFailure(t *testing.T) {
+func (s *TestHandlersSuite) TestHandlersTimerCommandLookupFailure(t *testing.T) {
 	v := url.Values{}
 	v.Set("text", "foobar")
 	v.Set("token", "gIkuvaNzQIHg97ATvDxqgjtO")
@@ -104,7 +104,7 @@ func (s *TestHandlersSuite) GSTHandlersTimerCommandLookupFailure(t *testing.T) {
 	s.Equal(message.Attachments[0].Text, "Simulated failure")
 }
 
-func (s *TestHandlersSuite) GSTHealth(t *testing.T) {
+func (s *TestHandlersSuite) TestHealth(t *testing.T) {
 
 	req, err := http.NewRequest("GET", "/health", nil)
 	if err != nil {
@@ -148,7 +148,7 @@ type TestHandlersSuite struct {
 	session *mgo.Session
 }
 
-func (s *TestHandlersSuite) SetUpSuite(t *testing.T) {
+func (s *TestHandlersSuite) SetUpSuite() {
 	e := utils.NewEnvironment(utils.TestEnv, "1.0.0")
 	session, err := utils.ConnectToDatabase(e.Config)
 	if err != nil {

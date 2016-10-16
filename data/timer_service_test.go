@@ -16,10 +16,10 @@ import (
 )
 
 func TestTimerService(t *testing.T) {
-	gosuite.Run(t, &TimerServiceTestSuite{})
+	gosuite.Run(t, &TimerServiceTestSuite{Is: is.New(t)})
 }
 
-func (s *TimerServiceTestSuite) GSTgetActiveTimer(t *testing.T) {
+func (s *TimerServiceTestSuite) TestgetActiveTimer(t *testing.T) {
 
 	now := time.Now()
 
@@ -53,7 +53,7 @@ func (s *TimerServiceTestSuite) GSTgetActiveTimer(t *testing.T) {
 	s.Equal(timer.Minutes, 20)
 }
 
-func (s *TimerServiceTestSuite) GSTstopTimer(t *testing.T) {
+func (s *TimerServiceTestSuite) TeststopTimer(t *testing.T) {
 	now := time.Now()
 
 	offsetDuration, _ := time.ParseDuration("20m")
@@ -82,7 +82,7 @@ func (s *TimerServiceTestSuite) GSTstopTimer(t *testing.T) {
 	s.NotNil(loadedTimer.FinishedAt)
 }
 
-func (s *TimerServiceTestSuite) GSTstartTimer(t *testing.T) {
+func (s *TimerServiceTestSuite) TeststartTimer(t *testing.T) {
 
 	projectID := bson.NewObjectId()
 	project := &models.Project{
@@ -119,7 +119,7 @@ func (s *TimerServiceTestSuite) GSTstartTimer(t *testing.T) {
 	s.Equal(loadedTimer.Minutes, 0)
 }
 
-func (s *TimerServiceTestSuite) GSTtotalMinutesForTodayAddsTimeForUnfinishedTask(t *testing.T) {
+func (s *TimerServiceTestSuite) TesttotalMinutesForTodayAddsTimeForUnfinishedTask(t *testing.T) {
 	now := time.Now()
 
 	offsetDuration1, _ := time.ParseDuration("20m")
@@ -154,7 +154,7 @@ func (s *TimerServiceTestSuite) GSTtotalMinutesForTodayAddsTimeForUnfinishedTask
 	s.Equal(s.service.TotalMinutesForTaskToday(timer), 15)
 }
 
-func (s *TimerServiceTestSuite) GSTtotalCompletedMinutesForDay(t *testing.T) {
+func (s *TimerServiceTestSuite) TesttotalCompletedMinutesForDay(t *testing.T) {
 	now := time.Now()
 
 	user := &models.TeamUser{
@@ -204,7 +204,7 @@ func (s *TimerServiceTestSuite) GSTtotalCompletedMinutesForDay(t *testing.T) {
 	s.Equal(s.service.TotalCompletedMinutesForDay(targetDate.Year(), targetDate.Month(), targetDate.Day(), user), 7)
 }
 
-func (s *TimerServiceTestSuite) GSTgetCompletedTasksForDayPositiveTZOffset(t *testing.T) {
+func (s *TimerServiceTestSuite) TestgetCompletedTasksForDayPositiveTZOffset(t *testing.T) {
 
 	now := time.Now()
 
@@ -261,7 +261,7 @@ func (s *TimerServiceTestSuite) GSTgetCompletedTasksForDayPositiveTZOffset(t *te
 	s.Equal(v[0].Minutes, 7)
 }
 
-func (s *TimerServiceTestSuite) GSTgetCompletedTasksForDayNegativeTZOffset(t *testing.T) {
+func (s *TimerServiceTestSuite) TestgetCompletedTasksForDayNegativeTZOffset(t *testing.T) {
 
 	now := time.Now()
 
@@ -320,7 +320,7 @@ func (s *TimerServiceTestSuite) GSTgetCompletedTasksForDayNegativeTZOffset(t *te
 }
 
 // CompleteActiveTimersAtMidnight
-func (s *TimerServiceTestSuite) GSTcompleteActiveTimersAtMidnight(t *testing.T) {
+func (s *TimerServiceTestSuite) TestcompleteActiveTimersAtMidnight(t *testing.T) {
 
 	t1ID := bson.NewObjectId()
 	s.repo.createTimer(&models.Timer{
@@ -367,7 +367,7 @@ func (s *TimerServiceTestSuite) GSTcompleteActiveTimersAtMidnight(t *testing.T) 
 	s.Equal(timer.Minutes, 0)
 }
 
-func (s *TimerServiceTestSuite) SetUpSuite(t *testing.T) {
+func (s *TimerServiceTestSuite) SetUpSuite() {
 	e := utils.NewEnvironment(utils.TestEnv, "1.0.0")
 
 	session, err := utils.ConnectToDatabase(e.Config)
@@ -381,7 +381,6 @@ func (s *TimerServiceTestSuite) SetUpSuite(t *testing.T) {
 	s.session = session.Clone()
 	s.service = NewTimerService(s.session)
 	s.repo = NewTimerRepository(s.session)
-	s.Is = is.New(t)
 }
 
 func (s *TimerServiceTestSuite) TearDownSuite() {
