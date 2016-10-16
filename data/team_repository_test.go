@@ -1,120 +1,128 @@
 package data
 
 import (
-	"log"
-	"testing"
-
-	"gopkg.in/mgo.v2"
-
 	"github.com/tuna-timer/tuna-timer-api/models"
 	"github.com/tuna-timer/tuna-timer-api/utils"
-	. "gopkg.in/check.v1"
+	"gopkg.in/mgo.v2"
+	"log"
+	"testing"
+	"gopkg.in/tylerb/is.v1"
+	"github.com/pavlo/gosuite"
 )
 
-// Add Project
-func (s *TeamRepositoryTestSuite) TestAddProject(c *C) {
-	team, err := s.repository.createTeam("external-id", "external-name")
-	c.Assert(err, IsNil)
-	c.Assert(team, NotNil)
-
-	err = s.repository.addProject(team, "external-project-id", "external-project-name")
-	c.Assert(err, IsNil)
-
-	reloadedTeam, _ := s.repository.FindByExternalID("external-id")
-	c.Assert(len(reloadedTeam.Projects), Equals, 1)
-	testProject := reloadedTeam.Projects[0]
-
-	c.Assert(testProject.ID, NotNil)
-	c.Assert(testProject.CreatedAt, NotNil)
-	c.Assert(testProject.ExternalProjectID, Equals, "external-project-id")
-	c.Assert(testProject.ExternalProjectName, Equals, "external-project-name")
+func TestTeamRepository(t *testing.T) {
+	gosuite.Run(t, &TeamRepositoryTestSuite{})
 }
 
-func (s *TeamRepositoryTestSuite) TestAddProjectExists(c *C) {
+func (s *TeamRepositoryTestSuite) GSTAddProject(t *testing.T) {
 	team, err := s.repository.createTeam("external-id", "external-name")
-	c.Assert(err, IsNil)
-	c.Assert(team, NotNil)
+	s.Nil(err)
+	s.NotNil(team)
 
 	err = s.repository.addProject(team, "external-project-id", "external-project-name")
-	c.Assert(err, IsNil)
-
-	err = s.repository.addProject(team, "external-project-id", "external-project-name")
-	c.Assert(err, IsNil)
+	s.Nil(err)
 
 	reloadedTeam, _ := s.repository.FindByExternalID("external-id")
-	c.Assert(len(reloadedTeam.Projects), Equals, 1)
+	s.Equal(1, len(reloadedTeam.Projects))
+	testProject := reloadedTeam.Projects[0]
+
+	s.NotNil(testProject.ID)
+	s.NotNil(testProject.CreatedAt) //todo this does not make sense?
+	s.Equal("external-project-id", testProject.ExternalProjectID)
+	s.Equal("external-project-name", testProject.ExternalProjectName)
+}
+
+func (s *TeamRepositoryTestSuite) GSTAddProjectExists(t *testing.T) {
+	team, err := s.repository.createTeam("external-id", "external-name")
+	s.Nil(err)
+	s.NotNil(team)
+
+	err = s.repository.addProject(team, "external-project-id", "external-project-name")
+	s.Nil(err)
+
+	err = s.repository.addProject(team, "external-project-id", "external-project-name")
+	s.Nil(err)
+
+	reloadedTeam, _ := s.repository.FindByExternalID("external-id")
+	s.Equal(1, len(reloadedTeam.Projects))
 }
 
 // Find By External ID
-func (s *TeamRepositoryTestSuite) TestFindByExternalID(c *C) {
+func (s *TeamRepositoryTestSuite) GSTFindByExternalID(t *testing.T) {
 	team, err := s.repository.createTeam("external-id", "external-name")
-	c.Assert(err, IsNil)
-	c.Assert(team, NotNil)
+
+	s.Nil(err)
+	s.NotNil(team)
 
 	resultTeam, err := s.repository.FindByExternalID("external-id")
-	c.Assert(err, IsNil)
-	c.Assert(resultTeam, NotNil)
-	c.Assert(resultTeam.ID, Equals, team.ID)
+	s.Nil(err)
+
+	s.NotNil(resultTeam)
+	s.Equal(team.ID, resultTeam.ID)
 }
 
-func (s *TeamRepositoryTestSuite) TestFindByExternalIDNotExist(c *C) {
+func (s *TeamRepositoryTestSuite) GSTFindByExternalIDNotExist(t *testing.T) {
 	resultTeam, err := s.repository.FindByExternalID("external-id")
-	c.Assert(err, IsNil)
-	c.Assert(resultTeam, IsNil)
+	s.Nil(err)
+	s.Nil(resultTeam)
 }
 
 // CREATE TEAM
-func (s *TeamRepositoryTestSuite) TestCreateTeam(c *C) {
+func (s *TeamRepositoryTestSuite) GSTCreateTeam(t *testing.T) {
 	team, err := s.repository.createTeam("external-id", "external-name")
-	c.Assert(err, IsNil)
-	c.Assert(team, NotNil)
-	c.Assert(team.ID, NotNil)
-	c.Assert(team.ExternalTeamID, Equals, "external-id")
-	c.Assert(team.ExternalTeamName, Equals, "external-name")
-	c.Assert(team.CreatedAt, NotNil)
-	c.Assert(len(team.Projects), Equals, 0)
-	c.Assert(team.ModelVersion, Equals, models.ModelVersionTeam)
+	s.Nil(err)
+	s.NotNil(team)
+	s.NotNil(team.ID)
+	s.Equal("external-id", team.ExternalTeamID)
+	s.Equal("external-name", team.ExternalTeamName)
+	s.NotNil(team.CreatedAt) // todo - this can not be nil ever, check type rather
+	s.Equal(0, len(team.Projects))
+	s.Equal(models.ModelVersionTeam, team.ModelVersion)
 }
 
-func (s *TeamRepositoryTestSuite) TestCreateTeamWhenAlreadyExists(c *C) {
+func (s *TeamRepositoryTestSuite) GSTCreateTeamWhenAlreadyExists(t *testing.T) {
 	_, err := s.repository.createTeam("external-id", "external-name")
-	c.Assert(err, IsNil)
-
+	s.Nil(err)
 	_, err = s.repository.createTeam("external-id", "external-name")
-	c.Assert(err, NotNil)
-	c.Assert(mgo.IsDup(err), Equals, true)
+	s.NotNil(err)
+	s.True(mgo.IsDup(err))
 }
 
-func (s *TeamRepositoryTestSuite) TestSave(c *C) {
-	t := &models.Team{
+func (s *TeamRepositoryTestSuite) GSTSave(t *testing.T) {
+	tt := &models.Team{
 		ExternalTeamID:   "team-id",
 		ExternalTeamName: "team-name",
 		SlackOAuth:       nil,
 	}
-	err := s.repository.save(t)
-	c.Assert(err, IsNil)
-
+	err := s.repository.save(tt)
+	s.Nil(err)
 	team, err := s.repository.FindByExternalID("team-id")
-	c.Assert(team, NotNil)
+	s.NotNil(team)
 }
 
-func (s *TeamRepositoryTestSuite) TestSaveUpdatesExisting(c *C) {
+func (s *TeamRepositoryTestSuite) GSTSaveUpdatesExisting(t *testing.T) {
 
 	team, err := s.repository.createTeam("external-id", "external-name")
-	c.Assert(err, IsNil)
-	c.Assert(team, NotNil)
+	s.Nil(err)
+	s.NotNil(team)
 
 	team.ExternalTeamName = "new-name"
 	err = s.repository.save(team)
-	c.Assert(err, IsNil)
+	s.Nil(err)
 
-	t, err := s.repository.FindByExternalID("external-id")
-	c.Assert(t, NotNil)
-	c.Assert(t.ExternalTeamName, Equals, "new-name")
+	tt, err := s.repository.FindByExternalID("external-id")
+	s.Nil(err)
+	s.Equal("new-name", tt.ExternalTeamName)
 }
 
-// Suite lifecycle and callbacks
-func (s *TeamRepositoryTestSuite) SetUpSuite(c *C) {
+type TeamRepositoryTestSuite struct {
+	*is.Is
+	env        *utils.Environment
+	session    *mgo.Session
+	repository *TeamRepository
+}
+
+func (s *TeamRepositoryTestSuite) SetUpSuite(t *testing.T) {
 	e := utils.NewEnvironment(utils.TestEnv, "1.0.0")
 
 	session, err := utils.ConnectToDatabase(e.Config)
@@ -127,22 +135,16 @@ func (s *TeamRepositoryTestSuite) SetUpSuite(c *C) {
 	s.env = e
 	s.session = session.Clone()
 	s.repository = NewTeamRepository(s.session)
+	s.Is = is.New(t)
 }
 
-func (s *TeamRepositoryTestSuite) TearDownSuite(c *C) {
+func (s *TeamRepositoryTestSuite) TearDownSuite() {
 	s.session.Close()
 }
 
-func (s *TeamRepositoryTestSuite) SetUpTest(c *C) {
+func (s *TeamRepositoryTestSuite) SetUp() {
 	utils.TruncateTables(s.session)
 }
 
-func TestTeamRepository(t *testing.T) { TestingT(t) }
+func (s *TeamRepositoryTestSuite) TearDown() {}
 
-type TeamRepositoryTestSuite struct {
-	env        *utils.Environment
-	session    *mgo.Session
-	repository *TeamRepository
-}
-
-var _ = Suite(&TeamRepositoryTestSuite{})

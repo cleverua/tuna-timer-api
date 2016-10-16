@@ -4,12 +4,17 @@ import (
 	"github.com/nlopes/slack"
 	"github.com/tuna-timer/tuna-timer-api/models"
 	"github.com/tuna-timer/tuna-timer-api/utils"
-	. "gopkg.in/check.v1"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
+	"gopkg.in/tylerb/is.v1"
 	"log"
 	"testing"
+	"github.com/pavlo/gosuite"
 )
+
+func TestUserService(t *testing.T) {
+	gosuite.Run(t, &UserServiceTestSuite{})
+}
 
 type userServiceSlackAPIImplTest struct {
 	err  error
@@ -27,7 +32,7 @@ func newUserServiceSlackAPIImplTest(user *slack.User, err error) *userServiceSla
 	}
 }
 
-func (s *UserServiceTestSuite) TestEnsureUserNew(c *C) {
+func (s *UserServiceTestSuite) GSTEnsureUserNew(t *testing.T) {
 
 	teamID := bson.NewObjectId()
 	team := &models.Team{
@@ -44,16 +49,15 @@ func (s *UserServiceTestSuite) TestEnsureUserNew(c *C) {
 	)
 
 	user, err := service.EnsureUser(team, "ext-id")
-	c.Assert(err, IsNil)
-	c.Assert(user, NotNil)
-
-	c.Assert(user.TeamID, Equals, teamID.Hex())
-	c.Assert(user.ExternalUserName, Equals, "test-user")
-	c.Assert(user.SlackUserInfo.TZOffset, Equals, -2000)
-	c.Assert(user.SlackUserInfo.IsAdmin, Equals, true)
+	s.Nil(err)
+	s.NotNil(user)
+	s.Equal(user.TeamID, teamID.Hex())
+	s.Equal(user.TeamID, teamID.Hex())
+	s.Equal(user.SlackUserInfo.TZOffset, -2000)
+	s.True(user.SlackUserInfo.IsAdmin)
 }
 
-func (s *UserServiceTestSuite) TestEnsureUserExisting(c *C) {
+func (s *UserServiceTestSuite) GSTEnsureUserExisting(t *testing.T) {
 
 	service := NewUserService(s.session)
 	service.repository.save(&models.TeamUser{
@@ -62,13 +66,21 @@ func (s *UserServiceTestSuite) TestEnsureUserExisting(c *C) {
 	})
 
 	user, err := service.EnsureUser(nil, "ext-id")
-
-	c.Assert(err, IsNil)
-	c.Assert(user, NotNil)
-	c.Assert(user.ExternalUserName, Equals, "ext-name")
+	s.Nil(err)
+	s.NotNil(user)
+	s.Equal(user.ExternalUserName, "ext-name")
 }
 
-func (s *UserServiceTestSuite) SetUpSuite(c *C) {
+type UserServiceTestSuite struct {
+	*is.Is
+	env        *utils.Environment
+	session    *mgo.Session
+	repository *UserRepository
+}
+
+func (s *UserServiceTestSuite) SetUpSuite(t *testing.T) {
+	log.Println("UserServiceTestSuite#SetUpSuite")
+
 	e := utils.NewEnvironment(utils.TestEnv, "1.0.0")
 
 	session, err := utils.ConnectToDatabase(e.Config)
@@ -80,25 +92,20 @@ func (s *UserServiceTestSuite) SetUpSuite(c *C) {
 
 	s.env = e
 	s.session = session.Clone()
-	//s.service = NewUserService(s.session)
 	s.repository = NewUserRepository(session)
+	s.Is = is.New(t)
 }
 
-func (s *UserServiceTestSuite) TearDownSuite(c *C) {
+func (s *UserServiceTestSuite) TearDownSuite() {
+	log.Println("UserServiceTestSuite#TearDownSuite")
 	s.session.Close()
 }
 
-func (s *UserServiceTestSuite) SetUpTest(c *C) {
+func (s *UserServiceTestSuite) SetUp() {
+	log.Println("UserServiceTestSuite#SetUp")
 	utils.TruncateTables(s.session)
 }
 
-func TestUserService(t *testing.T) { TestingT(t) }
-
-type UserServiceTestSuite struct {
-	env     *utils.Environment
-	session *mgo.Session
-	//service    *UserService
-	repository *UserRepository
+func (s *UserServiceTestSuite) TearDown() {
+	log.Println("UserServiceTestSuite#TearDown")
 }
-
-var _ = Suite(&UserServiceTestSuite{})

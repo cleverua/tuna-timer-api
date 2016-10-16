@@ -1,57 +1,68 @@
 package data
 
 import (
-	"log"
-	"testing"
-
-	"errors"
-
-	"github.com/nlopes/slack"
 	"github.com/tuna-timer/tuna-timer-api/models"
 	"github.com/tuna-timer/tuna-timer-api/utils"
-	. "gopkg.in/check.v1"
+	"log"
+	"testing"
+	"gopkg.in/tylerb/is.v1"
 	"gopkg.in/mgo.v2"
+	"github.com/pavlo/gosuite"
+	"github.com/nlopes/slack"
+	"errors"
 )
 
-func (s *TeamServiceTestSuite) TestEnsureTeamNoTeamExist(c *C) {
+func TestTeamService(t *testing.T) {
+	gosuite.Run(t, &TeamServiceTestSuite{})
+}
+
+func (s *TeamServiceTestSuite) GSTEnsureTeamNoTeamExist(t *testing.T) {
 	cmd := getSlackCustomCommand()
 	_, _, err := s.service.EnsureTeamSetUp(cmd)
-	c.Assert(err, NotNil)
+	s.NotNil(err)
 }
 
-func (s *TeamServiceTestSuite) TestEnsureTeamExists(c *C) {
+func (s *TeamServiceTestSuite) GSTEnsureTeamExists(t *testing.T) {
 	cmd := getSlackCustomCommand()
 	existingTeam, err := s.repository.createTeam("team-id", "team-domain")
-	c.Assert(err, IsNil)
+	s.Nil(err)
 
 	team, project, err := s.service.EnsureTeamSetUp(cmd)
-	c.Assert(err, IsNil)
+	s.Nil(err)
 
-	assertTeam(c, team)
-	assertProject(c, project)
+	s.assertTeam(team)
+	s.assertProject(project)
 
-	c.Assert(existingTeam.ID, Equals, team.ID)
+	if err != nil {
+		return
+	}
+
+	s.Equal(existingTeam.ID, team.ID)
 }
 
-func (s *TeamServiceTestSuite) TestEnsureTeamExistsWhenTeamAndUserAndProjectExist(c *C) {
+func (s *TeamServiceTestSuite) GSTEnsureTeamExistsWhenTeamAndUserAndProjectExist(t *testing.T) {
 	cmd := getSlackCustomCommand()
 
 	existingTeam, err := s.repository.createTeam("team-id", "team-domain")
-	c.Assert(err, IsNil)
+	//c.Assert(err, IsNil)
+	s.Nil(err)
 
 	err = s.repository.addProject(existingTeam, "channel-id", "channel-name")
-	c.Assert(err, IsNil)
+	s.Nil(err)
+	//c.Assert(err, IsNil)
 
 	team, project, err := s.service.EnsureTeamSetUp(cmd)
-	c.Assert(err, IsNil)
+	s.Nil(err)
+	//c.Assert(err, IsNil)
 
-	assertTeam(c, team)
-	assertProject(c, project)
+	s.assertTeam(team)
+	s.assertProject(project)
 
-	c.Assert(existingTeam.ID, Equals, team.ID)
+	//c.Assert(existingTeam.ID, Equals, team.ID)
+	s.Equal(team.ID, existingTeam.ID)
 }
 
-func (s *TeamServiceTestSuite) TestEnsureTeamExistsFailureOnFindTeam(c *C) {
+func (s *TeamServiceTestSuite) GSTEnsureTeamExistsFailureOnFindTeam(t *testing.T) {
 	modifiedRepository := &testTeamRepositoryImpl{
 		findByExternalIDSuccess: false,
 		createTeamSuccess:       true,
@@ -69,28 +80,32 @@ func (s *TeamServiceTestSuite) TestEnsureTeamExistsFailureOnFindTeam(c *C) {
 
 	// - FindTeam failure case
 	_, _, err := s.service.EnsureTeamSetUp(cmd)
-	c.Assert(err, NotNil)
+	s.NotNil(err)
+	//c.Assert(err, NotNil)
 
 	// - Create team failure case
 	modifiedRepository.findByExternalIDSuccess = true
 	modifiedRepository.createTeamSuccess = false
 	_, _, err = s.service.EnsureTeamSetUp(cmd)
-	c.Assert(err, NotNil)
+	s.NotNil(err)
+	//c.Assert(err, NotNil)
 
 	// - Add project failure case
 	modifiedRepository.createTeamSuccess = true
 	modifiedRepository.addProjectSuccess = false
 	_, _, err = s.service.EnsureTeamSetUp(cmd)
-	c.Assert(err, NotNil)
+	//c.Assert(err, NotNil)
+	s.NotNil(err)
 
 	// - Add user failure case
 	modifiedRepository.addProjectSuccess = true
 	modifiedRepository.addUserSuccess = false
 	_, _, err = s.service.EnsureTeamSetUp(cmd)
-	c.Assert(err, NotNil)
+	//c.Assert(err, NotNil)
+	s.NotNil(err)
 }
 
-func (r *TeamServiceTestSuite) TestCreateOrUpdateWithSlackOAuthResponseNew(c *C) {
+func (s *TeamServiceTestSuite) GSTCreateOrUpdateWithSlackOAuthResponseNew(t *testing.T) {
 	oauthResponse := &slack.OAuthResponse{
 		TeamID:      "ext-id",
 		TeamName:    "ext-name",
@@ -98,24 +113,33 @@ func (r *TeamServiceTestSuite) TestCreateOrUpdateWithSlackOAuthResponseNew(c *C)
 		Scope:       "scope",
 	}
 
-	err := r.service.CreateOrUpdateWithSlackOAuthResponse(oauthResponse)
-	c.Assert(err, IsNil)
+	err := s.service.CreateOrUpdateWithSlackOAuthResponse(oauthResponse)
+	s.Nil(err)
+	//c.Assert(err, IsNil)
 
-	team, err := r.repository.FindByExternalID("ext-id")
-	c.Assert(err, IsNil)
-	c.Assert(team, NotNil)
+	team, err := s.repository.FindByExternalID("ext-id")
+	//c.Assert(err, IsNil)
+	s.Nil(err)
+	//c.Assert(team, NotNil)
+	s.NotNil(team)
 
-	c.Assert(team.ExternalTeamName, Equals, "ext-name")
+	//c.Assert(team.ExternalTeamName, Equals, "ext-name")
+	s.Equal(team.ExternalTeamName, "ext-name")
 
 	details := team.SlackOAuth
-	c.Assert(details, NotNil)
-	c.Assert(details.AccessToken, Equals, "access-token")
-	c.Assert(details.Scope, Equals, "scope")
+	s.NotNil(details)
+
+	//c.Assert(details, NotNil)
+	//c.Assert(details.AccessToken, Equals, "access-token")
+	s.Equal(details.AccessToken, "access-token")
+	//c.Assert(details.Scope, Equals, "scope")
+	s.Equal(details.Scope, "scope")
 }
 
-func (r *TeamServiceTestSuite) TestCreateOrUpdateWithSlackOAuthResponseExisting(c *C) {
-	_, err := r.repository.createTeam("ext-id", "ext-name")
-	c.Assert(err, IsNil)
+func (s *TeamServiceTestSuite) GSTCreateOrUpdateWithSlackOAuthResponseExisting(t *testing.T) {
+	_, err := s.repository.createTeam("ext-id", "ext-name")
+	s.Nil(err)
+	//c.Assert(err, IsNil)
 
 	oauthResponse := &slack.OAuthResponse{
 		TeamID:      "ext-id",
@@ -124,19 +148,28 @@ func (r *TeamServiceTestSuite) TestCreateOrUpdateWithSlackOAuthResponseExisting(
 		Scope:       "scope",
 	}
 
-	err = r.service.CreateOrUpdateWithSlackOAuthResponse(oauthResponse)
-	c.Assert(err, IsNil)
+	err = s.service.CreateOrUpdateWithSlackOAuthResponse(oauthResponse)
+	s.Nil(err)
+	//c.Assert(err, IsNil)
 
-	team, err := r.repository.FindByExternalID("ext-id")
-	c.Assert(err, IsNil)
-	c.Assert(team, NotNil)
+	team, err := s.repository.FindByExternalID("ext-id")
+	s.Nil(err)
+	//c.Assert(err, IsNil)
+	s.NotNil(team)
+	//c.Assert(team, NotNil)
 
-	c.Assert(team.ExternalTeamName, Equals, "ext-name-changed")
+	//c.Assert(team.ExternalTeamName, Equals, "ext-name-changed")
+	s.Equal(team.ExternalTeamName, "ext-name-changed")
 
 	details := team.SlackOAuth
-	c.Assert(details, NotNil)
-	c.Assert(details.AccessToken, Equals, "access-token")
-	c.Assert(details.Scope, Equals, "scope")
+	//c.Assert(details, NotNil)
+	s.NotNil(details)
+
+	//c.Assert(details.AccessToken, Equals, "access-token")
+	s.Equal(details.AccessToken, "access-token")
+
+	//c.Assert(details.Scope, Equals, "scope")
+	s.Equal(details.Scope, "scope")
 }
 
 func getSlackCustomCommand() *models.SlackCustomCommand {
@@ -154,24 +187,35 @@ func getSlackCustomCommand() *models.SlackCustomCommand {
 	}
 }
 
-func assertTeam(c *C, team *models.Team) {
-	c.Assert(team, NotNil)
-	c.Assert(team.ID, NotNil)
-	c.Assert(team.ExternalTeamID, Equals, "team-id")
-	c.Assert(team.ExternalTeamName, Equals, "team-domain")
-	c.Assert(team.CreatedAt, NotNil)
-	c.Assert(len(team.Projects), Equals, 1)
+func (s *TeamServiceTestSuite) assertTeam(team *models.Team) {
+	//c.Assert(team, NotNil)
+	s.NotNil(team)
+	//c.Assert(team.ID, NotNil)
+	s.NotNil(team.ID)
 
-	assertProject(c, team.Projects[0])
+	//c.Assert(team.ExternalTeamID, Equals, "team-id")
+	s.Equal("team-id", team.ExternalTeamID)
+
+	//c.Assert(team.ExternalTeamName, Equals, "team-domain")
+	s.Equal("team-domain", team.ExternalTeamName)
+
+	//c.Assert(team.CreatedAt, NotNil)
+	s.NotNil(team.CreatedAt) // todo change to type checking
+
+	//c.Assert(len(team.Projects), Equals, 1)
+	s.Equal(1, len(team.Projects))
+
+	s.assertProject(team.Projects[0])
 }
 
-func assertProject(c *C, project *models.Project) {
-	c.Assert(project, NotNil)
-	c.Assert(project.ID, NotNil)
-	c.Assert(project.ExternalProjectID, Equals, "channel-id")
-	c.Assert(project.ExternalProjectName, Equals, "channel-name")
-	c.Assert(project.CreatedAt, NotNil)
+func (s *TeamServiceTestSuite) assertProject(project *models.Project) {
+	s.NotNil(project)
+	s.NotNil(project.ID)
+	s.Equal("channel-id", project.ExternalProjectID)
+	s.Equal("channel-name", project.ExternalProjectName)
+	s.NotNil(project.CreatedAt) //todo - check type rather
 }
+
 
 // testTeamRepositoryImpl allows is a TeamRepositoryInterface that is able to simulate returned errors
 type testTeamRepositoryImpl struct {
@@ -207,8 +251,15 @@ func (r *testTeamRepositoryImpl) save(team *models.Team) error {
 	return nil
 }
 
-// Suite lifecycle and callbacks
-func (s *TeamServiceTestSuite) SetUpSuite(c *C) {
+type TeamServiceTestSuite struct {
+	*is.Is
+	env        *utils.Environment
+	session    *mgo.Session
+	service    *TeamService
+	repository TeamRepositoryInterface
+}
+
+func (s *TeamServiceTestSuite) SetUpSuite(t *testing.T) {
 	e := utils.NewEnvironment(utils.TestEnv, "1.0.0")
 
 	session, err := utils.ConnectToDatabase(e.Config)
@@ -222,23 +273,15 @@ func (s *TeamServiceTestSuite) SetUpSuite(c *C) {
 	s.session = session.Clone()
 	s.service = NewTeamService(s.session)
 	s.repository = NewTeamRepository(s.session)
+	s.Is = is.New(t)
 }
 
-func (s *TeamServiceTestSuite) TearDownSuite(c *C) {
+func (s *TeamServiceTestSuite) TearDownSuite() {
 	s.session.Close()
 }
 
-func (s *TeamServiceTestSuite) SetUpTest(c *C) {
+func (s *TeamServiceTestSuite) SetUp() {
 	utils.TruncateTables(s.session)
 }
 
-func TestTeamService(t *testing.T) { TestingT(t) }
-
-type TeamServiceTestSuite struct {
-	env        *utils.Environment
-	session    *mgo.Session
-	service    *TeamService
-	repository TeamRepositoryInterface
-}
-
-var _ = Suite(&TeamServiceTestSuite{})
+func (s *TeamServiceTestSuite) TearDown() {}

@@ -10,12 +10,17 @@ import (
 	"github.com/nlopes/slack"
 	"github.com/tuna-timer/tuna-timer-api/models"
 	"github.com/tuna-timer/tuna-timer-api/utils"
-	. "gopkg.in/check.v1"
 	"gopkg.in/mgo.v2/bson"
 	"time"
+	"github.com/pavlo/gosuite"
+	"gopkg.in/tylerb/is.v1"
 )
 
-func (s *TimerRepositoryTestSuite) TestUpdate(c *C) {
+func TestTimerRepository(t *testing.T) {
+	gosuite.Run(t, &TimerRepositoryTestSuite{})
+}
+
+func (s *TimerRepositoryTestSuite) GSTUpdate(t *testing.T) {
 
 	project := &models.Project{
 		ID:                  bson.NewObjectId(),
@@ -32,22 +37,22 @@ func (s *TimerRepositoryTestSuite) TestUpdate(c *C) {
 	}
 
 	timer, err := s.repo.create("team", project, user, "task")
-	c.Assert(err, IsNil)
-	c.Assert(timer, NotNil)
-	c.Assert(timer.Minutes, Equals, 0)
-	c.Assert(timer.ModelVersion, Equals, models.ModelVersionTimer)
+	s.Nil(err)
+	s.NotNil(timer)
+	s.Equal(timer.Minutes, 0)
+	s.Equal(timer.ModelVersion, models.ModelVersionTimer)
 
 	timer.Minutes = 50
 
 	err = s.repo.update(timer)
-	c.Assert(err, IsNil)
+	s.Nil(err)
 
 	loadedTimer, err := s.repo.findByID(timer.ID.Hex())
-	c.Assert(err, IsNil)
-	c.Assert(loadedTimer.Minutes, Equals, 50)
+	s.Nil(err)
+	s.Equal(loadedTimer.Minutes, 50)
 }
 
-func (s *TimerRepositoryTestSuite) TestCreateTimer(c *C) {
+func (s *TimerRepositoryTestSuite) GSTCreateTimer(t *testing.T) {
 	project := &models.Project{
 		ID:                  bson.NewObjectId(),
 		ExternalProjectName: "project",
@@ -64,32 +69,32 @@ func (s *TimerRepositoryTestSuite) TestCreateTimer(c *C) {
 	}
 
 	timer, err := s.repo.create("team", project, user, "task")
-	c.Assert(err, IsNil)
-	c.Assert(timer, NotNil)
+	s.Nil(err)
+	s.NotNil(timer)
 
 	timerFromDB, err := s.repo.findByID(timer.ID.Hex())
+	s.Nil(err)
 
-	c.Assert(err, IsNil)
-	c.Assert(timerFromDB.CreatedAt, NotNil)
-	c.Assert(timerFromDB.DeletedAt, IsNil)
-	c.Assert(timerFromDB.FinishedAt, IsNil)
-	c.Assert(timerFromDB.Minutes, Equals, 0)
-	c.Assert(timerFromDB.TeamID, Equals, "team")
-	c.Assert(timerFromDB.ProjectID, Equals, project.ID.Hex())
-	c.Assert(timerFromDB.ProjectExternalID, Equals, "0987654321")
-	c.Assert(timerFromDB.ProjectExternalName, Equals, "project")
-	c.Assert(timerFromDB.TeamUserID, Equals, userID.Hex())
-	c.Assert(timerFromDB.TaskName, Equals, "task")
-	c.Assert(timerFromDB.TeamUserTZOffset, Equals, 10800)
+	s.NotNil(timerFromDB.CreatedAt) //todo check this
+	s.Nil(timerFromDB.DeletedAt) //todo check this
+	s.Nil(timerFromDB.FinishedAt) //todo check this
+	s.Equal(timerFromDB.Minutes, 0)
+	s.Equal(timerFromDB.TeamID, "team")
+	s.Equal(timerFromDB.ProjectID, project.ID.Hex())
+	s.Equal(timerFromDB.ProjectExternalID, "0987654321")
+	s.Equal(timerFromDB.ProjectExternalName, "project")
+	s.Equal(timerFromDB.TeamUserID, userID.Hex())
+	s.Equal(timerFromDB.TaskName, "task")
+	s.Equal(timerFromDB.TeamUserTZOffset, 10800)
 }
 
-func (s *TimerRepositoryTestSuite) TestFindActiveTimerByTeamAndUserNotExist(c *C) {
+func (s *TimerRepositoryTestSuite) GSTFindActiveTimerByTeamAndUserNotExist(t *testing.T) {
 	timer, err := s.repo.findActiveByTeamAndUser("does not", "matter")
-	c.Assert(err, IsNil)
-	c.Assert(timer, IsNil)
+	s.Nil(err)
+	s.Nil(timer)
 }
 
-func (s *TimerRepositoryTestSuite) TestFindActiveTimerByTeamAndUserExists(c *C) {
+func (s *TimerRepositoryTestSuite) GSTFindActiveTimerByTeamAndUserExists(t *testing.T) {
 
 	newID := bson.NewObjectId()
 	timer := &models.Timer{
@@ -104,12 +109,12 @@ func (s *TimerRepositoryTestSuite) TestFindActiveTimerByTeamAndUserExists(c *C) 
 	s.repo.createTimer(timer)
 
 	timerFromDB, err := s.repo.findActiveByTeamAndUser("team", "user")
-	c.Assert(err, IsNil)
-	c.Assert(timerFromDB, NotNil)
-	c.Assert(timerFromDB.ID.Hex(), Equals, newID.Hex())
+	s.Nil(err)
+	s.NotNil(timerFromDB)
+	s.Equal(timerFromDB.ID.Hex(), newID.Hex())
 }
 
-func (s *TimerRepositoryTestSuite) TestFindActiveTimerByTeamAndUserButAlreadyFinished(c *C) {
+func (s *TimerRepositoryTestSuite) GSTFindActiveTimerByTeamAndUserButAlreadyFinished(t *testing.T) {
 
 	newID := bson.NewObjectId()
 	finishedAt := time.Now()
@@ -126,11 +131,11 @@ func (s *TimerRepositoryTestSuite) TestFindActiveTimerByTeamAndUserButAlreadyFin
 	s.repo.createTimer(timer)
 
 	timerFromDB, err := s.repo.findActiveByTeamAndUser("team", "user")
-	c.Assert(err, IsNil)
-	c.Assert(timerFromDB, IsNil)
+	s.Nil(err)
+	s.Nil(timerFromDB)
 }
 
-func (s *TimerRepositoryTestSuite) TestFindActiveTimerByTeamAndUserButAlreadyDeleted(c *C) {
+func (s *TimerRepositoryTestSuite) GSTFindActiveTimerByTeamAndUserButAlreadyDeleted(t *testing.T) {
 
 	newID := bson.NewObjectId()
 	deletedAt := time.Now()
@@ -147,11 +152,11 @@ func (s *TimerRepositoryTestSuite) TestFindActiveTimerByTeamAndUserButAlreadyDel
 	s.repo.createTimer(timer)
 
 	timerFromDB, err := s.repo.findActiveByTeamAndUser("team", "user")
-	c.Assert(err, IsNil)
-	c.Assert(timerFromDB, IsNil)
+	s.Nil(err)
+	s.Nil(timerFromDB)
 }
 
-func (s *TimerRepositoryTestSuite) TestTotalMinutesMethods(c *C) {
+func (s *TimerRepositoryTestSuite) GSTTotalMinutesMethods(t *testing.T) {
 
 	now := time.Now()
 	// creates 10 timers one minute each
@@ -205,27 +210,27 @@ func (s *TimerRepositoryTestSuite) TestTotalMinutesMethods(c *C) {
 
 	// all tasks
 	m := s.repo.totalMinutesForTaskAndUser("task", "user", utils.PT("2016 Sep 09 12:35:00"), utils.PT("2016 Sep 21 12:35:00"))
-	c.Assert(m, Equals, 10)
+	s.Equal(m, 10)
 
 	// one year later than any of the tasks
 	m = s.repo.totalMinutesForTaskAndUser("task", "user", utils.PT("2017 Sep 09 12:35:00"), utils.PT("2017 Sep 21 12:35:00"))
-	c.Assert(m, Equals, 0)
+	s.Equal(m, 0)
 
 	// should get one for 10th, one for 11th and one for 12th because the endDate is one minute after the third time
 	m = s.repo.totalMinutesForTaskAndUser("task", "user", utils.PT("2016 Sep 10 10:00:00"), utils.PT("2016 Sep 12 12:36:00"))
-	c.Assert(m, Equals, 3)
+	s.Equal(m, 3)
 
 	m = s.repo.totalMinutesForUser("user", utils.PT("2016 Sep 09 12:35:00"), utils.PT("2016 Sep 21 12:35:00"))
-	c.Assert(m, Equals, 11) // 10 regular and one outstanding timer
+	s.Equal(m, 11) // 10 regular and one outstanding timer
 
 	m = s.repo.totalMinutesForUser("user", utils.PT("2017 Sep 09 12:35:00"), utils.PT("2017 Sep 21 12:35:00"))
-	c.Assert(m, Equals, 0)
+	s.Equal(m, 0)
 
 	m = s.repo.totalMinutesForUser("user", utils.PT("2016 Sep 12 00:00:00"), utils.PT("2016 Sep 12 23:59:59"))
-	c.Assert(m, Equals, 2)
+	s.Equal(m, 2)
 }
 
-func (s *TimerRepositoryTestSuite) TestCompletedTasksForUser(c *C) {
+func (s *TimerRepositoryTestSuite) GSTCompletedTasksForUser(t *testing.T) {
 
 	now := time.Now()
 
@@ -266,22 +271,23 @@ func (s *TimerRepositoryTestSuite) TestCompletedTasksForUser(c *C) {
 	})
 
 	m, err := s.repo.completedTasksForUser("user", utils.PT("2016 Sep 25 12:35:00"), utils.PT("2016 Sep 25 12:45:00"))
-	c.Assert(err, IsNil)
-	c.Assert(len(m), Equals, 1) // only the `task-hash1` one given the time frame
-	c.Assert(m[0].Minutes, Equals, 15)
-	c.Assert(m[0].Name, Equals, "task-name1")
+	s.Nil(err)
+
+	s.Equal(len(m), 1) // only the `task-hash1` one given the time frame
+	s.Equal(m[0].Minutes, 15)
+	s.Equal(m[0].Name, "task-name1")
 
 	m, err = s.repo.completedTasksForUser("user", utils.PT("2016 Sep 25 12:35:00"), utils.PT("2016 Sep 25 15:00:00"))
-	c.Assert(err, IsNil)
-	c.Assert(len(m), Equals, 2)
-	c.Assert(m[0].Minutes, Equals, 15)
-	c.Assert(m[0].Name, Equals, "task-name1")
+	s.Nil(err)
 
-	c.Assert(m[1].Minutes, Equals, 20)
-	c.Assert(m[1].Name, Equals, "task-name2")
+	s.Equal(len(m), 2)
+	s.Equal(m[0].Minutes, 15)
+	s.Equal(m[0].Name, "task-name1")
+	s.Equal(m[1].Minutes, 20)
+	s.Equal(m[1].Name, "task-name2")
 }
 
-func (s *TimerRepositoryTestSuite) TestFindActiveByTimezoneOffset(c *C) {
+func (s *TimerRepositoryTestSuite) GSTFindActiveByTimezoneOffset(t *testing.T) {
 	s.repo.createTimer(&models.Timer{
 		ID:               bson.NewObjectId(),
 		FinishedAt:       nil,
@@ -314,16 +320,15 @@ func (s *TimerRepositoryTestSuite) TestFindActiveByTimezoneOffset(c *C) {
 	})
 
 	timers, err := s.repo.findActiveByTimezoneOffset(10)
-	c.Assert(err, IsNil)
-	c.Assert(len(timers), Equals, 2)
+	s.Nil(err)
+	s.Equal(len(timers), 2)
 
 	for _, timer := range timers {
-		c.Assert(timer.TaskHash, Equals, "match")
+		s.Equal(timer.TaskHash, "match")
 	}
 }
 
-// Suite lifecycle and callbacks
-func (s *TimerRepositoryTestSuite) SetUpSuite(c *C) {
+func (s *TimerRepositoryTestSuite) SetUpSuite(t *testing.T) {
 	e := utils.NewEnvironment(utils.TestEnv, "1.0.0")
 
 	session, err := utils.ConnectToDatabase(e.Config)
@@ -336,22 +341,22 @@ func (s *TimerRepositoryTestSuite) SetUpSuite(c *C) {
 	s.env = e
 	s.session = session.Clone()
 	s.repo = NewTimerRepository(s.session)
+	s.Is = is.New(t)
 }
 
-func (s *TimerRepositoryTestSuite) TearDownSuite(c *C) {
+func (s *TimerRepositoryTestSuite) TearDownSuite() {
 	s.session.Close()
 }
 
-func (s *TimerRepositoryTestSuite) SetUpTest(c *C) {
+func (s *TimerRepositoryTestSuite) SetUp() {
 	utils.TruncateTables(s.session)
 }
 
-func TestTimerRepository(t *testing.T) { TestingT(t) }
+func (s *TimerRepositoryTestSuite) TearDown() {}
 
 type TimerRepositoryTestSuite struct {
+	*is.Is
 	env     *utils.Environment
 	session *mgo.Session
 	repo    *TimerRepository
 }
-
-var _ = Suite(&TimerRepositoryTestSuite{})

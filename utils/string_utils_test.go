@@ -3,54 +3,57 @@ package utils
 import (
 	"crypto/tls"
 	"github.com/tuna-timer/tuna-timer-api/models"
-	. "gopkg.in/check.v1"
 	"net/http"
 	"testing"
+	"gopkg.in/tylerb/is.v1"
 )
 
-func (s *StringUtilsTestSuite) TestNormalizeSlackCustomCommand(c *C) {
+func TestNormalizeSlackCustomCommand(t *testing.T) {
+
+	s := is.New(t)
+
 	cmd := NormalizeSlackCustomCommand(models.SlackCustomCommand{
 		Text: "start Add MongoDB service to docker-compose.yml",
 	})
-	c.Assert(cmd.Text, Equals, "Add MongoDB service to docker-compose.yml")
-	c.Assert(cmd.SubCommand, Equals, "start")
+
+	s.Equal(cmd.Text, "Add MongoDB service to docker-compose.yml")
+	s.Equal(cmd.SubCommand, "start")
 
 	cmd = NormalizeSlackCustomCommand(models.SlackCustomCommand{
 		Text: "      start         Add MongoDB service to docker-compose.yml",
 	})
-	c.Assert(cmd.Text, Equals, "Add MongoDB service to docker-compose.yml")
-	c.Assert(cmd.SubCommand, Equals, "start")
+
+	s.Equal(cmd.Text, "Add MongoDB service to docker-compose.yml")
+	s.Equal(cmd.SubCommand, "start")
 
 	cmd = NormalizeSlackCustomCommand(models.SlackCustomCommand{
 		Text: "status",
 	})
-	c.Assert(cmd.Text, Equals, "")
-	c.Assert(cmd.SubCommand, Equals, "status")
+
+	s.Equal(cmd.Text, "")
+	s.Equal(cmd.SubCommand, "status")
 
 	cmd = NormalizeSlackCustomCommand(models.SlackCustomCommand{
 		Text: "start ",
 	})
-	c.Assert(cmd.Text, Equals, "")
-	c.Assert(cmd.SubCommand, Equals, "start")
+	s.Equal(cmd.Text, "")
+	s.Equal(cmd.SubCommand, "start")
 }
 
-func (s *StringUtilsTestSuite) TestGetSelfURLFromRequest(c *C) {
+func TestGetSelfURLFromRequest(t *testing.T) {
+	s := is.New(t)
+
 	r := &http.Request{
 		Host: "subdomain.domain.com",
 	}
 
-	c.Assert(GetSelfURLFromRequest(r), Equals, "http://subdomain.domain.com")
+	s.Equal(GetSelfURLFromRequest(r), "http://subdomain.domain.com")
 
 	r = &http.Request{
 		Host: "subdomain.domain.com",
 		TLS:  &tls.ConnectionState{},
 	}
 
-	c.Assert(GetSelfURLFromRequest(r), Equals, "https://subdomain.domain.com")
+	s.Equal(GetSelfURLFromRequest(r), "https://subdomain.domain.com")
 }
 
-func TestStringUtils(t *testing.T) { TestingT(t) }
-
-type StringUtilsTestSuite struct{}
-
-var _ = Suite(&StringUtilsTestSuite{})

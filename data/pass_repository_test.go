@@ -3,15 +3,20 @@ package data
 import (
 	"github.com/tuna-timer/tuna-timer-api/models"
 	"github.com/tuna-timer/tuna-timer-api/utils"
-	. "gopkg.in/check.v1"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 	"log"
 	"testing"
 	"time"
+	"gopkg.in/tylerb/is.v1"
+	"github.com/pavlo/gosuite"
 )
 
-func (s *PassRepositoryTestSuite) TestFindByToken(c *C) {
+func TestPassRepository(t *testing.T) {
+	gosuite.Run(t, &PassRepositoryTestSuite{})
+}
+
+func (s *PassRepositoryTestSuite) GSTFindByToken(t *testing.T) {
 	p1 := &models.Pass{
 		ID:           bson.NewObjectId(),
 		Token:        "token",
@@ -21,16 +26,16 @@ func (s *PassRepositoryTestSuite) TestFindByToken(c *C) {
 		ModelVersion: models.ModelVersionPass,
 	}
 	err := s.repository.insert(p1)
-	c.Assert(err, IsNil)
+	s.Nil(err)
 
 	p1Test, err := s.repository.FindActivePassByToken("token")
-	c.Assert(err, IsNil)
-	c.Assert(p1Test, NotNil)
+	s.Nil(err)
+	s.NotNil(p1Test)
 
-	c.Assert(p1.ID, Equals, p1Test.ID)
+	s.Equal(p1.ID, p1Test.ID)
 }
 
-func (s *PassRepositoryTestSuite) TestFindByTokenDoesNotGetExpired(c *C) {
+func (s *PassRepositoryTestSuite) GSTFindByTokenDoesNotGetExpired(t *testing.T) {
 	p1 := &models.Pass{
 		ID:           bson.NewObjectId(),
 		Token:        "token",
@@ -40,14 +45,14 @@ func (s *PassRepositoryTestSuite) TestFindByTokenDoesNotGetExpired(c *C) {
 		ModelVersion: models.ModelVersionPass,
 	}
 	err := s.repository.insert(p1)
-	c.Assert(err, IsNil)
+	s.Nil(err)
 
 	p1Test, err := s.repository.FindActivePassByToken("token")
-	c.Assert(err, IsNil)
-	c.Assert(p1Test, IsNil)
+	s.Nil(err)
+	s.Nil(p1Test)
 }
 
-func (s *PassRepositoryTestSuite) TestFindByTokenDoesNotGetClaimed(c *C) {
+func (s *PassRepositoryTestSuite) GSTFindByTokenDoesNotGetClaimed(t *testing.T) {
 	now := time.Now()
 
 	p1 := &models.Pass{
@@ -59,14 +64,14 @@ func (s *PassRepositoryTestSuite) TestFindByTokenDoesNotGetClaimed(c *C) {
 		ModelVersion: models.ModelVersionPass,
 	}
 	err := s.repository.insert(p1)
-	c.Assert(err, IsNil)
+	s.Nil(err)
 
 	p1Test, err := s.repository.FindActivePassByToken("token")
-	c.Assert(err, IsNil)
-	c.Assert(p1Test, IsNil)
+	s.Nil(err)
+	s.Nil(p1Test)
 }
 
-func (s *PassRepositoryTestSuite) TestFindActiveByUserID(c *C) {
+func (s *PassRepositoryTestSuite) GSTFindActiveByUserID(t *testing.T) {
 
 	now := time.Now()
 
@@ -106,14 +111,12 @@ func (s *PassRepositoryTestSuite) TestFindActiveByUserID(c *C) {
 	s.repository.insert(p3)
 
 	pass, err := s.repository.FindActiveByUserID(userID.Hex())
-	c.Assert(err, IsNil)
-	c.Assert(pass, NotNil)
-
-	c.Assert(pass.Token, Equals, "p1token")
-	c.Assert(pass.Token, Equals, "p1token")
+	s.Nil(err)
+	s.NotNil(pass)
+	s.Equal("p1token", pass.Token)
 }
 
-func (s *PassRepositoryTestSuite) TestRemoveExpiredPasses(c *C) {
+func (s *PassRepositoryTestSuite) GSTRemoveExpiredPasses(t *testing.T) {
 
 	now := time.Now()
 
@@ -146,31 +149,31 @@ func (s *PassRepositoryTestSuite) TestRemoveExpiredPasses(c *C) {
 	}
 
 	err := s.repository.insert(p1)
-	c.Assert(err, IsNil)
+	s.Nil(err)
 
 	err = s.repository.insert(p2)
-	c.Assert(err, IsNil)
+	s.Nil(err)
 
 	err = s.repository.insert(p3)
-	c.Assert(err, IsNil)
+	s.Nil(err)
 
 	err = s.repository.removeExpiredPasses()
-	c.Assert(err, IsNil)
+	s.Nil(err)
 
 	p1, err = s.repository.findByID(p1.ID.Hex())
-	c.Assert(err, IsNil)
-	c.Assert(p1, IsNil) // not found
+	s.Nil(err)
+	s.Nil(p1)
 
 	p2, err = s.repository.findByID(p2.ID.Hex())
-	c.Assert(err, IsNil)
-	c.Assert(p2, NotNil) // found
+	s.Nil(err)
+	s.NotNil(p2)
 
 	p3, err = s.repository.findByID(p3.ID.Hex())
-	c.Assert(err, IsNil)
-	c.Assert(p3, NotNil) // found
+	s.Nil(err)
+	s.NotNil(p3)
 }
 
-func (s *PassRepositoryTestSuite) TestFindByID(c *C) {
+func (s *PassRepositoryTestSuite) GSTFindByID(t *testing.T) {
 	p1 := &models.Pass{
 		ID:         bson.NewObjectId(),
 		Token:      "p1token",
@@ -190,21 +193,22 @@ func (s *PassRepositoryTestSuite) TestFindByID(c *C) {
 	}
 
 	err := s.repository.insert(p1)
-	c.Assert(err, IsNil)
+	s.Nil(err)
+
 	err = s.repository.insert(p2)
-	c.Assert(err, IsNil)
+	s.Nil(err)
 
 	p, err := s.repository.findByID(p1.ID.Hex())
-	c.Assert(err, IsNil)
-	c.Assert(p, NotNil)
-	c.Assert(p.Token, Equals, "p1token")
+	s.Nil(err)
+	s.NotNil(p)
+	s.Equal("p1token", p.Token)
 
 	p, err = s.repository.findByID(bson.NewObjectId().Hex())
-	c.Assert(err, IsNil)
-	c.Assert(p, IsNil)
+	s.Nil(err)
+	s.Nil(p)
 }
 
-func (s *PassRepositoryTestSuite) TestRemovePassesClaimedBefore(c *C) {
+func (s *PassRepositoryTestSuite) GSTRemovePassesClaimedBefore(t *testing.T) {
 
 	now := time.Now()
 
@@ -232,19 +236,26 @@ func (s *PassRepositoryTestSuite) TestRemovePassesClaimedBefore(c *C) {
 	s.repository.insert(p2)
 
 	err := s.repository.removePassesClaimedBefore(time.Now())
-	c.Assert(err, IsNil)
+	s.Nil(err)
 
 	p1, err = s.repository.findByID(p1.ID.Hex())
-	c.Assert(err, IsNil)
-	c.Assert(p1, IsNil)
+	s.Nil(err)
+	s.Nil(p1)
 
 	p2, err = s.repository.findByID(p2.ID.Hex())
-	c.Assert(err, IsNil)
-	c.Assert(p2, NotNil)
+	s.Nil(err)
+	s.NotNil(p2)
 }
 
-// Suite lifecycle and callbacks
-func (s *PassRepositoryTestSuite) SetUpSuite(c *C) {
+type PassRepositoryTestSuite struct {
+	*is.Is
+	env            *utils.Environment
+	session        *mgo.Session
+	repository     *PassRepository
+	userRepository *UserRepository
+}
+
+func (s *PassRepositoryTestSuite) SetUpSuite(t *testing.T) {
 	e := utils.NewEnvironment(utils.TestEnv, "1.0.0")
 
 	session, err := utils.ConnectToDatabase(e.Config)
@@ -258,23 +269,15 @@ func (s *PassRepositoryTestSuite) SetUpSuite(c *C) {
 	s.session = session.Clone()
 	s.repository = NewPassRepository(s.session)
 	s.userRepository = NewUserRepository(session)
+	s.Is = is.New(t)
 }
 
-func (s *PassRepositoryTestSuite) TearDownSuite(c *C) {
+func (s *PassRepositoryTestSuite) TearDownSuite() {
 	s.session.Close()
 }
 
-func (s *PassRepositoryTestSuite) SetUpTest(c *C) {
+func (s *PassRepositoryTestSuite) SetUp() {
 	utils.TruncateTables(s.session)
 }
 
-func TestPassRepository(t *testing.T) { TestingT(t) }
-
-type PassRepositoryTestSuite struct {
-	env            *utils.Environment
-	session        *mgo.Session
-	repository     *PassRepository
-	userRepository *UserRepository
-}
-
-var _ = Suite(&PassRepositoryTestSuite{})
+func (s *PassRepositoryTestSuite) TearDown() {}

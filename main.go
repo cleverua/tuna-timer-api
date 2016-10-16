@@ -12,15 +12,15 @@ import (
 	"github.com/tuna-timer/tuna-timer-api/web"
 	"time"
 
-	"github.com/robfig/cron"
-	"gopkg.in/mgo.v2"
-	"github.com/tuna-timer/tuna-timer-api/jobs"
 	"fmt"
+	"github.com/robfig/cron"
+	"github.com/tuna-timer/tuna-timer-api/jobs"
+	"gopkg.in/mgo.v2"
 )
 
 const (
 	version = "0.1.0"
-    port    = "8080"
+	port    = "8080"
 )
 
 func main() {
@@ -51,7 +51,6 @@ func main() {
 
 	// Static assets
 	router.PathPrefix("/assets/").Handler(http.StripPrefix("/assets/", http.FileServer(http.Dir("./assets/"))))
-
 
 	// Temporary stuff, remove eventually
 	router.HandleFunc("/api/v1/temporary/clear_data", handlers.ClearAllData).Methods("GET")
@@ -95,5 +94,3 @@ func getEnvironmentName() string {
 	}
 	return env
 }
-
-

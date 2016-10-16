@@ -3,16 +3,20 @@ package data
 import (
 	"github.com/tuna-timer/tuna-timer-api/models"
 	"github.com/tuna-timer/tuna-timer-api/utils"
-	. "gopkg.in/check.v1"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 	"log"
 	"testing"
 	"time"
+	"gopkg.in/tylerb/is.v1"
+	"github.com/pavlo/gosuite"
 )
 
-func (s *PassServiceTestSuite) TestCreatePass(c *C) {
+func TestPassService(t *testing.T) {
+	gosuite.Run(t, &PassServiceTestSuite{})
+}
 
+func (s *PassServiceTestSuite) GSTCreatePass(t *testing.T) {
 	teamID := bson.NewObjectId()
 	team := &models.Team{
 		ID: teamID,
@@ -24,18 +28,18 @@ func (s *PassServiceTestSuite) TestCreatePass(c *C) {
 	}
 
 	pass, err := s.service.createPass(team, user, "project-id")
-	c.Assert(err, IsNil)
+	s.Nil(err)
 
-	c.Assert(pass.Token, Not(Equals), "")
-	c.Assert(pass.ClaimedAt, IsNil)
-	c.Assert(pass.ExpiresAt.Sub(pass.CreatedAt), Equals, utils.PassExpiresInMinutes*time.Minute)
-	c.Assert(pass.TeamID, Equals, teamID.Hex())
-	c.Assert(pass.TeamUserID, Equals, userID.Hex())
-	c.Assert(pass.ProjectID, Equals, "project-id")
-	c.Assert(pass.ModelVersion, Equals, models.ModelVersionPass)
+	s.NotEqual("", pass.Token)
+	s.Nil(pass.ClaimedAt)
+	s.Equal(utils.PassExpiresInMinutes*time.Minute, pass.ExpiresAt.Sub(pass.CreatedAt))
+	s.Equal(teamID.Hex(), pass.TeamID)
+	s.Equal(userID.Hex(), pass.TeamUserID)
+	s.Equal("project-id", pass.ProjectID)
+	s.Equal(models.ModelVersionPass, pass.ModelVersion)
 }
 
-func (s *PassServiceTestSuite) TestEnsurePassNewPassCase(c *C) {
+func (s *PassServiceTestSuite) GSTEnsurePassNewPassCase(t *testing.T) {
 	teamID := bson.NewObjectId()
 	team := &models.Team{
 		ID: teamID,
@@ -52,19 +56,18 @@ func (s *PassServiceTestSuite) TestEnsurePassNewPassCase(c *C) {
 	}
 
 	pass, err := s.service.EnsurePass(team, user, project)
-	c.Assert(err, IsNil)
-	c.Assert(pass, NotNil)
+	s.Nil(err)
+	s.NotNil(pass)
 
-	c.Assert(pass.TeamUserID, Equals, userID.Hex())
-	c.Assert(pass.ProjectID, Equals, projectID.Hex())
-	c.Assert(pass.TeamID, Equals, teamID.Hex())
-	c.Assert(pass.Token, NotNil)
-	c.Assert(pass.CreatedAt, NotNil)
-	c.Assert(pass.ExpiresAt.Sub(pass.CreatedAt), Equals, utils.PassExpiresInMinutes*time.Minute)
-	c.Assert(pass.ClaimedAt, IsNil)
+	s.Equal(userID.Hex(), pass.TeamUserID)
+	s.Equal(projectID.Hex(), pass.ProjectID)
+	s.Equal(teamID.Hex(), pass.TeamID)
+	s.NotEqual("", pass.Token)
+	s.Equal(utils.PassExpiresInMinutes*time.Minute, pass.ExpiresAt.Sub(pass.CreatedAt))
+	s.Nil(pass.ClaimedAt)
 }
 
-func (s *PassServiceTestSuite) TestEnsurePassExistingOne(c *C) {
+func (s *PassServiceTestSuite) GSTEnsurePassExistingOne(t *testing.T) {
 	teamID := bson.NewObjectId()
 	team := &models.Team{
 		ID: teamID,
@@ -81,31 +84,28 @@ func (s *PassServiceTestSuite) TestEnsurePassExistingOne(c *C) {
 	}
 
 	pass, err := s.service.EnsurePass(team, user, project)
-	c.Assert(err, IsNil)
-	c.Assert(pass, NotNil)
+	s.Nil(err)
+	s.NotNil(pass)
 
 	// let's change ExpiresAt for this timer a little bit to be able to assert it is prolonged
 	pass.ExpiresAt = pass.ExpiresAt.Add(-3 * time.Minute)
 	s.repository.update(pass)
 
 	ensuredPass, err := s.service.EnsurePass(team, user, project)
-	c.Assert(err, IsNil)
-	c.Assert(ensuredPass, NotNil)
+	s.Nil(err)
 
-	c.Assert(ensuredPass.ID.Hex(), Equals, pass.ID.Hex())
-	c.Assert(ensuredPass.TeamUserID, Equals, userID.Hex())
-	c.Assert(ensuredPass.ProjectID, Equals, projectID.Hex())
-	c.Assert(ensuredPass.TeamID, Equals, teamID.Hex())
-	c.Assert(ensuredPass.Token, NotNil)
-	c.Assert(ensuredPass.CreatedAt, NotNil)
-	c.Assert(pass.ClaimedAt, IsNil)
-
-	diffSeconds := utils.PassExpiresInMinutes*time.Minute.Seconds() - ensuredPass.ExpiresAt.Sub(time.Now()).Seconds()
-	isZeroSeconds := diffSeconds < 0.001
-	c.Assert(isZeroSeconds, Equals, true)
+	s.NotNil(ensuredPass)
+	s.Equal(pass.ID.Hex(), ensuredPass.ID.Hex())
+	s.Equal(userID.Hex(), ensuredPass.TeamUserID)
+	s.Equal(projectID.Hex(), ensuredPass.ProjectID)
+	s.Equal(teamID.Hex(), ensuredPass.TeamID)
+	s.NotEqual("", ensuredPass.Token)
+	//s.IsType(time.Time{}, ensuredPass.CreatedAt) //todo, find a way to assert this using Is package
+	s.Nil(ensuredPass.ClaimedAt)
+	s.True(utils.PassExpiresInMinutes*time.Minute.Seconds() - ensuredPass.ExpiresAt.Sub(time.Now()).Seconds() < 0.01)
 }
 
-func (s *PassServiceTestSuite) RemoveStalePasses(c *C) {
+func (s *PassServiceTestSuite) GSTRemoveStalePasses(t *testing.T) {
 
 	now := time.Now()
 
@@ -138,32 +138,39 @@ func (s *PassServiceTestSuite) RemoveStalePasses(c *C) {
 	}
 
 	err := s.repository.insert(p1)
-	c.Assert(err, IsNil)
+	s.Nil(err)
 
 	err = s.repository.insert(p2)
-	c.Assert(err, IsNil)
+	s.Nil(err)
 
 	err = s.repository.insert(p3)
-	c.Assert(err, IsNil)
+	s.Nil(err)
 
 	err = s.service.RemoveStalePasses()
-	c.Assert(err, IsNil)
+	s.Nil(err)
 
 	pass, err := s.repository.findByID(p1.ID.Hex())
-	c.Assert(err, IsNil)
-	c.Assert(pass, IsNil)
+	s.Nil(err)
+	s.Nil(pass)
 
 	pass, err = s.repository.findByID(p2.ID.Hex())
-	c.Assert(err, IsNil)
-	c.Assert(pass, NotNil)
+	s.Nil(err)
+	s.NotNil(pass)
 
 	pass, err = s.repository.findByID(p3.ID.Hex())
-	c.Assert(err, IsNil)
-	c.Assert(pass, IsNil)
-
+	s.Nil(err)
+	s.Nil(pass)
 }
 
-func (s *PassServiceTestSuite) SetUpSuite(c *C) {
+type PassServiceTestSuite struct {
+	*is.Is
+	env        *utils.Environment
+	session    *mgo.Session
+	service    *PassService
+	repository *PassRepository
+}
+
+func (s *PassServiceTestSuite) SetUpSuite(t *testing.T) {
 	e := utils.NewEnvironment(utils.TestEnv, "1.0.0")
 
 	session, err := utils.ConnectToDatabase(e.Config)
@@ -177,23 +184,15 @@ func (s *PassServiceTestSuite) SetUpSuite(c *C) {
 	s.session = session.Clone()
 	s.service = NewPassService(s.session)
 	s.repository = NewPassRepository(session)
+	s.Is = is.New(t)
 }
-
-func (s *PassServiceTestSuite) TearDownSuite(c *C) {
+func (s *PassServiceTestSuite) TearDownSuite() {
 	s.session.Close()
 }
 
-func (s *PassServiceTestSuite) SetUpTest(c *C) {
+func (s *PassServiceTestSuite) SetUp() {
 	utils.TruncateTables(s.session)
 }
 
-func TestPassService(t *testing.T) { TestingT(t) }
+func (s *PassServiceTestSuite) TearDown() {}
 
-type PassServiceTestSuite struct {
-	env        *utils.Environment
-	session    *mgo.Session
-	service    *PassService
-	repository *PassRepository
-}
-
-var _ = Suite(&PassServiceTestSuite{})

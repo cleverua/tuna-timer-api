@@ -1,8 +1,6 @@
 package utils
 
 import (
-	"log"
-
 	"gopkg.in/mgo.v2"
 	"time"
 )
@@ -19,7 +17,7 @@ func TruncateTables(session *mgo.Session) {
 	}
 
 	for _, tableName := range tablesToTruncate {
-		log.Printf("Truncating table: %s", tableName)
+		//log.Printf("Truncating table: %s", tableName)
 		session.DB("").C(tableName).RemoveAll(nil)
 	}
 }

@@ -2,21 +2,14 @@ package utils
 
 import (
 	"testing"
-
-	. "gopkg.in/check.v1"
+	"gopkg.in/tylerb/is.v1"
 )
 
-// Hook up gocheck into the "go test" runner.
-func TestEnvironment(t *testing.T) { TestingT(t) }
 
-type EnvironmentTestSuite struct {
-	env *Environment
-}
-
-var _ = Suite(&EnvironmentTestSuite{})
-
-func (s *EnvironmentTestSuite) TestNewEnvironment(c *C) {
+func TestNewEnvironment(t *testing.T) {
+	s := is.New(t)
 	env := NewEnvironment(TestEnv, "1")
-	c.Assert(env.AppVersion, Equals, "1")
-	c.Assert(env.CreatedAt, NotNil)
+
+	s.Equal(env.AppVersion, "1")
+	s.NotNil(env.CreatedAt) //todo - check type rather?
 }

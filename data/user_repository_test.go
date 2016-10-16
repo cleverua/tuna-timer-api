@@ -8,33 +8,17 @@ import (
 
 	"github.com/nlopes/slack"
 	"github.com/tuna-timer/tuna-timer-api/models"
-	. "gopkg.in/check.v1"
+
+	"gopkg.in/tylerb/is.v1"
+	"github.com/pavlo/gosuite"
+
 )
 
-func (s *UserRepositoryTestSuite) TestFindByExternalID(c *C) {
-	user := &models.TeamUser{
-		TeamID:           "team-id",
-		ExternalUserID:   "ext-id",
-		ExternalUserName: "ext-name",
-		SlackUserInfo: &slack.User{
-			IsAdmin: true,
-		},
-	}
-
-	u, err := s.repository.save(user)
-	c.Assert(err, IsNil)
-	c.Assert(u, NotNil)
-
-	loadedUser, err := s.repository.FindByExternalID("ext-id")
-	c.Assert(err, IsNil)
-	c.Assert(loadedUser, NotNil)
-
-	c.Assert(loadedUser.ExternalUserID, Equals, "ext-id")
-	c.Assert(loadedUser.ExternalUserName, Equals, "ext-name")
-	c.Assert(loadedUser.SlackUserInfo.IsAdmin, Equals, true)
+func TestUserRepository(t *testing.T) {
+	gosuite.Run(t, &UserRepositoryTestSuite{})
 }
 
-func (s *UserRepositoryTestSuite) TestSave(c *C) {
+func (s *UserRepositoryTestSuite) GSTFindByExternalID(t *testing.T) {
 	user := &models.TeamUser{
 		TeamID:           "team-id",
 		ExternalUserID:   "ext-id",
@@ -45,29 +29,49 @@ func (s *UserRepositoryTestSuite) TestSave(c *C) {
 	}
 
 	u, err := s.repository.save(user)
-	c.Assert(err, IsNil)
+
+	s.Nil(err)
+	s.NotNil(u)
+
+	loadedUser, err := s.repository.FindByExternalID("ext-id")
+	s.Nil(err)
+	s.NotNil(loadedUser)
+	s.Equal(loadedUser.ExternalUserID, "ext-id")
+	s.True(loadedUser.SlackUserInfo.IsAdmin)
+}
+
+func (s *UserRepositoryTestSuite) GSTSave(t *testing.T) {
+	user := &models.TeamUser{
+		TeamID:           "team-id",
+		ExternalUserID:   "ext-id",
+		ExternalUserName: "ext-name",
+		SlackUserInfo: &slack.User{
+			IsAdmin: true,
+		},
+	}
+
+	u, err := s.repository.save(user)
+	s.Nil(err)
 
 	u.SlackUserInfo.IsAdmin = false
 	_, err = s.repository.save(u)
-	c.Assert(err, IsNil)
+	s.Nil(err)
 
 	loadedUser, err := s.repository.FindByExternalID("ext-id")
-	c.Assert(err, IsNil)
-	c.Assert(loadedUser, NotNil)
-
-	c.Assert(loadedUser.ExternalUserName, Equals, "ext-name")
-	c.Assert(loadedUser.SlackUserInfo.IsAdmin, Equals, false)
-
-	c.Assert(loadedUser.ModelVersion, Equals, models.ModelVersionTeamUser)
+	s.Nil(err)
+	s.NotNil(loadedUser)
+	s.Equal(loadedUser.ExternalUserName, "ext-name")
+	s.False(loadedUser.SlackUserInfo.IsAdmin)
+	s.Equal(loadedUser.ModelVersion, models.ModelVersionTeamUser)
 }
 
-func (s *UserRepositoryTestSuite) TestFindByExternalIDNotExist(c *C) {
+func (s *UserRepositoryTestSuite) GSTFindByExternalIDNotExist(t *testing.T) {
 	resultTeam, err := s.repository.FindByExternalID("external-id")
-	c.Assert(err, IsNil)
-	c.Assert(resultTeam, IsNil)
+	s.Nil(err)
+	s.Nil(resultTeam)
 }
 
-func (s *UserRepositoryTestSuite) SetUpSuite(c *C) {
+func (s *UserRepositoryTestSuite) SetUpSuite(t *testing.T) {
 	e := utils.NewEnvironment(utils.TestEnv, "1.0.0")
 
 	session, err := utils.ConnectToDatabase(e.Config)
@@ -80,22 +84,23 @@ func (s *UserRepositoryTestSuite) SetUpSuite(c *C) {
 	s.env = e
 	s.session = session.Clone()
 	s.repository = NewUserRepository(s.session)
+	s.Is = is.New(t)
 }
 
-func (s *UserRepositoryTestSuite) TearDownSuite(c *C) {
+func (s *UserRepositoryTestSuite) TearDownSuite() {
 	s.session.Close()
 }
 
-func (s *UserRepositoryTestSuite) SetUpTest(c *C) {
+func (s *UserRepositoryTestSuite) SetUp() {
 	utils.TruncateTables(s.session)
 }
 
-func TestUserRepository(t *testing.T) { TestingT(t) }
+func (s *UserRepositoryTestSuite) TearDown() {}
+
 
 type UserRepositoryTestSuite struct {
+	*is.Is
 	env        *utils.Environment
 	session    *mgo.Session
 	repository *UserRepository
 }
-
-var _ = Suite(&UserRepositoryTestSuite{})

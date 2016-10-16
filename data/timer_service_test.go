@@ -9,12 +9,17 @@ import (
 	"github.com/nlopes/slack"
 	"github.com/tuna-timer/tuna-timer-api/models"
 	"github.com/tuna-timer/tuna-timer-api/utils"
-	. "gopkg.in/check.v1"
 	"gopkg.in/mgo.v2/bson"
 	"time"
+	"gopkg.in/tylerb/is.v1"
+	"github.com/pavlo/gosuite"
 )
 
-func (s *TimerServiceTestSuite) TestGetActiveTimer(c *C) {
+func TestTimerService(t *testing.T) {
+	gosuite.Run(t, &TimerServiceTestSuite{})
+}
+
+func (s *TimerServiceTestSuite) GSTgetActiveTimer(t *testing.T) {
 
 	now := time.Now()
 
@@ -42,12 +47,13 @@ func (s *TimerServiceTestSuite) TestGetActiveTimer(c *C) {
 	})
 
 	timer, err := s.service.GetActiveTimer("team", "user")
-	c.Assert(err, IsNil)
-	c.Assert(timer, NotNil)
-	c.Assert(timer.Minutes, Equals, 20)
+	s.Nil(err)
+	s.NotNil(timer)
+
+	s.Equal(timer.Minutes, 20)
 }
 
-func (s *TimerServiceTestSuite) TestStopTimer(c *C) {
+func (s *TimerServiceTestSuite) GSTstopTimer(t *testing.T) {
 	now := time.Now()
 
 	offsetDuration, _ := time.ParseDuration("20m")
@@ -64,19 +70,19 @@ func (s *TimerServiceTestSuite) TestStopTimer(c *C) {
 		Minutes:    0,
 	})
 
-	c.Assert(err, IsNil)
-	c.Assert(timer, NotNil)
+	s.Nil(err)
+	s.NotNil(timer)
 
 	s.service.StopTimer(timer)
 
 	loadedTimer, err := s.repo.findByID(id.Hex())
-	c.Assert(err, IsNil)
+	s.Nil(err)
 
-	c.Assert(loadedTimer.Minutes, Equals, 20)
-	c.Assert(loadedTimer.FinishedAt, NotNil)
+	s.Equal(loadedTimer.Minutes, 20)
+	s.NotNil(loadedTimer.FinishedAt)
 }
 
-func (s *TimerServiceTestSuite) TestStartTimer(c *C) {
+func (s *TimerServiceTestSuite) GSTstartTimer(t *testing.T) {
 
 	projectID := bson.NewObjectId()
 	project := &models.Project{
@@ -95,25 +101,25 @@ func (s *TimerServiceTestSuite) TestStartTimer(c *C) {
 	}
 
 	timer, err := s.service.StartTimer("team", project, user, "task")
-	c.Assert(err, IsNil)
-	c.Assert(timer, NotNil)
+	s.Nil(err)
+	s.NotNil(timer)
 
 	loadedTimer, err := s.repo.findByID(timer.ID.Hex())
-	c.Assert(err, IsNil)
-	c.Assert(loadedTimer, NotNil)
+	s.Nil(err)
+	s.NotNil(loadedTimer)
 
-	c.Assert(loadedTimer.TeamID, Equals, "team")
-	c.Assert(loadedTimer.ProjectID, Equals, projectID.Hex())
-	c.Assert(loadedTimer.TeamUserID, Equals, userID.Hex())
-	c.Assert(loadedTimer.TaskName, Equals, "task")
-	c.Assert(loadedTimer.TaskHash, NotNil)
-	c.Assert(loadedTimer.CreatedAt, NotNil)
-	c.Assert(loadedTimer.FinishedAt, IsNil)
-	c.Assert(loadedTimer.DeletedAt, IsNil)
-	c.Assert(loadedTimer.Minutes, Equals, 0)
+	s.Equal(loadedTimer.TeamID, "team")
+	s.Equal(loadedTimer.ProjectID, projectID.Hex())
+	s.Equal(loadedTimer.TeamUserID, userID.Hex())
+	s.Equal(loadedTimer.TaskName, "task")
+	s.NotNil(loadedTimer.TaskHash)
+	s.NotNil(loadedTimer.CreatedAt)
+	s.Nil(loadedTimer.FinishedAt)
+	s.Nil(loadedTimer.DeletedAt)
+	s.Equal(loadedTimer.Minutes, 0)
 }
 
-func (s *TimerServiceTestSuite) TestTotalMinutesForTodayAddsTimeForUnfinishedTask(c *C) {
+func (s *TimerServiceTestSuite) GSTtotalMinutesForTodayAddsTimeForUnfinishedTask(t *testing.T) {
 	now := time.Now()
 
 	offsetDuration1, _ := time.ParseDuration("20m")
@@ -144,10 +150,11 @@ func (s *TimerServiceTestSuite) TestTotalMinutesForTodayAddsTimeForUnfinishedTas
 		Minutes:    0,
 	})
 
-	c.Assert(s.service.TotalMinutesForTaskToday(timer), Equals, 15)
+	//c.Assert(s.service.TotalMinutesForTaskToday(timer), Equals, 15)
+	s.Equal(s.service.TotalMinutesForTaskToday(timer), 15)
 }
 
-func (s *TimerServiceTestSuite) TestTotalCompletedMinutesForDay(c *C) {
+func (s *TimerServiceTestSuite) GSTtotalCompletedMinutesForDay(t *testing.T) {
 	now := time.Now()
 
 	user := &models.TeamUser{
@@ -191,13 +198,13 @@ func (s *TimerServiceTestSuite) TestTotalCompletedMinutesForDay(c *C) {
 	})
 
 	targetDate := utils.PT("2016 Sep 12 00:00:00")
-	c.Assert(s.service.TotalCompletedMinutesForDay(targetDate.Year(), targetDate.Month(), targetDate.Day(), user), Equals, 5)
+	s.Equal(s.service.TotalCompletedMinutesForDay(targetDate.Year(), targetDate.Month(), targetDate.Day(), user), 5)
 
 	targetDate = utils.PT("2016 Sep 13 00:00:00")
-	c.Assert(s.service.TotalCompletedMinutesForDay(targetDate.Year(), targetDate.Month(), targetDate.Day(), user), Equals, 7)
+	s.Equal(s.service.TotalCompletedMinutesForDay(targetDate.Year(), targetDate.Month(), targetDate.Day(), user), 7)
 }
 
-func (s *TimerServiceTestSuite) TestGetCompletedTasksForDayPositiveTZOffset(c *C) {
+func (s *TimerServiceTestSuite) GSTgetCompletedTasksForDayPositiveTZOffset(t *testing.T) {
 
 	now := time.Now()
 
@@ -243,18 +250,18 @@ func (s *TimerServiceTestSuite) TestGetCompletedTasksForDayPositiveTZOffset(c *C
 
 	targetDate := utils.PT("2016 Sep 12 00:00:00")
 	v, err := s.service.GetCompletedTasksForDay(targetDate.Year(), targetDate.Month(), targetDate.Day(), user)
-	c.Assert(err, IsNil)
-	c.Assert(len(v), Equals, 1)
-	c.Assert(v[0].Minutes, Equals, 5)
+	s.Nil(err)
+	s.Equal(len(v), 1)
+	s.Equal(v[0].Minutes, 5)
 
 	targetDate = utils.PT("2016 Sep 13 00:00:00")
 	v, err = s.service.GetCompletedTasksForDay(targetDate.Year(), targetDate.Month(), targetDate.Day(), user)
-	c.Assert(err, IsNil)
-	c.Assert(len(v), Equals, 1)
-	c.Assert(v[0].Minutes, Equals, 7)
+	s.Nil(err)
+	s.Equal(len(v), 1)
+	s.Equal(v[0].Minutes, 7)
 }
 
-func (s *TimerServiceTestSuite) TestGetCompletedTasksForDayNegativeTZOffset(c *C) {
+func (s *TimerServiceTestSuite) GSTgetCompletedTasksForDayNegativeTZOffset(t *testing.T) {
 
 	now := time.Now()
 
@@ -300,20 +307,20 @@ func (s *TimerServiceTestSuite) TestGetCompletedTasksForDayNegativeTZOffset(c *C
 
 	targetDate := utils.PT("2016 Sep 12 00:00:00")
 	v, err := s.service.GetCompletedTasksForDay(targetDate.Year(), targetDate.Month(), targetDate.Day(), user)
-	c.Assert(err, IsNil)
-	c.Assert(len(v), Equals, 1)
-	c.Assert(v[0].Minutes, Equals, 5)
+	s.Nil(err)
+	s.Equal(len(v), 1)
+	s.Equal(v[0].Minutes, 5)
 
 	targetDate = utils.PT("2016 Sep 13 00:00:00")
 
 	v, err = s.service.GetCompletedTasksForDay(targetDate.Year(), targetDate.Month(), targetDate.Day(), user)
-	c.Assert(err, IsNil)
-	c.Assert(len(v), Equals, 1)
-	c.Assert(v[0].Minutes, Equals, 7)
+	s.Nil(err)
+	s.Equal(len(v), 1)
+	s.Equal(v[0].Minutes, 7)
 }
 
 // CompleteActiveTimersAtMidnight
-func (s *TimerServiceTestSuite) TestCompleteActiveTimersAtMidnight(c *C) {
+func (s *TimerServiceTestSuite) GSTcompleteActiveTimersAtMidnight(t *testing.T) {
 
 	t1ID := bson.NewObjectId()
 	s.repo.createTimer(&models.Timer{
@@ -343,24 +350,24 @@ func (s *TimerServiceTestSuite) TestCompleteActiveTimersAtMidnight(c *C) {
 	now := utils.PT("2016 Sep 12 21:00:00")
 
 	// a side check just to make sure we're on the right track
-	c.Assert(utils.WhichTimezoneIsMidnightAt(now.Hour(), now.Minute()), Equals, 10800)
+	//c.Assert(utils.WhichTimezoneIsMidnightAt(now.Hour(), now.Minute()), Equals, 10800)
+	s.Equal(utils.WhichTimezoneIsMidnightAt(now.Hour(), now.Minute()), 10800)
 
 	err := s.service.CompleteActiveTimersAtMidnight(&now)
-	c.Assert(err, IsNil)
+	s.Nil(err)
 
 	timer, err := s.repo.findByID(t1ID.Hex())
-	c.Assert(err, IsNil)
-	c.Assert(timer.FinishedAt, NotNil)
-	c.Assert(timer.Minutes, Equals, 20-1)
+	s.Nil(err)
+	s.NotNil(timer.FinishedAt)
+	s.Equal(timer.Minutes, 20-1)
 
 	timer, err = s.repo.findByID(t2ID.Hex())
-	c.Assert(err, IsNil)
-	c.Assert(timer.FinishedAt, IsNil)
-	c.Assert(timer.Minutes, Equals, 0)
+	s.Nil(err)
+	s.Nil(timer.FinishedAt)
+	s.Equal(timer.Minutes, 0)
 }
 
-// Suite lifecycle and callbacks
-func (s *TimerServiceTestSuite) SetUpSuite(c *C) {
+func (s *TimerServiceTestSuite) SetUpSuite(t *testing.T) {
 	e := utils.NewEnvironment(utils.TestEnv, "1.0.0")
 
 	session, err := utils.ConnectToDatabase(e.Config)
@@ -374,24 +381,24 @@ func (s *TimerServiceTestSuite) SetUpSuite(c *C) {
 	s.session = session.Clone()
 	s.service = NewTimerService(s.session)
 	s.repo = NewTimerRepository(s.session)
+	s.Is = is.New(t)
 }
 
-func (s *TimerServiceTestSuite) TearDownSuite(c *C) {
+func (s *TimerServiceTestSuite) TearDownSuite() {
 	s.session.Close()
 }
 
-func (s *TimerServiceTestSuite) SetUpTest(c *C) {
-	time.Local = time.UTC
+func (s *TimerServiceTestSuite) SetUp() {
 	utils.TruncateTables(s.session)
 }
 
-func TestTimerService(t *testing.T) { TestingT(t) }
+func (s *TimerServiceTestSuite) TearDown() {
+}
 
 type TimerServiceTestSuite struct {
+	*is.Is
 	env     *utils.Environment
 	session *mgo.Session
 	repo    *TimerRepository
 	service *TimerService
 }
-
-var _ = Suite(&TimerServiceTestSuite{})

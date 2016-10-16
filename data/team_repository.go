@@ -6,7 +6,6 @@ import (
 	"github.com/tuna-timer/tuna-timer-api/models"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
-	"log"
 )
 
 const teamsCollectionName = "teams"
@@ -91,6 +90,6 @@ func (r *TeamRepository) save(team *models.Team) error {
 		return r.collection.Insert(team)
 	}
 
-	log.Printf("Updating: %+v", team)
+	//log.Printf("Updating: %+v", team)
 	return r.collection.Update(bson.M{"_id": team.ID}, team)
 }

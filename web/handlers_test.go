@@ -5,34 +5,27 @@ import (
 
 	"encoding/json"
 	"errors"
-
 	"context"
-	"log"
-
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"testing"
-
 	"github.com/tuna-timer/tuna-timer-api/commands"
 	"github.com/tuna-timer/tuna-timer-api/models"
 	"github.com/tuna-timer/tuna-timer-api/utils"
-
 	"github.com/tuna-timer/tuna-timer-api/themes"
-	. "gopkg.in/check.v1"
+	"gopkg.in/tylerb/is.v1"
+	"log"
 	"gopkg.in/mgo.v2"
+	"github.com/pavlo/gosuite"
 )
 
-func TestHandlers(t *testing.T) { TestingT(t) }
 
-type TestHandlersSuite struct {
-	env     *utils.Environment
-	session *mgo.Session
+func TestHandlers(t *testing.T) {
+	gosuite.Run(t, &TestHandlersSuite{})
 }
 
-var _ = Suite(&TestHandlersSuite{})
-
-func (s *TestHandlersSuite) TestTimer(c *C) {
+func (s *TestHandlersSuite) GSTHandlersTimer(t *testing.T) {
 	v := url.Values{}
 	v.Set("token", "gIkuvaNzQIHg97ATvDxqgjtO")
 	v.Set("team_id", "T0001")
@@ -47,7 +40,7 @@ func (s *TestHandlersSuite) TestTimer(c *C) {
 
 	req, err := http.NewRequest("POST", "/timer", bytes.NewBufferString(v.Encode()))
 	if err != nil {
-		c.Fatal(err)
+		t.Fatal(err)
 	}
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded;")
 
@@ -55,16 +48,16 @@ func (s *TestHandlersSuite) TestTimer(c *C) {
 	h := NewHandlers(s.env, s.session)
 
 	h.commandLookupFunction = func(ctx context.Context, slackCommand models.SlackCustomCommand) (commands.SlackCustomCommandHandler, error) {
-		c.Assert(slackCommand.ChannelID, Equals, "C2147483705")
-		c.Assert(slackCommand.ChannelName, Equals, "test")
-		c.Assert(slackCommand.Command, Equals, "/timer")
-		c.Assert(slackCommand.ResponseURL, Equals, "https://hooks.slack.com/commands/1234/5678")
-		c.Assert(slackCommand.TeamDomain, Equals, "example")
-		c.Assert(slackCommand.TeamID, Equals, "T0001")
-		c.Assert(slackCommand.Text, Equals, "Convert the logotype to PNG")
-		c.Assert(slackCommand.Token, Equals, "gIkuvaNzQIHg97ATvDxqgjtO")
-		c.Assert(slackCommand.UserID, Equals, "U2147483697")
-		c.Assert(slackCommand.UserName, Equals, "Steve")
+		s.Equal(slackCommand.ChannelID, "C2147483705")
+		s.Equal(slackCommand.ChannelName, "test")
+		s.Equal(slackCommand.Command, "/timer")
+		s.Equal(slackCommand.ResponseURL, "https://hooks.slack.com/commands/1234/5678")
+		s.Equal(slackCommand.TeamDomain, "example")
+		s.Equal(slackCommand.TeamID, "T0001")
+		s.Equal(slackCommand.Text, "Convert the logotype to PNG")
+		s.Equal(slackCommand.Token, "gIkuvaNzQIHg97ATvDxqgjtO")
+		s.Equal(slackCommand.UserID, "U2147483697")
+		s.Equal(slackCommand.UserName, "Steve")
 		return mockCmd, nil
 	}
 
@@ -72,10 +65,10 @@ func (s *TestHandlersSuite) TestTimer(c *C) {
 	handler := http.HandlerFunc(h.Timer)
 
 	handler.ServeHTTP(recorder, req)
-	c.Assert(mockCmd.executed, Equals, true)
+	s.Equal(mockCmd.executed, true)
 }
 
-func (s *TestHandlersSuite) TestTimerCommandLookupFailure(c *C) {
+func (s *TestHandlersSuite) GSTHandlersTimerCommandLookupFailure(t *testing.T) {
 	v := url.Values{}
 	v.Set("text", "foobar")
 	v.Set("token", "gIkuvaNzQIHg97ATvDxqgjtO")
@@ -90,7 +83,7 @@ func (s *TestHandlersSuite) TestTimerCommandLookupFailure(c *C) {
 
 	req, err := http.NewRequest("POST", "/timer", bytes.NewBufferString(v.Encode()))
 	if err != nil {
-		c.Fatal(err)
+		t.Fatal(err)
 	}
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded;")
 	h := NewHandlers(s.env, s.session)
@@ -108,13 +101,14 @@ func (s *TestHandlersSuite) TestTimerCommandLookupFailure(c *C) {
 	message := themes.SlackThemeTemplate{}
 	json.Unmarshal([]byte(jsonResponse), &message)
 
-	c.Assert(message.Attachments[0].Text, Equals, "Simulated failure")
+	s.Equal(message.Attachments[0].Text, "Simulated failure")
 }
 
-func (s *TestHandlersSuite) TestHealth(c *C) {
+func (s *TestHandlersSuite) GSTHealth(t *testing.T) {
+
 	req, err := http.NewRequest("GET", "/health", nil)
 	if err != nil {
-		c.Fatal(err)
+		t.Fatal(err)
 	}
 
 	h := NewHandlers(s.env, s.session)
@@ -125,12 +119,12 @@ func (s *TestHandlersSuite) TestHealth(c *C) {
 	data := make(map[string]interface{})
 	err = json.Unmarshal(recorder.Body.Bytes(), &data)
 	if err != nil {
-		c.Fatal(err)
+		t.Fatal(err)
 	}
 
-	c.Assert(data["env"].(string), Equals, utils.TestEnv)
-	c.Assert(data["uptime"].(string), NotNil)
-	c.Assert(data["version"].(string), Equals, s.env.AppVersion)
+	s.Equal(data["env"].(string), utils.TestEnv)
+	s.NotNil(data["uptime"].(string))
+	s.Equal(data["version"].(string), s.env.AppVersion)
 }
 
 type mockCommand struct {
@@ -148,8 +142,13 @@ func (cmd *mockCommand) GetName() string {
 	return "mockCmd"
 }
 
-// Suite lifecycle and callbacks
-func (s *TestHandlersSuite) SetUpSuite(c *C) {
+type TestHandlersSuite struct {
+	*is.Is
+	env     *utils.Environment
+	session *mgo.Session
+}
+
+func (s *TestHandlersSuite) SetUpSuite(t *testing.T) {
 	e := utils.NewEnvironment(utils.TestEnv, "1.0.0")
 	session, err := utils.ConnectToDatabase(e.Config)
 	if err != nil {
@@ -161,10 +160,12 @@ func (s *TestHandlersSuite) SetUpSuite(c *C) {
 	s.session = session.Clone()
 }
 
-func (s *TestHandlersSuite) TearDownSuite(c *C) {
+func (s *TestHandlersSuite) TearDownSuite() {
 	s.session.Close()
 }
 
-func (s *TestHandlersSuite) SetUpTest(c *C) {
+func (s *TestHandlersSuite) SetUp() {
 	utils.TruncateTables(s.session)
 }
+
+func (s *TestHandlersSuite) TearDown() {}
