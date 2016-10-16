@@ -201,7 +201,7 @@ func (s *PassRepositoryTestSuite) GSTFindByID(t *testing.T) {
 	p, err := s.repository.findByID(p1.ID.Hex())
 	s.Nil(err)
 	s.NotNil(p)
-	s.Equal("--p1token", p.Token)
+	s.Equal("p1token", p.Token)
 
 	p, err = s.repository.findByID(bson.NewObjectId().Hex())
 	s.Nil(err)
