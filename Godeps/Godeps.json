@@ -7,6 +7,20 @@
 	],
 	"Deps": [
 		{
+			"ImportPath": "github.com/auth0/go-jwt-middleware",
+			"Rev": "f3f7de3b9e394e3af3b88e1b9457f6f71d1ae0ac"
+		},
+		{
+			"ImportPath": "github.com/dgrijalva/jwt-go",
+			"Comment": "v3.0.0-8-g24c63f5",
+			"Rev": "24c63f56522a87ec5339cc3567883f1039378fdb"
+		},
+		{
+			"ImportPath": "github.com/gorilla/context",
+			"Comment": "v1.1-7-g08b5f42",
+			"Rev": "08b5f424b9271eedf6f9f0ce86cb9396ed337a42"
+		},
+		{
 			"ImportPath": "github.com/gorilla/handlers",
 			"Comment": "v1.1-11-ga577578",
 			"Rev": "a5775781a543af3c6b9f5baf10995e4d14168950"

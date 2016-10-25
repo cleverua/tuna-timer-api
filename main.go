@@ -38,35 +38,43 @@ func main() {
 	environment.MigrateDatabase(session)
 	handlers := web.NewHandlers(environment, session)
 
+	public := alice.New(web.LoggingMiddleware, web.RecoveryMiddleware)
+	secure := alice.New(web.LoggingMiddleware, web.RecoveryMiddleware, web.JWTMiddleware)
+
+
 	router := mux.NewRouter().StrictSlash(true)
 
-	router.HandleFunc("/api/v1/health", handlers.Health).Methods("GET")
+
+	router.Handle("/api/v1/health", public.ThenFunc(handlers.Health)).Methods("GET")
 
 	// Slack will sometimes call the API method using a GET request
 	// to check SSL certificate - so we reply with a status handler here
-	router.HandleFunc("/api/v1/timer", handlers.Timer).Methods("POST", "GET")
+	router.Handle("/api/v1/timer", public.ThenFunc(handlers.Timer)).Methods("POST", "GET")
 
 	// Slack  OAuth2 stuff
-	router.HandleFunc("/api/v1/slack/oauth2redirect", handlers.SlackOauth2Redirect).Methods("GET")
+	router.Handle("/api/v1/slack/oauth2redirect", public.ThenFunc(handlers.SlackOauth2Redirect)).Methods("GET")
 
 	// Static assets
 	router.PathPrefix("/assets/").Handler(http.StripPrefix("/assets/", http.FileServer(http.Dir("./assets/"))))
 
-	// Temporary stuff, remove eventually
-	router.HandleFunc("/api/v1/temporary/clear_data", handlers.ClearAllData).Methods("GET")
-	router.HandleFunc("/api/v1/temporary/send_message", handlers.SendSampleMessageFromBot).Methods("GET")
+	// ===== Routes for frontend application
+	// Activates the pass and returns back a JWT token, it essentially logs the user in
+	router.Handle("/api/v1/frontend/auth/{token}/activate", public.ThenFunc(handlers.NotImplemented)).Methods("POST")
+	// reads JWT from header and returns a 200 if it is okay and not expired
+	router.Handle("/api/v1/frontend/auth/validate", secure.ThenFunc(handlers.ValidateAuthToken)).Methods("GET")
 
-	defaultMiddleware := alice.New(
-		web.LoggingMiddleware,
-		web.RecoveryMiddleware,
-	)
+
+	// Temporary stuff, remove eventually
+	router.Handle("/api/v1/temporary/clear_data", public.ThenFunc(handlers.ClearAllData)).Methods("GET")
+	router.Handle("/api/v1/temporary/send_message", public.ThenFunc(handlers.SendSampleMessageFromBot)).Methods("GET")
+	router.Handle("/api/v1/temporary/new_jwt_token", public.ThenFunc(handlers.NewJWTToken)).Methods("GET")
 
 	dbJobsEngine := launchBGJobEngine(environment, session)
 	defer dbJobsEngine.Stop() // does it leak mongo session?
 
 	log.Printf("All startup routines completed successfully, app is listening on %s port\n", port)
 
-	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", port), defaultMiddleware.Then(router)))
+	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", port), router))
 }
 
 func launchBGJobEngine(env *utils.Environment, session *mgo.Session) *cron.Cron {

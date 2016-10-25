@@ -18,6 +18,7 @@ import (
 	"github.com/tuna-timer/tuna-timer-api/utils"
 	"gopkg.in/mgo.v2/bson"
 	"log"
+	"github.com/dgrijalva/jwt-go"
 )
 
 // Handlers is a collection of net/http handlers to serve the API
@@ -122,6 +123,16 @@ func (h *Handlers) SlackOauth2Redirect(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
+func (h *Handlers) ValidateAuthToken(w http.ResponseWriter, r *http.Request) {
+	// if we get here (meaning JWTMiddleware passed it through) then auth token is valid
+	w.WriteHeader(http.StatusOK)
+}
+
+func (h *Handlers) NotImplemented(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte("Not Implemented"))
+	w.WriteHeader(http.StatusInternalServerError)
+}
+
 // Health handles a call for app health request
 func (h *Handlers) Health(w http.ResponseWriter, r *http.Request) {
 	uptime := time.Since(h.env.CreatedAt)
@@ -175,6 +186,28 @@ func (h *Handlers) SendSampleMessageFromBot(w http.ResponseWriter, r *http.Reque
 			},
 		},
 	})
+}
+
+func (h *Handlers) NewJWTToken(w http.ResponseWriter, r *http.Request) {
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"team_id": "sample team id",
+		"user_id": "sample user id",
+		"is_team_admin": false,
+		"exp": time.Now().Add(time.Minute * 5).Unix(),
+	})
+
+	tokenString, err := token.SignedString([]byte("TODO: Extract me in config/env"))
+	if err != nil {
+		w.Write([]byte(err.Error()))
+		return
+	}
+
+	result, _ := json.Marshal(map[string]string {
+		"jwt": string(tokenString),
+	})
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write([]byte(result))
 }
 
 // ClearAllData - is supposed to be called by the QA team during early testing stage
