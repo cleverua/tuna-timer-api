@@ -60,6 +60,7 @@ func main() {
 	// ===== Routes for frontend application
 	// Activates the pass and returns back a JWT token, it essentially logs the user in
 	router.Handle("/api/v1/frontend/auth/{token}/activate", public.ThenFunc(handlers.NotImplemented)).Methods("POST")
+	router.Handle("/api/v1/frontend/session", public.ThenFunc(handlers.UserAuthentication)).Methods("POST")
 	// reads JWT from header and returns a 200 if it is okay and not expired
 	router.Handle("/api/v1/frontend/auth/validate", secure.ThenFunc(handlers.ValidateAuthToken)).Methods("GET")
 

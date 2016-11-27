@@ -32,6 +32,11 @@ func (s *PassService) EnsurePass(team *models.Team, user *models.TeamUser, proje
 	return pass, err
 }
 
+func (s *PassService) FindPassByToken(token string) (*models.Pass, error) {
+	pass, err := s.repository.FindActivePassByToken(token)
+	return pass, err
+}
+
 func (s *PassService) RemoveStalePasses() error {
 	err := s.repository.removeExpiredPasses()
 	if err != nil {

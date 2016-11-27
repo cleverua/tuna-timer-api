@@ -32,6 +32,17 @@ func (r *UserRepository) FindByExternalID(externalUserID string) (*models.TeamUs
 	return teamUser, err
 }
 
+func (r *UserRepository) FindByID(userID string) (*models.TeamUser, error) {
+	teamUser := &models.TeamUser{}
+	err := r.collection.FindId(bson.ObjectIdHex(userID)).One(&teamUser)
+
+	if err != nil && err == mgo.ErrNotFound {
+		teamUser = nil
+		err = nil
+	}
+	return teamUser, err
+}
+
 func (r *UserRepository) save(user *models.TeamUser) (*models.TeamUser, error) {
 	if user.ID == "" {
 		user.ID = bson.NewObjectId()

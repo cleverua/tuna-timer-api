@@ -19,6 +19,14 @@ func NewUserService(session *mgo.Session) *UserService {
 	}
 }
 
+func (s *UserService) FindByID(id string) (*models.TeamUser, error){
+	user, err := s.repository.FindByID(id)
+	if err != nil {
+		return nil, err
+	}
+	return user, err
+}
+
 func (s *UserService) EnsureUser(team *models.Team, externalUserID string) (*models.TeamUser, error) {
 	user, err := s.repository.FindByExternalID(externalUserID)
 	if err != nil {
