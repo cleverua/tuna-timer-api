@@ -1,9 +1,9 @@
 package web
 
 import (
-	"github.com/tuna-timer/tuna-timer-api/models"
+	"github.com/cleverua/tuna-timer-api/models"
 	"gopkg.in/mgo.v2"
-	"github.com/tuna-timer/tuna-timer-api/data"
+	"github.com/cleverua/tuna-timer-api/data"
 	"github.com/dgrijalva/jwt-go"
 )
 

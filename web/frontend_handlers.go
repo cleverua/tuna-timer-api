@@ -2,35 +2,47 @@ package web
 
 import (
 	"net/http"
-	"github.com/tuna-timer/tuna-timer-api/data"
+	"github.com/cleverua/tuna-timer-api/data"
 	"encoding/json"
 )
 
-func (h *Handlers) UserAuthentication(w http.ResponseWriter, r *http.Request) {
-	pid := r.PostFormValue("pid")
+type ResponseBody struct {
+	AppInfo map[string]string `json:"appInfo"`
+	ResponseErrors map[string]string `json:"errors"`
+	ResponseData interface{} `json:"data"`
+}
 
+func NewResponseBody(h *Handlers) *ResponseBody {
+	return &ResponseBody{
+		ResponseErrors: map[string]string{},
+		AppInfo: h.status,
+	}
+}
+
+func (h *Handlers) UserAuthentication(w http.ResponseWriter, r *http.Request) {
+	response := NewResponseBody(h)
+	pid := r.PostFormValue("pid") // TODO: sanitize pid
 	session := h.mongoSession.Clone()
 	defer session.Close()
 
 	pass_service := data.NewPassService(session)
 	pass, err := pass_service.FindPassByToken(pid)
-	result := make(map[string]string)
 
 	if err == nil && pass == nil {
 		w.WriteHeader(http.StatusBadRequest)
-		result["userMessage"] = "please login from slack application"
+		response.ResponseErrors["userMessage"] = "please login from slack application"
 	} else if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		result["developerMessage"] = err.Error()
+		response.ResponseErrors["developerMessage"] = err.Error()
 	} else {
 		jwt_token, jwt_err := NewToken(pass, session)
 		if jwt_err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
-			result["developerMessage"] = jwt_err.Error()
+			response.ResponseErrors["developerMessage"] = jwt_err.Error()
 		} else {
 			w.WriteHeader(http.StatusOK)
-			result["jwt"] = string(jwt_token)
+			response.ResponseData = map[string]string{"jwt": jwt_token}
 		}
 	}
-	json.NewEncoder(w).Encode(result)
+	json.NewEncoder(w).Encode(response)
 }
