@@ -3,7 +3,7 @@ package commands
 import (
 	"context"
 	"fmt"
-	"github.com/tuna-timer/tuna-timer-api/models"
+	"github.com/cleverua/tuna-timer-api/models"
 )
 
 const (

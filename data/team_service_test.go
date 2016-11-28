@@ -1,8 +1,8 @@
 package data
 
 import (
-	"github.com/tuna-timer/tuna-timer-api/models"
-	"github.com/tuna-timer/tuna-timer-api/utils"
+	"github.com/cleverua/tuna-timer-api/models"
+	"github.com/cleverua/tuna-timer-api/utils"
 	"log"
 	"testing"
 	"gopkg.in/tylerb/is.v1"

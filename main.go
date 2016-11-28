@@ -8,13 +8,13 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/justinas/alice"
-	"github.com/tuna-timer/tuna-timer-api/utils"
-	"github.com/tuna-timer/tuna-timer-api/web"
+	"github.com/cleverua/tuna-timer-api/utils"
+	"github.com/cleverua/tuna-timer-api/web"
 	"time"
 
 	"fmt"
 	"github.com/robfig/cron"
-	"github.com/tuna-timer/tuna-timer-api/jobs"
+	"github.com/cleverua/tuna-timer-api/jobs"
 	"gopkg.in/mgo.v2"
 )
 

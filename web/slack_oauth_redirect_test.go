@@ -2,8 +2,8 @@ package web
 
 import (
 	"github.com/nlopes/slack"
-	"github.com/tuna-timer/tuna-timer-api/data"
-	"github.com/tuna-timer/tuna-timer-api/utils"
+	"github.com/cleverua/tuna-timer-api/data"
+	"github.com/cleverua/tuna-timer-api/utils"
 	"gopkg.in/mgo.v2"
 	"log"
 	"net/http"

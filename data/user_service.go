@@ -2,7 +2,7 @@ package data
 
 import (
 	"github.com/nlopes/slack"
-	"github.com/tuna-timer/tuna-timer-api/models"
+	"github.com/cleverua/tuna-timer-api/models"
 	"gopkg.in/mgo.v2"
 	"time"
 )

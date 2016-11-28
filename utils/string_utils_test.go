@@ -2,7 +2,7 @@ package utils
 
 import (
 	"crypto/tls"
-	"github.com/tuna-timer/tuna-timer-api/models"
+	"github.com/cleverua/tuna-timer-api/models"
 	"net/http"
 	"testing"
 	"gopkg.in/tylerb/is.v1"
