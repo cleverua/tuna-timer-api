@@ -9,7 +9,7 @@ import (
 type ResponseBody struct {
 	AppInfo map[string]string `json:"appInfo"`
 	ResponseErrors map[string]string `json:"errors"`
-	ResponseData interface{} `json:"data"`
+	ResponseData JwtToken `json:"data"`
 }
 
 func NewResponseBody(h *Handlers) *ResponseBody {
@@ -41,7 +41,7 @@ func (h *Handlers) UserAuthentication(w http.ResponseWriter, r *http.Request) {
 			response.ResponseErrors["developerMessage"] = jwt_err.Error()
 		} else {
 			w.WriteHeader(http.StatusOK)
-			response.ResponseData = map[string]string{"jwt": jwt_token}
+			response.ResponseData = JwtToken{Token: jwt_token}
 		}
 	}
 	json.NewEncoder(w).Encode(response)

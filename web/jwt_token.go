@@ -7,6 +7,10 @@ import (
 	"github.com/dgrijalva/jwt-go"
 )
 
+type JwtToken struct{
+	Token string `json:"jwt"`
+}
+
 func NewToken(pass *models.Pass, session *mgo.Session) (string, error) {
 	user_service := data.NewUserService(session)
 	user, user_err := user_service.FindByID(pass.TeamUserID)
