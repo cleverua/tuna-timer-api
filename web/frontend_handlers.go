@@ -6,21 +6,14 @@ import (
 	"encoding/json"
 )
 
-type ResponseBody struct {
-	AppInfo map[string]string `json:"appInfo"`
-	ResponseErrors map[string]string `json:"errors"`
-	ResponseData JwtToken `json:"data"`
-}
-
-func NewResponseBody(h *Handlers) *ResponseBody {
-	return &ResponseBody{
-		ResponseErrors: map[string]string{},
-		AppInfo: h.status,
-	}
-}
-
 func (h *Handlers) UserAuthentication(w http.ResponseWriter, r *http.Request) {
-	response := NewResponseBody(h)
+	response := JwtResponseBody{
+		ResponseData: JwtToken{},
+		ResponseBody: ResponseBody{
+			ResponseErrors: map[string]string{},
+			AppInfo: h.status,
+		},
+	}
 	pid := r.PostFormValue("pid") // TODO: sanitize pid
 	session := h.mongoSession.Clone()
 	defer session.Close()
@@ -35,13 +28,13 @@ func (h *Handlers) UserAuthentication(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		response.ResponseErrors["developerMessage"] = err.Error()
 	} else {
-		jwt_token, jwt_err := NewToken(pass, session)
+		jwt_token, jwt_err := NewToken(pass.TeamUserID, session)
 		if jwt_err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			response.ResponseErrors["developerMessage"] = jwt_err.Error()
 		} else {
 			w.WriteHeader(http.StatusOK)
-			response.ResponseData = JwtToken{Token: jwt_token}
+			response.ResponseData.Token = jwt_token
 		}
 	}
 	json.NewEncoder(w).Encode(response)

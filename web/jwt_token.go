@@ -1,7 +1,6 @@
 package web
 
 import (
-	"github.com/cleverua/tuna-timer-api/models"
 	"gopkg.in/mgo.v2"
 	"github.com/cleverua/tuna-timer-api/data"
 	"github.com/dgrijalva/jwt-go"
@@ -11,9 +10,9 @@ type JwtToken struct{
 	Token string `json:"jwt"`
 }
 
-func NewToken(pass *models.Pass, session *mgo.Session) (string, error) {
+func NewToken(userId string, session *mgo.Session) (string, error) {
 	user_service := data.NewUserService(session)
-	user, user_err := user_service.FindByID(pass.TeamUserID)
+	user, user_err := user_service.FindByID(userId)
 
 	if user_err != nil {
 		return "", user_err
