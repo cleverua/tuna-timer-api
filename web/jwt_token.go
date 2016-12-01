@@ -4,18 +4,19 @@ import (
 	"gopkg.in/mgo.v2"
 	"github.com/cleverua/tuna-timer-api/data"
 	"github.com/dgrijalva/jwt-go"
+	"errors"
 )
 
 type JwtToken struct{
 	Token string `json:"jwt"`
 }
 
-func NewToken(userId string, session *mgo.Session) (string, error) {
+func NewUserToken(userId string, session *mgo.Session) (string, error) {
 	user_service := data.NewUserService(session)
 	user, user_err := user_service.FindByID(userId)
 
-	if user_err != nil {
-		return "", user_err
+	if user_err == nil && user == nil {
+		return "", errors.New("user doesn't exist")
 	}
 
 	jwt_token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{

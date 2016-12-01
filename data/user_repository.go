@@ -5,6 +5,7 @@ import (
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 	"time"
+	"errors"
 )
 
 const usersCollectionName = "team_users"
@@ -33,6 +34,10 @@ func (r *UserRepository) FindByExternalID(externalUserID string) (*models.TeamUs
 }
 
 func (r *UserRepository) FindByID(userID string) (*models.TeamUser, error) {
+	if !bson.IsObjectIdHex(userID) {
+		return nil, errors.New("id is not valid")
+	}
+
 	teamUser := &models.TeamUser{}
 	err := r.collection.FindId(bson.ObjectIdHex(userID)).One(&teamUser)
 

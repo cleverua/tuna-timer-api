@@ -71,6 +71,34 @@ func (s *UserServiceTestSuite) TestEnsureUserExisting(t *testing.T) {
 	s.Equal(user.ExternalUserName, "ext-name")
 }
 
+func (s *UserServiceTestSuite) TestFindByID(t *testing.T) {
+	service := NewUserService(s.session)
+	u, err := s.repository.save(&models.TeamUser{
+		ExternalUserID:   "ext-id",
+		ExternalUserName: "user-name",
+	})
+	s.Nil(err)
+
+	user, err := service.FindByID(u.ID.Hex())
+	s.Nil(err)
+	s.NotNil(user)
+	s.Equal(user.ExternalUserName, "user-name")
+}
+
+func (s *UserServiceTestSuite) TestFindByIDNotExist(t *testing.T) {
+	service := NewUserService(s.session)
+	_, err := s.repository.save(&models.TeamUser{
+		ExternalUserID:   "ext-id",
+		ExternalUserName: "user-name",
+	})
+	s.Nil(err)
+
+	random_id := bson.NewObjectId().Hex()
+	user, err := service.FindByID(random_id)
+	s.Nil(err)
+	s.Nil(user)
+}
+
 type UserServiceTestSuite struct {
 	*is.Is
 	env        *utils.Environment

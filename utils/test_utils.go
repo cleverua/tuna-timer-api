@@ -61,7 +61,7 @@ func Create(object interface{}, session *mgo.Session) (interface{}, error) {
 
 	switch t := object.(type) {
 	case *models.TeamUser:
-		if object.(*models.TeamUser).ExternalUserID == "" {	object = *defaultUser }
+		if object.(*models.TeamUser).ExternalUserID == "" { object = *defaultUser }
 		userCollection := session.DB("").C(MongoCollectionTeamUsers)
 		err = userCollection.Insert(object)
 	case *models.Pass:

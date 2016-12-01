@@ -28,7 +28,7 @@ func (h *Handlers) UserAuthentication(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		response.ResponseErrors["developerMessage"] = err.Error()
 	} else {
-		jwt_token, jwt_err := NewToken(pass.TeamUserID, session)
+		jwt_token, jwt_err := NewUserToken(pass.TeamUserID, session)
 		if jwt_err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			response.ResponseErrors["developerMessage"] = jwt_err.Error()

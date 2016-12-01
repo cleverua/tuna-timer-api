@@ -32,7 +32,7 @@ func (s *TestHandlersSuite) TestUserAuthentication(t *testing.T) {
 	err = json.Unmarshal(recorder.Body.Bytes(), &resp)
 	s.Nil(err)
 
-	verification_token, err := NewToken(pass.(models.Pass).TeamUserID, s.session)
+	verification_token, err := NewUserToken(pass.(models.Pass).TeamUserID, s.session)
 	s.Nil(err)
 	s.Equal(resp.ResponseErrors, make(map[string]string))
 	s.Equal(resp.ResponseData.Token, verification_token)
