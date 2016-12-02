@@ -12,20 +12,20 @@ type JwtToken struct{
 }
 
 func NewUserToken(userId string, session *mgo.Session) (string, error) {
-	user_service := data.NewUserService(session)
-	user, user_err := user_service.FindByID(userId)
+	userService := data.NewUserService(session)
+	user, userErr := userService.FindByID(userId)
 
-	if user_err == nil && user == nil {
+	if userErr == nil && user == nil {
 		return "", errors.New("user doesn't exist")
 	}
 
-	jwt_token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+	jwtToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"team_id": user.TeamID,
 		"user_id": user.ID,
 		"is_team_admin": user.SlackUserInfo.IsAdmin,
 		"image48": user.SlackUserInfo.Profile.Image48,
 	})
 
-	signed_token, err := jwt_token.SignedString([]byte("TODO: Extract me in config/env"))
-	return signed_token, err
+	signedToken, err := jwtToken.SignedString([]byte("TODO: Extract me in config/env"))
+	return signedToken, err
 }

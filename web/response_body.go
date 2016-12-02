@@ -8,7 +8,7 @@ import (
 type ResponseBody struct {
 	AppInfo        map[string]string `json:"appInfo"`
 	ResponseErrors map[string]string `json:"errors"`
-	ResponseBody   interface{}       `json:"data"`
+	ResponseData   map[string]string `json:"data"`
 }
 
 // Response with jwt token

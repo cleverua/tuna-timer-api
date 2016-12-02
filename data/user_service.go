@@ -48,7 +48,7 @@ func (s *UserService) EnsureUser(team *models.Team, externalUserID string) (*mod
 			TeamID:           team.ID.Hex(),
 		}
 
-		user, err = s.repository.save(user)
+		user, err = s.repository.Save(user)
 		if err != nil {
 			return nil, err
 		}

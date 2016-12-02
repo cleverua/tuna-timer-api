@@ -4,9 +4,30 @@ import (
 	"net/http"
 	"github.com/cleverua/tuna-timer-api/data"
 	"encoding/json"
+	"github.com/cleverua/tuna-timer-api/utils"
+	"gopkg.in/mgo.v2"
 )
 
-func (h *Handlers) UserAuthentication(w http.ResponseWriter, r *http.Request) {
+// Handlers is a collection of net/http handlers to serve the API
+type FrontendHandlers struct {
+	env                   *utils.Environment
+	mongoSession          *mgo.Session
+	status                map[string]string
+}
+
+// NewHandlers constructs a FrontendHandler collection
+func NewFrontendHandlers(env *utils.Environment, mongoSession *mgo.Session) *FrontendHandlers {
+	return &FrontendHandlers{
+		env:          env,
+		mongoSession: mongoSession,
+		status: map[string]string{
+			"env":     env.Name,
+			"version": env.AppVersion,
+		},
+	}
+}
+
+func (h *FrontendHandlers) UserAuthentication(w http.ResponseWriter, r *http.Request) {
 	response := JwtResponseBody{
 		ResponseData: JwtToken{},
 		ResponseBody: ResponseBody{
@@ -18,9 +39,10 @@ func (h *Handlers) UserAuthentication(w http.ResponseWriter, r *http.Request) {
 	session := h.mongoSession.Clone()
 	defer session.Close()
 
-	pass_service := data.NewPassService(session)
-	pass, err := pass_service.FindPassByToken(pid)
+	passService := data.NewPassService(session)
+	pass, err := passService.FindPassByToken(pid)
 
+	w.Header().Set("Content-Type", "application/json")
 	if err == nil && pass == nil {
 		w.WriteHeader(http.StatusBadRequest)
 		response.ResponseErrors["userMessage"] = "please login from slack application"
@@ -28,14 +50,15 @@ func (h *Handlers) UserAuthentication(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		response.ResponseErrors["developerMessage"] = err.Error()
 	} else {
-		jwt_token, jwt_err := NewUserToken(pass.TeamUserID, session)
-		if jwt_err != nil {
+		jwtToken, jwtErr := NewUserToken(pass.TeamUserID, session)
+		if jwtErr != nil {
 			w.WriteHeader(http.StatusInternalServerError)
-			response.ResponseErrors["developerMessage"] = jwt_err.Error()
+			response.ResponseErrors["developerMessage"] = jwtErr.Error()
 		} else {
 			w.WriteHeader(http.StatusOK)
-			response.ResponseData.Token = jwt_token
+			response.ResponseData.Token = jwtToken
 		}
 	}
+
 	json.NewEncoder(w).Encode(response)
 }

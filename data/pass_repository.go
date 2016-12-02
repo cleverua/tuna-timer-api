@@ -69,7 +69,7 @@ func (r *PassRepository) removePassesClaimedBefore(date time.Time) error {
 	})
 }
 
-func (r *PassRepository) insert(pass *models.Pass) error {
+func (r *PassRepository) Insert(pass *models.Pass) error {
 	return r.collection.Insert(pass)
 }
 

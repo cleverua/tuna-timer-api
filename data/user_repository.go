@@ -48,7 +48,7 @@ func (r *UserRepository) FindByID(userID string) (*models.TeamUser, error) {
 	return teamUser, err
 }
 
-func (r *UserRepository) save(user *models.TeamUser) (*models.TeamUser, error) {
+func (r *UserRepository) Save(user *models.TeamUser) (*models.TeamUser, error) {
 	if user.ID == "" {
 		user.ID = bson.NewObjectId()
 		user.CreatedAt = time.Now()

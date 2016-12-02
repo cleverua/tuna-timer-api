@@ -62,5 +62,5 @@ func (s *PassService) createPass(team *models.Team, user *models.TeamUser, proje
 		ModelVersion: models.ModelVersionPass,
 	}
 
-	return pass, s.repository.insert(pass)
+	return pass, s.repository.Insert(pass)
 }

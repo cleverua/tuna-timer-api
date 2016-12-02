@@ -28,7 +28,7 @@ func (s *UserRepositoryTestSuite) TestFindByExternalID(t *testing.T) {
 		},
 	}
 
-	u, err := s.repository.save(user)
+	u, err := s.repository.Save(user)
 
 	s.Nil(err)
 	s.NotNil(u)
@@ -50,11 +50,11 @@ func (s *UserRepositoryTestSuite) TestSave(t *testing.T) {
 		},
 	}
 
-	u, err := s.repository.save(user)
+	u, err := s.repository.Save(user)
 	s.Nil(err)
 
 	u.SlackUserInfo.IsAdmin = false
-	_, err = s.repository.save(u)
+	_, err = s.repository.Save(u)
 	s.Nil(err)
 
 	loadedUser, err := s.repository.FindByExternalID("ext-id")
@@ -77,7 +77,7 @@ func (s *UserRepositoryTestSuite) TestFindByID(t *testing.T) {
 		ExternalUserName: "user-name",
 	}
 
-	u, err := s.repository.save(user)
+	u, err := s.repository.Save(user)
 	s.Nil(err)
 
 	userRecord, err := s.repository.FindByID(u.ID.Hex())

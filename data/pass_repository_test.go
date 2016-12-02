@@ -25,7 +25,7 @@ func (s *PassRepositoryTestSuite) TestFindByToken(t *testing.T) {
 		ClaimedAt:    nil,
 		ModelVersion: models.ModelVersionPass,
 	}
-	err := s.repository.insert(p1)
+	err := s.repository.Insert(p1)
 	s.Nil(err)
 
 	p1Test, err := s.repository.FindActivePassByToken("token")
@@ -44,7 +44,7 @@ func (s *PassRepositoryTestSuite) TestFindByTokenDoesNotGetExpired(t *testing.T)
 		ClaimedAt:    nil,
 		ModelVersion: models.ModelVersionPass,
 	}
-	err := s.repository.insert(p1)
+	err := s.repository.Insert(p1)
 	s.Nil(err)
 
 	p1Test, err := s.repository.FindActivePassByToken("token")
@@ -63,7 +63,7 @@ func (s *PassRepositoryTestSuite) TestFindByTokenDoesNotGetClaimed(t *testing.T)
 		ClaimedAt:    &now,
 		ModelVersion: models.ModelVersionPass,
 	}
-	err := s.repository.insert(p1)
+	err := s.repository.Insert(p1)
 	s.Nil(err)
 
 	p1Test, err := s.repository.FindActivePassByToken("token")
@@ -76,7 +76,7 @@ func (s *PassRepositoryTestSuite) TestFindActiveByUserID(t *testing.T) {
 	now := time.Now()
 
 	userID := bson.NewObjectId()
-	s.userRepository.save(&models.TeamUser{
+	s.userRepository.Save(&models.TeamUser{
 		ID: userID,
 	})
 
@@ -106,9 +106,9 @@ func (s *PassRepositoryTestSuite) TestFindActiveByUserID(t *testing.T) {
 		TeamUserID: "another-user",
 	}
 
-	s.repository.insert(p1)
-	s.repository.insert(p2)
-	s.repository.insert(p3)
+	s.repository.Insert(p1)
+	s.repository.Insert(p2)
+	s.repository.Insert(p3)
 
 	pass, err := s.repository.FindActiveByUserID(userID.Hex())
 	s.Nil(err)
@@ -148,13 +148,13 @@ func (s *PassRepositoryTestSuite) TestRemoveExpiredPasses(t *testing.T) {
 		TeamUserID: "user-id",
 	}
 
-	err := s.repository.insert(p1)
+	err := s.repository.Insert(p1)
 	s.Nil(err)
 
-	err = s.repository.insert(p2)
+	err = s.repository.Insert(p2)
 	s.Nil(err)
 
-	err = s.repository.insert(p3)
+	err = s.repository.Insert(p3)
 	s.Nil(err)
 
 	err = s.repository.removeExpiredPasses()
@@ -192,10 +192,10 @@ func (s *PassRepositoryTestSuite) TestFindByID(t *testing.T) {
 		TeamUserID: "user-id",
 	}
 
-	err := s.repository.insert(p1)
+	err := s.repository.Insert(p1)
 	s.Nil(err)
 
-	err = s.repository.insert(p2)
+	err = s.repository.Insert(p2)
 	s.Nil(err)
 
 	p, err := s.repository.findByID(p1.ID.Hex())
@@ -232,8 +232,8 @@ func (s *PassRepositoryTestSuite) TestRemovePassesClaimedBefore(t *testing.T) {
 		TeamUserID: "user-id",
 	}
 
-	s.repository.insert(p1)
-	s.repository.insert(p2)
+	s.repository.Insert(p1)
+	s.repository.Insert(p2)
 
 	err := s.repository.removePassesClaimedBefore(time.Now())
 	s.Nil(err)
