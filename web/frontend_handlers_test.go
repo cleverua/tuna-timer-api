@@ -11,7 +11,6 @@ import (
 	"gopkg.in/tylerb/is.v1"
 	"gopkg.in/mgo.v2"
 	"github.com/pavlo/gosuite"
-	"net/url"
 	"net/http"
 	"bytes"
 	"net/http/httptest"
@@ -24,10 +23,13 @@ func TestFrontendHandlers(t *testing.T) {
 }
 
 func (s *FrontendHandlersTestSuite) TestUserAuthentication(t *testing.T) {
-	s.urlValues.Set("pid", "pass-for-jwt-generation")
-	req, err := http.NewRequest("POST", "/frontend/sessions", bytes.NewBufferString(s.urlValues.Encode()))
+	reqData := map[string]string{ "pid": "pass-for-jwt-generation" }
+	body := new(bytes.Buffer)
+	json.NewEncoder(body).Encode(reqData)
+
+	req, err := http.NewRequest("POST", "/api/v1/frontend/sessions", body)
 	s.Nil(err)
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded;")
+	req.Header.Set("Content-Type", "application/json")
 
 	h := NewFrontendHandlers(s.env, s.session)
 	recorder := httptest.NewRecorder()
@@ -40,15 +42,17 @@ func (s *FrontendHandlersTestSuite) TestUserAuthentication(t *testing.T) {
 
 	verificationToken, err := NewUserToken(s.user.ID.Hex(), s.session)
 	s.Nil(err)
-	s.Equal(resp.ResponseErrors, make(map[string]string))
+	s.Equal(resp.ResponseErrors["status"], "200")
 	s.Equal(resp.ResponseData.Token, verificationToken)
 }
 
 func (s *FrontendHandlersTestSuite) TestUserAuthenticationWithWrongPid(t *testing.T) {
-	s.urlValues.Set("pid", "gIkuvaNzQIHg97ATvDxqgjtO")
+	reqData := map[string]string{ "pid": "gIkuvaNzQIHg97ATvDxqgjtO" }
+	body := new(bytes.Buffer)
+	json.NewEncoder(body).Encode(reqData)
 
-	req, err := http.NewRequest("POST", "/api/v1/frontend/session", bytes.NewBufferString(s.urlValues.Encode()))
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded;")
+	req, err := http.NewRequest("POST", "/api/v1/frontend/session", body)
+	req.Header.Set("Content-Type", "application/json")
 	s.Nil(err)
 
 	h := NewFrontendHandlers(s.env, s.session)
@@ -60,18 +64,74 @@ func (s *FrontendHandlersTestSuite) TestUserAuthenticationWithWrongPid(t *testin
 	err = json.Unmarshal(recorder.Body.Bytes(), &resp)
 	s.Nil(err)
 	s.Equal(resp.ResponseErrors["userMessage"], "please login from slack application")
+	s.Equal(resp.ResponseErrors["status"], "400")
 	s.Equal(resp.ResponseData.Token, "")
 	s.Equal(resp.AppInfo["env"], utils.TestEnv)
 	s.Equal(resp.AppInfo["version"], s.env.AppVersion)
 }
 
+func (s *FrontendHandlersTestSuite) TestUserAuthenticationWithOptionsMethod(t *testing.T) {
+	req, err := http.NewRequest("OPTIONS", "/api/v1/frontend/session", nil)
+
+	origin, err := s.env.Config.String("origin.url")
+	s.Nil(err)
+
+	req.Header.Set("Origin", origin)
+	s.Nil(err)
+
+	h := NewFrontendHandlers(s.env, s.session)
+	recorder := httptest.NewRecorder()
+	handler := http.HandlerFunc(h.UserAuthentication)
+	handler.ServeHTTP(recorder, req)
+
+	s.Equal(recorder.Code, http.StatusOK)
+	s.Zero(recorder.Body)
+}
+
+func (s *FrontendHandlersTestSuite) TestSetHeaders(t *testing.T) {
+	origin, err := s.env.Config.String("origin.url")
+	s.Nil(err)
+
+	req, err := http.NewRequest("POST", "/api/v1/frontend/session", nil)
+	req.Header.Set("Origin", origin)
+	s.Nil(err)
+
+	h := NewFrontendHandlers(s.env, s.session)
+	recorder := httptest.NewRecorder()
+	h.setHeaders(recorder, req)
+
+	allowMethods := []string{"POST, GET, OPTIONS, PUT, DELETE"}
+	allowHeaders := []string{"Accept, Content-Type, Content-Length, Origin, Authorization"}
+
+	s.Equal(recorder.Code, http.StatusOK)
+	s.Zero(recorder.Body)
+	s.Equal(recorder.HeaderMap["Access-Control-Allow-Origin"], []string{origin})
+	s.Equal(recorder.HeaderMap["Access-Control-Allow-Methods"], allowMethods)
+	s.Equal(recorder.HeaderMap["Access-Control-Allow-Headers"], allowHeaders)
+	s.Equal(recorder.HeaderMap["Content-Type"], []string{"application/json"})
+}
+
+func (s *FrontendHandlersTestSuite) TestSetHeadersWithWrongOrigin(t *testing.T) {
+	req, err := http.NewRequest("OPTIONS", "/api/v1/frontend/session", nil)
+	req.Header.Set("Origin", "http://example.com")
+	s.Nil(err)
+
+	h := NewFrontendHandlers(s.env, s.session)
+	recorder := httptest.NewRecorder()
+
+	h.setHeaders(recorder, req)
+
+	s.Equal(recorder.Code, http.StatusOK)
+	s.Zero(recorder.HeaderMap)
+	s.Zero(recorder.Body)
+}
+
 type FrontendHandlersTestSuite struct {
 	*is.Is
-	env        *utils.Environment
-	session    *mgo.Session
-	user       *models.TeamUser
-	pass       *models.Pass
-	urlValues  url.Values
+	env          *utils.Environment
+	session      *mgo.Session
+	user         *models.TeamUser
+	pass         *models.Pass
 }
 
 func (s *FrontendHandlersTestSuite) SetUpSuite() {
@@ -92,8 +152,6 @@ func (s *FrontendHandlersTestSuite) TearDownSuite() {
 }
 
 func (s *FrontendHandlersTestSuite) SetUp() {
-	s.urlValues = url.Values{}
-
 	//Clear Database
 	utils.TruncateTables(s.session)
 
