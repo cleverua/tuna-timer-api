@@ -70,62 +70,6 @@ func (s *FrontendHandlersTestSuite) TestUserAuthenticationWithWrongPid(t *testin
 	s.Equal(resp.AppInfo["version"], s.env.AppVersion)
 }
 
-func (s *FrontendHandlersTestSuite) TestUserAuthenticationWithOptionsMethod(t *testing.T) {
-	req, err := http.NewRequest("OPTIONS", "/api/v1/frontend/session", nil)
-
-	origin, err := s.env.Config.String("origin.url")
-	s.Nil(err)
-
-	req.Header.Set("Origin", origin)
-	s.Nil(err)
-
-	h := NewFrontendHandlers(s.env, s.session)
-	recorder := httptest.NewRecorder()
-	handler := http.HandlerFunc(h.UserAuthentication)
-	handler.ServeHTTP(recorder, req)
-
-	s.Equal(recorder.Code, http.StatusOK)
-	s.Zero(recorder.Body)
-}
-
-func (s *FrontendHandlersTestSuite) TestSetHeaders(t *testing.T) {
-	origin, err := s.env.Config.String("origin.url")
-	s.Nil(err)
-
-	req, err := http.NewRequest("POST", "/api/v1/frontend/session", nil)
-	req.Header.Set("Origin", origin)
-	s.Nil(err)
-
-	h := NewFrontendHandlers(s.env, s.session)
-	recorder := httptest.NewRecorder()
-	h.setHeaders(recorder, req)
-
-	allowMethods := []string{"POST, GET, OPTIONS, PUT, DELETE"}
-	allowHeaders := []string{"Accept, Content-Type, Content-Length, Origin, Authorization"}
-
-	s.Equal(recorder.Code, http.StatusOK)
-	s.Zero(recorder.Body)
-	s.Equal(recorder.HeaderMap["Access-Control-Allow-Origin"], []string{origin})
-	s.Equal(recorder.HeaderMap["Access-Control-Allow-Methods"], allowMethods)
-	s.Equal(recorder.HeaderMap["Access-Control-Allow-Headers"], allowHeaders)
-	s.Equal(recorder.HeaderMap["Content-Type"], []string{"application/json"})
-}
-
-func (s *FrontendHandlersTestSuite) TestSetHeadersWithWrongOrigin(t *testing.T) {
-	req, err := http.NewRequest("OPTIONS", "/api/v1/frontend/session", nil)
-	req.Header.Set("Origin", "http://example.com")
-	s.Nil(err)
-
-	h := NewFrontendHandlers(s.env, s.session)
-	recorder := httptest.NewRecorder()
-
-	h.setHeaders(recorder, req)
-
-	s.Equal(recorder.Code, http.StatusOK)
-	s.Zero(recorder.HeaderMap)
-	s.Zero(recorder.Body)
-}
-
 type FrontendHandlersTestSuite struct {
 	*is.Is
 	env          *utils.Environment

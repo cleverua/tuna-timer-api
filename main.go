@@ -38,9 +38,10 @@ func main() {
 	environment.MigrateDatabase(session)
 	handlers := web.NewHandlers(environment, session)
 	frontendHandlers := web.NewFrontendHandlers(environment, session)
+	cors := web.Cors{Origin: environment.Config.UString("origin.url")}
 
-	public := alice.New(web.LoggingMiddleware, web.RecoveryMiddleware)
-	secure := alice.New(web.LoggingMiddleware, web.RecoveryMiddleware, web.JWTMiddleware)
+	public := alice.New(web.LoggingMiddleware, web.RecoveryMiddleware, cors.CorsMiddleware)
+	secure := alice.New(web.LoggingMiddleware, web.RecoveryMiddleware, cors.CorsMiddleware, web.JWTMiddleware)
 
 	router := mux.NewRouter().StrictSlash(true)
 
