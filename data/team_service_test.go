@@ -24,7 +24,7 @@ func (s *TeamServiceTestSuite) TestEnsureTeamNoTeamExist(t *testing.T) {
 
 func (s *TeamServiceTestSuite) TestEnsureTeamExists(t *testing.T) {
 	cmd := getSlackCustomCommand()
-	existingTeam, err := s.repository.createTeam("team-id", "team-domain")
+	existingTeam, err := s.repository.CreateTeam("team-id", "team-domain")
 	s.Nil(err)
 
 	team, project, err := s.service.EnsureTeamSetUp(cmd)
@@ -43,7 +43,7 @@ func (s *TeamServiceTestSuite) TestEnsureTeamExists(t *testing.T) {
 func (s *TeamServiceTestSuite) TestEnsureTeamExistsWhenTeamAndUserAndProjectExist(t *testing.T) {
 	cmd := getSlackCustomCommand()
 
-	existingTeam, err := s.repository.createTeam("team-id", "team-domain")
+	existingTeam, err := s.repository.CreateTeam("team-id", "team-domain")
 	//c.Assert(err, IsNil)
 	s.Nil(err)
 
@@ -137,7 +137,7 @@ func (s *TeamServiceTestSuite) TestCreateOrUpdateWithSlackOAuthResponseNew(t *te
 }
 
 func (s *TeamServiceTestSuite) TestCreateOrUpdateWithSlackOAuthResponseExisting(t *testing.T) {
-	_, err := s.repository.createTeam("ext-id", "ext-name")
+	_, err := s.repository.CreateTeam("ext-id", "ext-name")
 	s.Nil(err)
 	//c.Assert(err, IsNil)
 
@@ -221,6 +221,7 @@ func (s *TeamServiceTestSuite) assertProject(project *models.Project) {
 type testTeamRepositoryImpl struct {
 	repository              TeamRepositoryInterface
 	findByExternalIDSuccess bool
+	findByIDSuccess		bool
 	createTeamSuccess       bool
 	addProjectSuccess       bool
 	addUserSuccess          bool
@@ -233,11 +234,18 @@ func (r *testTeamRepositoryImpl) FindByExternalID(externalTeamID string) (*model
 	return r.repository.FindByExternalID(externalTeamID)
 }
 
-func (r *testTeamRepositoryImpl) createTeam(externalID, externalName string) (*models.Team, error) {
+func (r *testTeamRepositoryImpl) FindByID(teamID string) (*models.Team, error) {
+	if !r.findByIDSuccess {
+		return nil, errors.New("TestTeamRepositoryImpl error")
+	}
+	return r.repository.FindByID(teamID)
+}
+
+func (r *testTeamRepositoryImpl) CreateTeam(externalID, externalName string) (*models.Team, error) {
 	if !r.createTeamSuccess {
 		return nil, errors.New("TestTeamRepositoryImpl error")
 	}
-	return r.repository.createTeam(externalID, externalName)
+	return r.repository.CreateTeam(externalID, externalName)
 }
 
 func (r *testTeamRepositoryImpl) addProject(team *models.Team, externalProjectID, externalProjectName string) error {

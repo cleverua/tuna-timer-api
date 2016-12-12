@@ -15,7 +15,7 @@ func TestTeamRepository(t *testing.T) {
 }
 
 func (s *TeamRepositoryTestSuite) TestAddProject(t *testing.T) {
-	team, err := s.repository.createTeam("external-id", "external-name")
+	team, err := s.repository.CreateTeam("external-id", "external-name")
 	s.Nil(err)
 	s.NotNil(team)
 
@@ -33,7 +33,7 @@ func (s *TeamRepositoryTestSuite) TestAddProject(t *testing.T) {
 }
 
 func (s *TeamRepositoryTestSuite) TestAddProjectExists(t *testing.T) {
-	team, err := s.repository.createTeam("external-id", "external-name")
+	team, err := s.repository.CreateTeam("external-id", "external-name")
 	s.Nil(err)
 	s.NotNil(team)
 
@@ -49,7 +49,7 @@ func (s *TeamRepositoryTestSuite) TestAddProjectExists(t *testing.T) {
 
 // Find By External ID
 func (s *TeamRepositoryTestSuite) TestFindByExternalID(t *testing.T) {
-	team, err := s.repository.createTeam("external-id", "external-name")
+	team, err := s.repository.CreateTeam("external-id", "external-name")
 
 	s.Nil(err)
 	s.NotNil(team)
@@ -69,7 +69,7 @@ func (s *TeamRepositoryTestSuite) TestFindByExternalIDNotExist(t *testing.T) {
 
 // CREATE TEAM
 func (s *TeamRepositoryTestSuite) TestCreateTeam(t *testing.T) {
-	team, err := s.repository.createTeam("external-id", "external-name")
+	team, err := s.repository.CreateTeam("external-id", "external-name")
 	s.Nil(err)
 	s.NotNil(team)
 	s.NotNil(team.ID)
@@ -81,9 +81,9 @@ func (s *TeamRepositoryTestSuite) TestCreateTeam(t *testing.T) {
 }
 
 func (s *TeamRepositoryTestSuite) TestCreateTeamWhenAlreadyExists(t *testing.T) {
-	_, err := s.repository.createTeam("external-id", "external-name")
+	_, err := s.repository.CreateTeam("external-id", "external-name")
 	s.Nil(err)
-	_, err = s.repository.createTeam("external-id", "external-name")
+	_, err = s.repository.CreateTeam("external-id", "external-name")
 	s.NotNil(err)
 	s.True(mgo.IsDup(err))
 }
@@ -102,7 +102,7 @@ func (s *TeamRepositoryTestSuite) TestSave(t *testing.T) {
 
 func (s *TeamRepositoryTestSuite) TestSaveUpdatesExisting(t *testing.T) {
 
-	team, err := s.repository.createTeam("external-id", "external-name")
+	team, err := s.repository.CreateTeam("external-id", "external-name")
 	s.Nil(err)
 	s.NotNil(team)
 

@@ -88,8 +88,8 @@ func (s *UserRepositoryTestSuite) TestFindByID(t *testing.T) {
 
 func (s *UserRepositoryTestSuite) TestFindByIDNotExist(t *testing.T) {
 	user, err := s.repository.FindByID(bson.NewObjectId().Hex())
-	s.Nil(err)
-	s.Nil(user)
+	s.Equal(err, mgo.ErrNotFound)
+	s.Equal(user, &models.TeamUser{})
 }
 
 func (s *UserRepositoryTestSuite) TestFindByWrongID(t *testing.T) {

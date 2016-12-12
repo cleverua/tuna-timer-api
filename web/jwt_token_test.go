@@ -23,10 +23,14 @@ func (s *JwtTokenTestSuite) TestNewUserToken(t *testing.T) {
 	s.Nil(err)
 
 	newToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"image48": s.user.SlackUserInfo.Profile.Image48,
-		"team_id": s.user.TeamID,
-		"user_id": s.user.ID,
+		"user_id":	 s.user.ID,
 		"is_team_admin": s.user.SlackUserInfo.IsAdmin,
+		"name":		 s.user.ExternalUserName,
+		"image48":	 s.user.SlackUserInfo.Profile.Image48,
+		"team_id":	 s.team.ID,
+		"ext_team_id":	 s.team.ExternalTeamID,
+		"ext_team_name": s.team.ExternalTeamName,
+
 	})
 	verificationToken, err := newToken.SignedString([]byte("TODO: Extract me in config/env"))
 
@@ -39,16 +43,17 @@ func (s *JwtTokenTestSuite) TestNewUserTokenFail(t *testing.T) {
 	jwtToken, err := NewUserToken(id, s.session)
 
 	s.Err(err)
-	s.Equal(err.Error(), "user doesn't exist")
+	s.Equal(err.Error(), mgo.ErrNotFound.Error())
 	s.Zero(jwtToken)
 }
 
 type JwtTokenTestSuite struct {
 	*is.Is
-	env        *utils.Environment
-	session    *mgo.Session
-	user       *models.TeamUser
-	pass       *models.Pass
+	env     *utils.Environment
+	session *mgo.Session
+	user    *models.TeamUser
+	pass    *models.Pass
+	team	*models.Team
 
 }
 func (s *JwtTokenTestSuite) SetUpSuite() {
@@ -75,9 +80,17 @@ func (s *JwtTokenTestSuite) SetUp() {
 	//Seed Database
 	passRepository := data.NewPassRepository(s.session)
 	userRepository := data.NewUserRepository(s.session)
+	teamRepository := data.NewTeamRepository(s.session)
+
 	var err error
+
+	//Create team
+	s.team, err = teamRepository.CreateTeam("ExtTeamID", "ExtTeamName")
+	s.Nil(err)
+
+	//Create user
 	s.user = &models.TeamUser{
-		TeamID:           "team-id",
+		TeamID:           s.team.ID.Hex(),
 		ExternalUserID:   "ext-user-id",
 		ExternalUserName: "user-name",
 		SlackUserInfo:    &slack.User{
@@ -87,6 +100,7 @@ func (s *JwtTokenTestSuite) SetUp() {
 	_, err = userRepository.Save(s.user)
 	s.Nil(err)
 
+	//Create pass
 	s.pass = &models.Pass{
 		ID:           bson.NewObjectId(),
 		Token:        "token",

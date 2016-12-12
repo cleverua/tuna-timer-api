@@ -4,7 +4,6 @@ import (
 	"gopkg.in/mgo.v2"
 	"github.com/cleverua/tuna-timer-api/data"
 	"github.com/dgrijalva/jwt-go"
-	"errors"
 )
 
 type JwtToken struct{
@@ -13,17 +12,26 @@ type JwtToken struct{
 
 func NewUserToken(userId string, session *mgo.Session) (string, error) {
 	userService := data.NewUserService(session)
-	user, userErr := userService.FindByID(userId)
+	teamService := data.NewTeamService(session)
 
-	if userErr == nil && user == nil {
-		return "", errors.New("user doesn't exist")
+	user, err := userService.FindByID(userId)
+	if err != nil {
+		return "", err
+	}
+
+	userTeam, err := teamService.FindByID(user.TeamID)
+	if err != nil {
+		return "", err
 	}
 
 	jwtToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"team_id": user.TeamID,
-		"user_id": user.ID,
+		"user_id":	 user.ID,
+		"name":		 user.ExternalUserName,
 		"is_team_admin": user.SlackUserInfo.IsAdmin,
-		"image48": user.SlackUserInfo.Profile.Image48,
+		"image48":	 user.SlackUserInfo.Profile.Image48,
+		"team_id":	 userTeam.ID,
+		"ext_team_id":	 userTeam.ExternalTeamID,
+		"ext_team_name": userTeam.ExternalTeamName,
 	})
 
 	signedToken, err := jwtToken.SignedString([]byte("TODO: Extract me in config/env"))

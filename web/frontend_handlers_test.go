@@ -72,10 +72,11 @@ func (s *FrontendHandlersTestSuite) TestUserAuthenticationWithWrongPid(t *testin
 
 type FrontendHandlersTestSuite struct {
 	*is.Is
-	env          *utils.Environment
-	session      *mgo.Session
-	user         *models.TeamUser
-	pass         *models.Pass
+	env     *utils.Environment
+	session *mgo.Session
+	user    *models.TeamUser
+	pass    *models.Pass
+	team	*models.Team
 }
 
 func (s *FrontendHandlersTestSuite) SetUpSuite() {
@@ -102,9 +103,17 @@ func (s *FrontendHandlersTestSuite) SetUp() {
 	//Seed Database
 	passRepository := data.NewPassRepository(s.session)
 	userRepository := data.NewUserRepository(s.session)
+	teamRepository := data.NewTeamRepository(s.session)
+
 	var err error
+
+	//Create team
+	s.team, err = teamRepository.CreateTeam("ExtTeamID", "ExtTeamName")
+	s.Nil(err)
+
+	//Create user
 	s.user = &models.TeamUser{
-		TeamID:           "team-id",
+		TeamID:           s.team.ID.Hex(),
 		ExternalUserID:   "ext-user-id",
 		ExternalUserName: "user-name",
 		SlackUserInfo:    &slack.User{
@@ -114,6 +123,7 @@ func (s *FrontendHandlersTestSuite) SetUp() {
 	_, err = userRepository.Save(s.user)
 	s.Nil(err)
 
+	//Create pass
 	s.pass = &models.Pass{
 		ID:           bson.NewObjectId(),
 		Token:        "pass-for-jwt-generation",

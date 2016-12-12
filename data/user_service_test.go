@@ -95,7 +95,7 @@ func (s *UserServiceTestSuite) TestFindByIDNotExist(t *testing.T) {
 
 	randomId := bson.NewObjectId().Hex()
 	user, err := service.FindByID(randomId)
-	s.Nil(err)
+	s.Equal(err, mgo.ErrNotFound)
 	s.Nil(user)
 }
 

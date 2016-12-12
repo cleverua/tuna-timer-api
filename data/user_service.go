@@ -21,7 +21,7 @@ func NewUserService(session *mgo.Session) *UserService {
 
 func (s *UserService) FindByID(id string) (*models.TeamUser, error){
 	user, err := s.repository.FindByID(id)
-	if err != nil {
+	if err == mgo.ErrNotFound {
 		return nil, err
 	}
 	return user, err
