@@ -62,7 +62,7 @@ func main() {
 	router.Handle("/api/v1/frontend/session", public.ThenFunc(frontendHandlers.UserAuthentication)).Methods("POST", "OPTIONS")
 	// reads JWT from header and returns a 200 if it is okay and not expired
 	router.Handle("/api/v1/frontend/auth/validate", secure.ThenFunc(handlers.ValidateAuthToken)).Methods("GET", "OPTIONS")
-
+	router.Handle("/api/v1/frontend/timers", secure.ThenFunc(frontendHandlers.UserTimersData)).Methods("GET", "OPTIONS")
 
 	// Temporary stuff, remove eventually
 	router.Handle("/api/v1/temporary/clear_data", public.ThenFunc(handlers.ClearAllData)).Methods("GET")

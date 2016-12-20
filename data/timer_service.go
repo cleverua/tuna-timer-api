@@ -6,6 +6,7 @@ import (
 	"gopkg.in/mgo.v2"
 	"log"
 	"time"
+	"errors"
 )
 
 // TimerService - the structure of the service
@@ -120,4 +121,38 @@ func (s *TimerService) CompleteActiveTimersAtMidnight(utcNow *time.Time) error {
 func (s *TimerService) CalculateMinutesForActiveTimer(timer *models.Timer) int {
 	duration := time.Since(timer.CreatedAt)
 	return int(duration.Minutes())
+}
+
+// Returns all user tasks for range(startDate...endDate).
+// Range couldn't be more than 750 hours(about 31 day)
+func (s *TimerService)GetUserTasksByRange(startDate string, endDate string, user *models.TeamUser) ([]*models.Timer, error) {
+	// What timezone to use: user or tz from frontend request?
+	tzOffset := user.SlackUserInfo.TZOffset
+	layout := "2006-1-2 15:04:05"
+
+	startDateParse, err := time.Parse(layout, startDate + " 00:00:00")
+	if err != nil {
+		return nil, err
+	}
+
+	endDateTParse, err := time.Parse(layout, endDate + " 23:59:59")
+	if err != nil {
+		return nil, err
+	}
+
+	startTime := startDateParse.Add(time.Duration(tzOffset) * time.Second * -1)
+	endTime := endDateTParse.Add(time.Duration(tzOffset) * time.Second * -1)
+
+	//Return error if number of hours in range more than 750
+	if startTime.Sub(endTime).Hours() > 750 {
+		return nil, errors.New("Too much days in range")
+	}
+
+	tasks, err := s.repository.findUserTasksByRange(user.ID.Hex(), startTime, endTime)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tasks, nil
 }

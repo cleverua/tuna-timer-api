@@ -27,5 +27,5 @@ type TaskResponseBody struct {
 // Response with array of tasks data
 type TasksResponseBody struct {
 	ResponseBody
-	ResponseData models.TaskAggregation `json:"data"`
+	ResponseData []*models.Timer `json:"data"`
 }
