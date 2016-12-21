@@ -60,7 +60,7 @@ func (s *UserServiceTestSuite) TestEnsureUserNew(t *testing.T) {
 func (s *UserServiceTestSuite) TestEnsureUserExisting(t *testing.T) {
 
 	service := NewUserService(s.session)
-	service.repository.save(&models.TeamUser{
+	service.repository.Save(&models.TeamUser{
 		ExternalUserID:   "ext-id",
 		ExternalUserName: "ext-name",
 	})
@@ -69,6 +69,34 @@ func (s *UserServiceTestSuite) TestEnsureUserExisting(t *testing.T) {
 	s.Nil(err)
 	s.NotNil(user)
 	s.Equal(user.ExternalUserName, "ext-name")
+}
+
+func (s *UserServiceTestSuite) TestFindByID(t *testing.T) {
+	service := NewUserService(s.session)
+	u, err := s.repository.Save(&models.TeamUser{
+		ExternalUserID:   "ext-id",
+		ExternalUserName: "user-name",
+	})
+	s.Nil(err)
+
+	user, err := service.FindByID(u.ID.Hex())
+	s.Nil(err)
+	s.NotNil(user)
+	s.Equal(user.ExternalUserName, "user-name")
+}
+
+func (s *UserServiceTestSuite) TestFindByIDNotExist(t *testing.T) {
+	service := NewUserService(s.session)
+	_, err := s.repository.Save(&models.TeamUser{
+		ExternalUserID:   "ext-id",
+		ExternalUserName: "user-name",
+	})
+	s.Nil(err)
+
+	randomId := bson.NewObjectId().Hex()
+	user, err := service.FindByID(randomId)
+	s.Equal(err, mgo.ErrNotFound)
+	s.Nil(user)
 }
 
 type UserServiceTestSuite struct {

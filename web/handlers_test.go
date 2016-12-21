@@ -116,15 +116,15 @@ func (s *TestHandlersSuite) TestHealth(t *testing.T) {
 	handler := http.HandlerFunc(h.Health)
 	handler.ServeHTTP(recorder, req)
 
-	data := make(map[string]interface{})
+	data := ResponseBody{}
 	err = json.Unmarshal(recorder.Body.Bytes(), &data)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	s.Equal(data["env"].(string), utils.TestEnv)
-	s.NotNil(data["uptime"].(string))
-	s.Equal(data["version"].(string), s.env.AppVersion)
+	s.Equal(data.AppInfo["env"], utils.TestEnv)
+	s.NotNil(data.ResponseData["uptime"])
+	s.Equal(data.AppInfo["version"], s.env.AppVersion)
 }
 
 type mockCommand struct {

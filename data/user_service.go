@@ -19,6 +19,14 @@ func NewUserService(session *mgo.Session) *UserService {
 	}
 }
 
+func (s *UserService) FindByID(id string) (*models.TeamUser, error){
+	user, err := s.repository.FindByID(id)
+	if err == mgo.ErrNotFound {
+		return nil, err
+	}
+	return user, err
+}
+
 func (s *UserService) EnsureUser(team *models.Team, externalUserID string) (*models.TeamUser, error) {
 	user, err := s.repository.FindByExternalID(externalUserID)
 	if err != nil {
@@ -40,7 +48,7 @@ func (s *UserService) EnsureUser(team *models.Team, externalUserID string) (*mod
 			TeamID:           team.ID.Hex(),
 		}
 
-		user, err = s.repository.save(user)
+		user, err = s.repository.Save(user)
 		if err != nil {
 			return nil, err
 		}

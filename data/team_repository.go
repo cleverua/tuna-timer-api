@@ -6,6 +6,7 @@ import (
 	"github.com/cleverua/tuna-timer-api/models"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
+	"errors"
 )
 
 const teamsCollectionName = "teams"
@@ -21,8 +22,9 @@ type TeamRepository struct {
 // The latter used to mimic/test error cases
 type TeamRepositoryInterface interface {
 	FindByExternalID(externalTeamID string) (*models.Team, error)
+	FindByID(teamID string) (*models.Team, error)
 	save(team *models.Team) error
-	createTeam(externalID, externalName string) (*models.Team, error)
+	CreateTeam(externalID, externalName string) (*models.Team, error)
 	addProject(team *models.Team, externalProjectID, externalProjectName string) error
 }
 
@@ -42,6 +44,17 @@ func (r *TeamRepository) FindByExternalID(externalTeamID string) (*models.Team, 
 		team = nil
 		err = nil
 	}
+	return team, err
+}
+
+func (r *TeamRepository) FindByID(teamID string) (*models.Team, error) {
+	if !bson.IsObjectIdHex(teamID) {
+		return nil, errors.New("id is not valid")
+	}
+
+	team := &models.Team{}
+	err := r.collection.FindId(bson.ObjectIdHex(teamID)).One(team)
+
 	return team, err
 }
 
@@ -67,7 +80,7 @@ func (r *TeamRepository) addProject(team *models.Team, externalProjectID, extern
 }
 
 // CreateTeam creates a new team - this method used for tests only!
-func (r *TeamRepository) createTeam(externalID, externalName string) (*models.Team, error) {
+func (r *TeamRepository) CreateTeam(externalID, externalName string) (*models.Team, error) {
 
 	team := &models.Team{
 		ID:               bson.NewObjectId(),

@@ -37,13 +37,13 @@ func main() {
 
 	environment.MigrateDatabase(session)
 	handlers := web.NewHandlers(environment, session)
+	frontendHandlers := web.NewFrontendHandlers(environment, session)
+	cors := web.Cors{Origin: environment.Config.UString("origin.url")}
 
-	public := alice.New(web.LoggingMiddleware, web.RecoveryMiddleware)
-	secure := alice.New(web.LoggingMiddleware, web.RecoveryMiddleware, web.JWTMiddleware)
-
+	public := alice.New(web.LoggingMiddleware, web.RecoveryMiddleware, cors.CorsMiddleware)
+	secure := alice.New(web.LoggingMiddleware, web.RecoveryMiddleware, cors.CorsMiddleware, web.JWTMiddleware)
 
 	router := mux.NewRouter().StrictSlash(true)
-
 
 	router.Handle("/api/v1/health", public.ThenFunc(handlers.Health)).Methods("GET")
 
@@ -59,15 +59,14 @@ func main() {
 
 	// ===== Routes for frontend application
 	// Activates the pass and returns back a JWT token, it essentially logs the user in
-	router.Handle("/api/v1/frontend/auth/{token}/activate", public.ThenFunc(handlers.NotImplemented)).Methods("POST")
+	router.Handle("/api/v1/frontend/session", public.ThenFunc(frontendHandlers.UserAuthentication)).Methods("POST", "OPTIONS")
 	// reads JWT from header and returns a 200 if it is okay and not expired
-	router.Handle("/api/v1/frontend/auth/validate", secure.ThenFunc(handlers.ValidateAuthToken)).Methods("GET")
+	router.Handle("/api/v1/frontend/auth/validate", secure.ThenFunc(handlers.ValidateAuthToken)).Methods("GET", "OPTIONS")
 
 
 	// Temporary stuff, remove eventually
 	router.Handle("/api/v1/temporary/clear_data", public.ThenFunc(handlers.ClearAllData)).Methods("GET")
 	router.Handle("/api/v1/temporary/send_message", public.ThenFunc(handlers.SendSampleMessageFromBot)).Methods("GET")
-	router.Handle("/api/v1/temporary/new_jwt_token", public.ThenFunc(handlers.NewJWTToken)).Methods("GET")
 
 	dbJobsEngine := launchBGJobEngine(environment, session)
 	defer dbJobsEngine.Stop() // does it leak mongo session?

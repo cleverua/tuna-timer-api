@@ -76,6 +76,14 @@ func (s *TeamService) EnsureTeamSetUp(slackCommand *models.SlackCustomCommand) (
 	return team, existingProject, nil
 }
 
+func (s *TeamService) FindByID(teamID string) (*models.Team, error) {
+	team, err := s.repository.FindByID(teamID)
+	if err == mgo.ErrNotFound {
+		return nil, err
+	}
+	return team, err
+}
+
 func (s *TeamService) findProject(team *models.Team, externalProjectID string) *models.Project {
 	var result *models.Project
 	for _, project := range team.Projects {

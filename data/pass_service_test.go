@@ -137,13 +137,13 @@ func (s *PassServiceTestSuite) TestRemoveStalePasses(t *testing.T) {
 		TeamUserID: "user-id",
 	}
 
-	err := s.repository.insert(p1)
+	err := s.repository.Insert(p1)
 	s.Nil(err)
 
-	err = s.repository.insert(p2)
+	err = s.repository.Insert(p2)
 	s.Nil(err)
 
-	err = s.repository.insert(p3)
+	err = s.repository.Insert(p3)
 	s.Nil(err)
 
 	err = s.service.RemoveStalePasses()

@@ -11,7 +11,7 @@ import (
 
 	"gopkg.in/tylerb/is.v1"
 	"github.com/pavlo/gosuite"
-
+	"gopkg.in/mgo.v2/bson"
 )
 
 func TestUserRepository(t *testing.T) {
@@ -28,7 +28,7 @@ func (s *UserRepositoryTestSuite) TestFindByExternalID(t *testing.T) {
 		},
 	}
 
-	u, err := s.repository.save(user)
+	u, err := s.repository.Save(user)
 
 	s.Nil(err)
 	s.NotNil(u)
@@ -50,11 +50,11 @@ func (s *UserRepositoryTestSuite) TestSave(t *testing.T) {
 		},
 	}
 
-	u, err := s.repository.save(user)
+	u, err := s.repository.Save(user)
 	s.Nil(err)
 
 	u.SlackUserInfo.IsAdmin = false
-	_, err = s.repository.save(u)
+	_, err = s.repository.Save(u)
 	s.Nil(err)
 
 	loadedUser, err := s.repository.FindByExternalID("ext-id")
@@ -69,6 +69,33 @@ func (s *UserRepositoryTestSuite) TestFindByExternalIDNotExist(t *testing.T) {
 	resultTeam, err := s.repository.FindByExternalID("external-id")
 	s.Nil(err)
 	s.Nil(resultTeam)
+}
+
+func (s *UserRepositoryTestSuite) TestFindByID(t *testing.T) {
+	user := &models.TeamUser{
+		TeamID:           "team-id",
+		ExternalUserName: "user-name",
+	}
+
+	u, err := s.repository.Save(user)
+	s.Nil(err)
+
+	userRecord, err := s.repository.FindByID(u.ID.Hex())
+	s.Nil(err)
+	s.NotNil(userRecord)
+	s.Equal(userRecord.ExternalUserName, "user-name")
+}
+
+func (s *UserRepositoryTestSuite) TestFindByIDNotExist(t *testing.T) {
+	user, err := s.repository.FindByID(bson.NewObjectId().Hex())
+	s.Equal(err, mgo.ErrNotFound)
+	s.Equal(user, &models.TeamUser{})
+}
+
+func (s *UserRepositoryTestSuite) TestFindByWrongID(t *testing.T) {
+	user, err := s.repository.FindByID("external-id")
+	s.Equal(err.Error(), "id is not valid")
+	s.Nil(user)
 }
 
 func (s *UserRepositoryTestSuite) SetUpSuite() {
