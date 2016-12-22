@@ -24,7 +24,7 @@ func (s *TimerServiceTestSuite) TestgetActiveTimer(t *testing.T) {
 	now := time.Now()
 
 	// completed
-	s.repo.createTimer(&models.Timer{
+	s.repo.CreateTimer(&models.Timer{
 		ID:         bson.NewObjectId(),
 		TeamID:     "team",
 		ProjectID:  "project",
@@ -36,7 +36,7 @@ func (s *TimerServiceTestSuite) TestgetActiveTimer(t *testing.T) {
 	})
 
 	// not completed
-	s.repo.createTimer(&models.Timer{
+	s.repo.CreateTimer(&models.Timer{
 		ID:         bson.NewObjectId(),
 		TeamID:     "team",
 		ProjectID:  "project",
@@ -60,7 +60,7 @@ func (s *TimerServiceTestSuite) TeststopTimer(t *testing.T) {
 	timerStartedAt := now.Add(offsetDuration * -1) // 20 minutes ago
 
 	id := bson.NewObjectId()
-	timer, err := s.repo.createTimer(&models.Timer{
+	timer, err := s.repo.CreateTimer(&models.Timer{
 		ID:         id,
 		TeamID:     "team",
 		ProjectID:  "project",
@@ -128,7 +128,7 @@ func (s *TimerServiceTestSuite) TesttotalMinutesForTodayAddsTimeForUnfinishedTas
 	offsetDuration2, _ := time.ParseDuration("5m")
 	secondTimerStartedAt := now.Add(offsetDuration2 * -1) // 5 minutes ago
 
-	s.repo.createTimer(&models.Timer{
+	s.repo.CreateTimer(&models.Timer{
 		ID:         bson.NewObjectId(),
 		TeamID:     "team",
 		ProjectID:  "project",
@@ -139,7 +139,7 @@ func (s *TimerServiceTestSuite) TesttotalMinutesForTodayAddsTimeForUnfinishedTas
 		Minutes:    10,
 	})
 
-	timer, _ := s.repo.createTimer(&models.Timer{
+	timer, _ := s.repo.CreateTimer(&models.Timer{
 		ID:         bson.NewObjectId(),
 		TeamID:     "team",
 		ProjectID:  "project",
@@ -164,7 +164,7 @@ func (s *TimerServiceTestSuite) TesttotalCompletedMinutesForDay(t *testing.T) {
 		},
 	}
 
-	s.repo.createTimer(&models.Timer{
+	s.repo.CreateTimer(&models.Timer{
 		ID:         bson.NewObjectId(),
 		TeamID:     "team",
 		ProjectID:  "project",
@@ -175,7 +175,7 @@ func (s *TimerServiceTestSuite) TesttotalCompletedMinutesForDay(t *testing.T) {
 		Minutes:    2,
 	})
 
-	s.repo.createTimer(&models.Timer{
+	s.repo.CreateTimer(&models.Timer{
 		ID:         bson.NewObjectId(),
 		TeamID:     "team",
 		ProjectID:  "project",
@@ -186,7 +186,7 @@ func (s *TimerServiceTestSuite) TesttotalCompletedMinutesForDay(t *testing.T) {
 		Minutes:    3,
 	})
 
-	s.repo.createTimer(&models.Timer{
+	s.repo.CreateTimer(&models.Timer{
 		ID:         bson.NewObjectId(),
 		TeamID:     "team",
 		ProjectID:  "project",
@@ -215,7 +215,7 @@ func (s *TimerServiceTestSuite) TestgetCompletedTasksForDayPositiveTZOffset(t *t
 		},
 	}
 
-	s.repo.createTimer(&models.Timer{
+	s.repo.CreateTimer(&models.Timer{
 		ID:         bson.NewObjectId(),
 		TeamID:     "team",
 		ProjectID:  "project",
@@ -226,7 +226,7 @@ func (s *TimerServiceTestSuite) TestgetCompletedTasksForDayPositiveTZOffset(t *t
 		Minutes:    2,
 	})
 
-	s.repo.createTimer(&models.Timer{
+	s.repo.CreateTimer(&models.Timer{
 		ID:         bson.NewObjectId(),
 		TeamID:     "team",
 		ProjectID:  "project",
@@ -237,7 +237,7 @@ func (s *TimerServiceTestSuite) TestgetCompletedTasksForDayPositiveTZOffset(t *t
 		Minutes:    3,
 	})
 
-	s.repo.createTimer(&models.Timer{
+	s.repo.CreateTimer(&models.Timer{
 		ID:         bson.NewObjectId(),
 		TeamID:     "team",
 		ProjectID:  "project",
@@ -272,7 +272,7 @@ func (s *TimerServiceTestSuite) TestgetCompletedTasksForDayNegativeTZOffset(t *t
 		},
 	}
 
-	s.repo.createTimer(&models.Timer{
+	s.repo.CreateTimer(&models.Timer{
 		ID:         bson.NewObjectId(),
 		TeamID:     "team",
 		ProjectID:  "project",
@@ -283,7 +283,7 @@ func (s *TimerServiceTestSuite) TestgetCompletedTasksForDayNegativeTZOffset(t *t
 		Minutes:    2,
 	})
 
-	s.repo.createTimer(&models.Timer{
+	s.repo.CreateTimer(&models.Timer{
 		ID:         bson.NewObjectId(),
 		TeamID:     "team",
 		ProjectID:  "project",
@@ -294,7 +294,7 @@ func (s *TimerServiceTestSuite) TestgetCompletedTasksForDayNegativeTZOffset(t *t
 		Minutes:    3,
 	})
 
-	s.repo.createTimer(&models.Timer{
+	s.repo.CreateTimer(&models.Timer{
 		ID:         bson.NewObjectId(),
 		TeamID:     "team",
 		ProjectID:  "project",
@@ -323,7 +323,7 @@ func (s *TimerServiceTestSuite) TestgetCompletedTasksForDayNegativeTZOffset(t *t
 func (s *TimerServiceTestSuite) TestcompleteActiveTimersAtMidnight(t *testing.T) {
 
 	t1ID := bson.NewObjectId()
-	s.repo.createTimer(&models.Timer{
+	s.repo.CreateTimer(&models.Timer{
 		ID:               t1ID,
 		TeamID:           "team",
 		ProjectID:        "project",
@@ -335,7 +335,7 @@ func (s *TimerServiceTestSuite) TestcompleteActiveTimersAtMidnight(t *testing.T)
 	})
 
 	t2ID := bson.NewObjectId()
-	s.repo.createTimer(&models.Timer{
+	s.repo.CreateTimer(&models.Timer{
 		ID:               t2ID,
 		TeamID:           "team",
 		ProjectID:        "project",
@@ -365,6 +365,75 @@ func (s *TimerServiceTestSuite) TestcompleteActiveTimersAtMidnight(t *testing.T)
 	s.Nil(err)
 	s.Nil(timer.FinishedAt)
 	s.Equal(timer.Minutes, 0)
+}
+
+func (s *TimerServiceTestSuite) TestGetUserTasksByRange(t *testing.T) {
+	user := &models.TeamUser{
+		ID:             bson.NewObjectId(),
+		ExternalUserID: "user",
+		SlackUserInfo: &slack.User{
+			TZOffset: 10800,
+		},
+	}
+
+	s.repo.CreateTimer(&models.Timer{
+		ID:         bson.NewObjectId(),
+		TeamID:     "team",
+		ProjectID:  "project",
+		TeamUserID: user.ID.Hex(),
+		CreatedAt:  utils.PT("2016 Dec 20 10:35:00"),
+		Minutes:    20,
+	})
+	s.repo.CreateTimer(&models.Timer{
+		ID:         bson.NewObjectId(),
+		TeamID:     "team",
+		ProjectID:  "project",
+		TeamUserID: user.ID.Hex(),
+		CreatedAt:  utils.PT("2016 Dec 21 10:35:00"),
+		Minutes:    20,
+	})
+
+	timers, err := s.service.GetUserTasksByRange("2016-12-20", "2016-12-21", user)
+	s.Nil(err)
+	s.Len(timers, 2)
+	for _, timer := range timers {
+		s.Equal(timer.TeamUserID, user.ID.Hex())
+	}
+}
+
+func (s *TimerServiceTestSuite) TestGetUserTasksByRangeFail(t *testing.T) {
+	user := &models.TeamUser{
+		ID:             bson.NewObjectId(),
+		ExternalUserID: "user",
+		SlackUserInfo: &slack.User{
+			TZOffset: 10800,
+		},
+	}
+
+	//Should return an error, with wrong startDate format
+	startDate := "2016/12/20"
+	endDate := "2016-12-21"
+
+	timers, err := s.service.GetUserTasksByRange(startDate, endDate, user)
+	s.Err(err)
+	s.Len(timers, 0)
+
+	//Should return an error, with wrong endDate format
+	startDate = "2016-12-20"
+	endDate = "2016:12:21"
+
+	timers, err = s.service.GetUserTasksByRange(startDate, endDate, user)
+	s.Err(err)
+	s.Len(timers, 0)
+
+	//Should return an error, with range more than 31 day
+	startDate = "2016-11-30"
+	endDate = "2016-12-31"
+
+	timers, err = s.service.GetUserTasksByRange(startDate, endDate, user)
+	s.Err(err)
+	s.Equal(err.Error(), "Too much days in range")
+	s.Len(timers, 0)
 }
 
 func (s *TimerServiceTestSuite) SetUpSuite() {

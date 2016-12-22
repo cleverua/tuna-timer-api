@@ -94,7 +94,7 @@ func (r *TimerRepository) create(teamID string, project *models.Project, user *m
 		ModelVersion:        models.ModelVersionTimer,
 	}
 
-	return r.createTimer(timer)
+	return r.CreateTimer(timer)
 }
 
 /*
@@ -230,7 +230,7 @@ func (r *TimerRepository) completedTasksForUser(userID string, startDate, endDat
 	return results, nil
 }
 
-func (r *TimerRepository) createTimer(timer *models.Timer) (*models.Timer, error) {
+func (r *TimerRepository) CreateTimer(timer *models.Timer) (*models.Timer, error) {
 	err := r.collection.Insert(timer)
 	return timer, err
 }

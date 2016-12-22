@@ -125,7 +125,7 @@ func (s *TimerService) CalculateMinutesForActiveTimer(timer *models.Timer) int {
 
 // Returns all user tasks for range(startDate...endDate).
 // Range couldn't be more than 750 hours(about 31 day)
-func (s *TimerService)GetUserTasksByRange(startDate string, endDate string, user *models.TeamUser) ([]*models.Timer, error) {
+func (s *TimerService)GetUserTasksByRange(startDate, endDate string, user *models.TeamUser) ([]*models.Timer, error) {
 	// What timezone to use: user or tz from frontend request?
 	tzOffset := user.SlackUserInfo.TZOffset
 	layout := "2006-1-2 15:04:05"
@@ -144,15 +144,9 @@ func (s *TimerService)GetUserTasksByRange(startDate string, endDate string, user
 	endTime := endDateTParse.Add(time.Duration(tzOffset) * time.Second * -1)
 
 	//Return error if number of hours in range more than 750
-	if startTime.Sub(endTime).Hours() > 750 {
+	if endTime.Sub(startTime).Hours() > 750 {
 		return nil, errors.New("Too much days in range")
 	}
 
-	tasks, err := s.repository.findUserTasksByRange(user.ID.Hex(), startTime, endTime)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return tasks, nil
+	return s.repository.findUserTasksByRange(user.ID.Hex(), startTime, endTime)
 }

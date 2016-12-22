@@ -30,8 +30,7 @@ func (h *FrontendHandlers) jsonDecode(data *map[string]string, r *http.Request) 
 	return decoder.Decode(data)
 }
 
-func (h *FrontendHandlers) getUserIDFromJWT(r *http.Request, session *mgo.Session) (*models.TeamUser, error) {
-	token := r.Header.Get("Authorization")
+func (h *FrontendHandlers) getUserFromJWT(token string, session *mgo.Session) (*models.TeamUser, error) {
 	jwtPayload := strings.Split(token, ".")[1]
 
 	decodedPayload, err := jwt.DecodeSegment(jwtPayload)
@@ -39,10 +38,11 @@ func (h *FrontendHandlers) getUserIDFromJWT(r *http.Request, session *mgo.Sessio
 		return nil, err
 	}
 
-	var userData struct {
-		UserID string `json:"user_id"`
-	}
+	var userData struct { UserID string `json:"user_id"` }
 	err = json.Unmarshal(decodedPayload, &userData)
+	if err != nil {
+		return nil, err
+	}
 
 	userService := data.NewUserService(session)
 	return userService.FindByID(userData.UserID)
@@ -115,16 +115,17 @@ func(h *FrontendHandlers) UserTimersData(w http.ResponseWriter, r *http.Request)
 	response := TasksResponseBody{
 		ResponseData: nil,
 		ResponseBody: ResponseBody{
-			ResponseErrors: map[string]string{},
+			ResponseErrors: map[string]string{
+				"status": statusOK,
+			},
 			AppInfo: h.status,
 		},
 	}
-	response.ResponseErrors["status"] = statusOK
 
 	session := h.mongoSession.Clone()
 	defer session.Close()
 
-	user, err := h.getUserIDFromJWT(r, session)
+	user, err := h.getUserFromJWT(r.Header.Get("Authorization"), session)
 	if err != nil {
 		response.ResponseErrors["status"] = statusBadRequest
 		response.ResponseErrors["userMessage"] = userMessage
