@@ -25,7 +25,7 @@ type TeamRepositoryInterface interface {
 	FindByID(teamID string) (*models.Team, error)
 	save(team *models.Team) error
 	CreateTeam(externalID, externalName string) (*models.Team, error)
-	addProject(team *models.Team, externalProjectID, externalProjectName string) error
+	AddProject(team *models.Team, externalProjectID, externalProjectName string) error
 }
 
 // NewTeamRepository is a factory method
@@ -58,7 +58,7 @@ func (r *TeamRepository) FindByID(teamID string) (*models.Team, error) {
 	return team, err
 }
 
-func (r *TeamRepository) addProject(team *models.Team, externalProjectID, externalProjectName string) error {
+func (r *TeamRepository) AddProject(team *models.Team, externalProjectID, externalProjectName string) error {
 	testTeam := &models.Team{}
 	err := r.collection.Find(bson.M{"projects.ext_id": externalProjectID}).One(testTeam)
 	if err != nil && err == mgo.ErrNotFound {

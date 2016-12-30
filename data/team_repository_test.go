@@ -19,7 +19,7 @@ func (s *TeamRepositoryTestSuite) TestAddProject(t *testing.T) {
 	s.Nil(err)
 	s.NotNil(team)
 
-	err = s.repository.addProject(team, "external-project-id", "external-project-name")
+	err = s.repository.AddProject(team, "external-project-id", "external-project-name")
 	s.Nil(err)
 
 	reloadedTeam, _ := s.repository.FindByExternalID("external-id")
@@ -37,10 +37,10 @@ func (s *TeamRepositoryTestSuite) TestAddProjectExists(t *testing.T) {
 	s.Nil(err)
 	s.NotNil(team)
 
-	err = s.repository.addProject(team, "external-project-id", "external-project-name")
+	err = s.repository.AddProject(team, "external-project-id", "external-project-name")
 	s.Nil(err)
 
-	err = s.repository.addProject(team, "external-project-id", "external-project-name")
+	err = s.repository.AddProject(team, "external-project-id", "external-project-name")
 	s.Nil(err)
 
 	reloadedTeam, _ := s.repository.FindByExternalID("external-id")

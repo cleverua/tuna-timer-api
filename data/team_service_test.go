@@ -47,7 +47,7 @@ func (s *TeamServiceTestSuite) TestEnsureTeamExistsWhenTeamAndUserAndProjectExis
 	//c.Assert(err, IsNil)
 	s.Nil(err)
 
-	err = s.repository.addProject(existingTeam, "channel-id", "channel-name")
+	err = s.repository.AddProject(existingTeam, "channel-id", "channel-name")
 	s.Nil(err)
 	//c.Assert(err, IsNil)
 
@@ -248,11 +248,11 @@ func (r *testTeamRepositoryImpl) CreateTeam(externalID, externalName string) (*m
 	return r.repository.CreateTeam(externalID, externalName)
 }
 
-func (r *testTeamRepositoryImpl) addProject(team *models.Team, externalProjectID, externalProjectName string) error {
+func (r *testTeamRepositoryImpl) AddProject(team *models.Team, externalProjectID, externalProjectName string) error {
 	if !r.addProjectSuccess {
 		return errors.New("TestTeamRepositoryImpl error")
 	}
-	return r.repository.addProject(team, externalProjectID, externalProjectName)
+	return r.repository.AddProject(team, externalProjectID, externalProjectName)
 }
 
 func (r *testTeamRepositoryImpl) save(team *models.Team) error {

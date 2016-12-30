@@ -9,6 +9,8 @@ import (
 	"errors"
 )
 
+const maxDaysCount  = 31
+
 // TimerService - the structure of the service
 type TimerService struct {
 	repository *TimerRepository
@@ -124,7 +126,7 @@ func (s *TimerService) CalculateMinutesForActiveTimer(timer *models.Timer) int {
 }
 
 // Returns all user tasks for range(startDate...endDate).
-// Range couldn't be more than 750 hours(about 31 day)
+// Range couldn't be more than 31 day
 func (s *TimerService)GetUserTasksByRange(startDate, endDate string, user *models.TeamUser) ([]*models.Timer, error) {
 	// What timezone to use: user or tz from frontend request?
 	tzOffset := user.SlackUserInfo.TZOffset
@@ -143,8 +145,7 @@ func (s *TimerService)GetUserTasksByRange(startDate, endDate string, user *model
 	startTime := startDateParse.Add(time.Duration(tzOffset) * time.Second * -1)
 	endTime := endDateTParse.Add(time.Duration(tzOffset) * time.Second * -1)
 
-	//Return error if number of hours in range more than 750
-	if endTime.Sub(startTime).Hours() > 750 {
+	if endTime.Sub(startTime).Hours() > maxDaysCount * 24 {
 		return nil, errors.New("Too much days in range")
 	}
 
