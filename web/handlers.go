@@ -136,7 +136,7 @@ func (h *Handlers) NotImplemented(w http.ResponseWriter, r *http.Request) {
 func (h *Handlers) Health(w http.ResponseWriter, r *http.Request) {
 	uptime := time.Since(h.env.CreatedAt)
 	response := ResponseBody{
-		ResponseErrors: map[string]string{},
+		ResponseStatus: &ResponseStatus{},
 		AppInfo: 	h.status,
 		ResponseData: 	map[string]string{
 			"uptime": uptime.String(),

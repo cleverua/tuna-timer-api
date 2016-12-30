@@ -7,8 +7,14 @@ import (
 // Common response body for frontend application
 type ResponseBody struct {
 	AppInfo        map[string]string `json:"appInfo"`
-	ResponseErrors map[string]string `json:"errors"`
+	ResponseStatus *ResponseStatus	 `json:"response_status"`
 	ResponseData   map[string]string `json:"data"`
+}
+
+type ResponseStatus struct {
+	Status		 string `json:"status"`
+	DeveloperMessage string `json:"developerMessage"`
+	UserMessage	 string `json:"user_message"`
 }
 
 // Response with jwt token
@@ -27,5 +33,11 @@ type TaskResponseBody struct {
 // Response with array of tasks data
 type TasksResponseBody struct {
 	ResponseBody
-	ResponseData models.TaskAggregation `json:"data"`
+	ResponseData []*models.Timer `json:"data"`
+}
+
+// Response with array of projects data
+type ProjectsResponseBody struct {
+	ResponseBody
+	ResponseData []*models.Project `json:"data"`
 }

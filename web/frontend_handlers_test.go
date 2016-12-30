@@ -16,6 +16,8 @@ import (
 	"net/http/httptest"
 	"encoding/json"
 	"time"
+	"strings"
+	"github.com/dgrijalva/jwt-go"
 )
 
 func TestFrontendHandlers(t *testing.T) {
@@ -42,7 +44,7 @@ func (s *FrontendHandlersTestSuite) TestUserAuthentication(t *testing.T) {
 
 	verificationToken, err := NewUserToken(s.user.ID.Hex(), s.session)
 	s.Nil(err)
-	s.Equal(resp.ResponseErrors["status"], "200")
+	s.Equal(resp.ResponseStatus.Status, "200")
 	s.Equal(resp.ResponseData.Token, verificationToken)
 }
 
@@ -63,20 +65,197 @@ func (s *FrontendHandlersTestSuite) TestUserAuthenticationWithWrongPid(t *testin
 	resp := JwtResponseBody{}
 	err = json.Unmarshal(recorder.Body.Bytes(), &resp)
 	s.Nil(err)
-	s.Equal(resp.ResponseErrors["userMessage"], "please login from slack application")
-	s.Equal(resp.ResponseErrors["status"], "400")
+	s.Equal(resp.ResponseStatus.UserMessage, "please login from slack application")
+	s.Equal(resp.ResponseStatus.Status, "400")
 	s.Equal(resp.ResponseData.Token, "")
 	s.Equal(resp.AppInfo["env"], utils.TestEnv)
 	s.Equal(resp.AppInfo["version"], s.env.AppVersion)
 }
 
+func (s *FrontendHandlersTestSuite) TestGetUserFromJWT(t *testing.T) {
+	//Should return user
+	h := NewFrontendHandlers(s.env, s.session)
+	status := &ResponseStatus{}
+	user, ok := h.getUserFromJWT(s.userJwt, s.session, status)
+
+	s.True(ok)
+	s.Equal(user.ID, s.user.ID)
+	s.Equal(user.ExternalUserID, s.user.ExternalUserID)
+	s.Equal(user.ExternalUserName, s.user.ExternalUserName)
+
+	//Should return error with corrupted payload
+	jwtParts := strings.Split(s.userJwt, ".")
+	jwtParts[1] += "==corruptedString"
+	token := strings.Join(jwtParts, ".")
+
+	user, ok = h.getUserFromJWT(token, s.session, status)
+	s.False(ok)
+	s.Equal(status.DeveloperMessage, "illegal base64 data at input byte 248")
+	s.Nil(user)
+
+	//Should return error with corrupted json data
+	jwtParts = strings.Split(s.userJwt, ".")
+	jwtParts[1] += "x"
+	token = strings.Join(jwtParts, ".")
+
+	user, ok = h.getUserFromJWT(token, s.session, status)
+	s.False(ok)
+	s.Equal(status.DeveloperMessage, "invalid character '\\f' after top-level value")
+	s.Nil(user)
+
+	//Should not return user with wrong ID, and return not found error
+	newToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"user_id":	 bson.NewObjectId(),
+		"is_team_admin": s.user.SlackUserInfo.IsAdmin,
+		"name":		 s.user.ExternalUserName,
+		"image48":	 s.user.SlackUserInfo.Profile.Image48,
+		"team_id":	 s.team.ID,
+		"ext_team_id":	 s.team.ExternalTeamID,
+		"ext_team_name": s.team.ExternalTeamName,
+
+	})
+	token, _ = newToken.SignedString([]byte("TODO: Extract me in config/env"))
+
+	user, ok = h.getUserFromJWT(token, s.session, status)
+	s.False(ok)
+	s.Equal(status.DeveloperMessage, mgo.ErrNotFound.Error())
+	s.Nil(user)
+}
+
+func (s *FrontendHandlersTestSuite) TestUserTimersData(t *testing.T)  {
+	req, err := http.NewRequest("GET", "/api/v1/frontend/timers?startDate=2016-12-20&endDate=2016-12-22", nil)
+	req.Header.Set("Authorization", "Bearer " + s.userJwt)
+	s.Nil(err)
+
+	h := NewFrontendHandlers(s.env, s.session)
+	recorder := httptest.NewRecorder()
+	handler := http.HandlerFunc(h.UserTimersData)
+	handler.ServeHTTP(recorder, req)
+
+	resp := TasksResponseBody{}
+	err = json.Unmarshal(recorder.Body.Bytes(), &resp)
+
+	s.Nil(err)
+	s.Equal(resp.ResponseStatus.Status, "200")
+	s.Equal(resp.AppInfo["env"], utils.TestEnv)
+	s.Equal(resp.AppInfo["version"], s.env.AppVersion)
+	s.Equal(resp.ResponseData[0].ID, s.timer.ID)
+}
+
+func (s *FrontendHandlersTestSuite) TestUserTimersDataWithoutDateRange(t *testing.T)  {
+	req, err := http.NewRequest("GET", "/api/v1/frontend/timers", nil)
+	req.Header.Set("Authorization", "Bearer " + s.userJwt)
+	s.Nil(err)
+
+	h := NewFrontendHandlers(s.env, s.session)
+	recorder := httptest.NewRecorder()
+	handler := http.HandlerFunc(h.UserTimersData)
+	handler.ServeHTTP(recorder, req)
+
+	resp := TasksResponseBody{}
+	err = json.Unmarshal(recorder.Body.Bytes(), &resp)
+
+	s.Nil(err)
+	s.Equal(resp.ResponseStatus.Status, "500")
+	s.NotNil(resp.ResponseStatus.DeveloperMessage)
+	s.Equal(resp.ResponseStatus.UserMessage, "")
+	s.Len(resp.ResponseData, 0)
+}
+
+func (s *FrontendHandlersTestSuite) TestUserTimersDataWithNoExistingUser(t *testing.T)  {
+	req, err := http.NewRequest("GET", "/api/v1/frontend/timers?startDate=2016-12-20&endDate=2016-12-22", nil)
+	newToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"user_id":	 bson.NewObjectId(),
+		"is_team_admin": s.user.SlackUserInfo.IsAdmin,
+		"name":		 s.user.ExternalUserName,
+		"image48":	 s.user.SlackUserInfo.Profile.Image48,
+		"team_id":	 s.team.ID,
+		"ext_team_id":	 s.team.ExternalTeamID,
+		"ext_team_name": s.team.ExternalTeamName,
+	})
+	token, err := newToken.SignedString([]byte("TODO: Extract me in config/env"))
+
+	req.Header.Set("Authorization", "Bearer " + token)
+	s.Nil(err)
+
+	h := NewFrontendHandlers(s.env, s.session)
+	recorder := httptest.NewRecorder()
+	handler := http.HandlerFunc(h.UserTimersData)
+	handler.ServeHTTP(recorder, req)
+
+	resp := TasksResponseBody{}
+	err = json.Unmarshal(recorder.Body.Bytes(), &resp)
+	s.Nil(err)
+
+	s.Equal(resp.ResponseStatus.Status, "400")
+	s.Equal(resp.ResponseStatus.DeveloperMessage, mgo.ErrNotFound.Error())
+	s.Equal(resp.ResponseStatus.UserMessage, "please login from slack application")
+	s.Len(resp.ResponseData, 0)
+}
+
+func (s *FrontendHandlersTestSuite) TestUserProjectsData(t *testing.T)  {
+	req, err := http.NewRequest("GET", "/api/v1/frontend/projects", nil)
+	req.Header.Set("Authorization", "Bearer " + s.userJwt)
+	s.Nil(err)
+
+	h := NewFrontendHandlers(s.env, s.session)
+	recorder := httptest.NewRecorder()
+	handler := http.HandlerFunc(h.UserProjectsData)
+	handler.ServeHTTP(recorder, req)
+
+	resp := ProjectsResponseBody{}
+	err = json.Unmarshal(recorder.Body.Bytes(), &resp)
+
+	s.Nil(err)
+	s.Equal(resp.ResponseStatus.Status, "200")
+	s.Equal(resp.AppInfo["env"], utils.TestEnv)
+	s.Equal(resp.AppInfo["version"], s.env.AppVersion)
+	s.Equal(resp.ResponseData[0].ID, s.team.Projects[0].ID)
+	s.Equal(resp.ResponseData[0].ExternalProjectID, s.team.Projects[0].ExternalProjectID)
+	s.Equal(resp.ResponseData[0].ExternalProjectName, s.team.Projects[0].ExternalProjectName)
+}
+
+func (s *FrontendHandlersTestSuite) TestUserProjectsDataWithNoExistedUser(t *testing.T)  {
+	req, err := http.NewRequest("GET", "/api/v1/frontend/projects", nil)
+	newToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"user_id":	 bson.NewObjectId(),
+		"is_team_admin": s.user.SlackUserInfo.IsAdmin,
+		"name":		 s.user.ExternalUserName,
+		"image48":	 s.user.SlackUserInfo.Profile.Image48,
+		"team_id":	 s.team.ID,
+		"ext_team_id":	 s.team.ExternalTeamID,
+		"ext_team_name": s.team.ExternalTeamName,
+	})
+	token, err := newToken.SignedString([]byte("TODO: Extract me in config/env"))
+
+	req.Header.Set("Authorization", "Bearer " + token)
+	s.Nil(err)
+
+	h := NewFrontendHandlers(s.env, s.session)
+	recorder := httptest.NewRecorder()
+	handler := http.HandlerFunc(h.UserProjectsData)
+	handler.ServeHTTP(recorder, req)
+
+	resp := ProjectsResponseBody{}
+	err = json.Unmarshal(recorder.Body.Bytes(), &resp)
+
+	s.Nil(err)
+	s.Equal(resp.ResponseStatus.Status, "400")
+	s.Equal(resp.ResponseStatus.DeveloperMessage, mgo.ErrNotFound.Error())
+	s.Equal(resp.AppInfo["env"], utils.TestEnv)
+	s.Equal(resp.AppInfo["version"], s.env.AppVersion)
+}
+
+// =================== TEST setup =================== //
 type FrontendHandlersTestSuite struct {
 	*is.Is
 	env     *utils.Environment
 	session *mgo.Session
 	user    *models.TeamUser
 	pass    *models.Pass
-	team	*models.Team
+	team    *models.Team
+	timer 	*models.Timer
+	userJwt string
 }
 
 func (s *FrontendHandlersTestSuite) SetUpSuite() {
@@ -104,12 +283,15 @@ func (s *FrontendHandlersTestSuite) SetUp() {
 	passRepository := data.NewPassRepository(s.session)
 	userRepository := data.NewUserRepository(s.session)
 	teamRepository := data.NewTeamRepository(s.session)
-
+	timerRepository := data.NewTimerRepository(s.session)
 	var err error
 
-	//Create team
+	//Create team with project
 	s.team, err = teamRepository.CreateTeam("ExtTeamID", "ExtTeamName")
 	s.Nil(err)
+	err = teamRepository.AddProject(s.team, "external-project-id", "external-project-name")
+	s.Nil(err)
+	s.team, _ = teamRepository.FindByID(s.team.ID.Hex())
 
 	//Create user
 	s.user = &models.TeamUser{
@@ -132,6 +314,22 @@ func (s *FrontendHandlersTestSuite) SetUp() {
 		ExpiresAt:    time.Now().Add(5 * time.Minute),
 	}
 	err = passRepository.Insert(s.pass)
+	s.Nil(err)
+
+	//Create timer
+	s.timer, err = timerRepository.CreateTimer(
+		&models.Timer{
+			ID:         bson.NewObjectId(),
+			TeamID:     s.team.ID.Hex(),
+			ProjectID:  "project",
+			TeamUserID: s.user.ID.Hex(),
+			CreatedAt:  utils.PT("2016 Dec 21 00:00:00"),
+			Minutes:    20,
+	})
+	s.Nil(err)
+
+	//Generate user JWT
+	s.userJwt, err = NewUserToken(s.user.ID.Hex(), s.session)
 	s.Nil(err)
 }
 

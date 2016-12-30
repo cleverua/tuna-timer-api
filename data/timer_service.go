@@ -6,7 +6,10 @@ import (
 	"gopkg.in/mgo.v2"
 	"log"
 	"time"
+	"errors"
 )
+
+const maxDaysCount  = 31
 
 // TimerService - the structure of the service
 type TimerService struct {
@@ -120,4 +123,31 @@ func (s *TimerService) CompleteActiveTimersAtMidnight(utcNow *time.Time) error {
 func (s *TimerService) CalculateMinutesForActiveTimer(timer *models.Timer) int {
 	duration := time.Since(timer.CreatedAt)
 	return int(duration.Minutes())
+}
+
+// Returns all user tasks for range(startDate...endDate).
+// Range couldn't be more than 31 day
+func (s *TimerService)GetUserTasksByRange(startDate, endDate string, user *models.TeamUser) ([]*models.Timer, error) {
+	// What timezone to use: user or tz from frontend request?
+	tzOffset := user.SlackUserInfo.TZOffset
+	layout := "2006-1-2 15:04:05"
+
+	startDateParse, err := time.Parse(layout, startDate + " 00:00:00")
+	if err != nil {
+		return nil, err
+	}
+
+	endDateTParse, err := time.Parse(layout, endDate + " 23:59:59")
+	if err != nil {
+		return nil, err
+	}
+
+	startTime := startDateParse.Add(time.Duration(tzOffset) * time.Second * -1)
+	endTime := endDateTParse.Add(time.Duration(tzOffset) * time.Second * -1)
+
+	if endTime.Sub(startTime).Hours() > maxDaysCount * 24 {
+		return nil, errors.New("Too much days in range")
+	}
+
+	return s.repository.findUserTasksByRange(user.ID.Hex(), startTime, endTime)
 }

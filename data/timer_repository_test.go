@@ -106,7 +106,7 @@ func (s *TimerRepositoryTestSuite) TestFindActiveTimerByTeamAndUserExists(t *tes
 		TaskName:   "task",
 		Minutes:    0,
 	}
-	s.repo.createTimer(timer)
+	s.repo.CreateTimer(timer)
 
 	timerFromDB, err := s.repo.findActiveByTeamAndUser("team", "user")
 	s.Nil(err)
@@ -128,7 +128,7 @@ func (s *TimerRepositoryTestSuite) TestFindActiveTimerByTeamAndUserButAlreadyFin
 		TaskName:   "task",
 		Minutes:    0,
 	}
-	s.repo.createTimer(timer)
+	s.repo.CreateTimer(timer)
 
 	timerFromDB, err := s.repo.findActiveByTeamAndUser("team", "user")
 	s.Nil(err)
@@ -149,7 +149,7 @@ func (s *TimerRepositoryTestSuite) TestFindActiveTimerByTeamAndUserButAlreadyDel
 		TaskName:   "task",
 		Minutes:    0,
 	}
-	s.repo.createTimer(timer)
+	s.repo.CreateTimer(timer)
 
 	timerFromDB, err := s.repo.findActiveByTeamAndUser("team", "user")
 	s.Nil(err)
@@ -162,7 +162,7 @@ func (s *TimerRepositoryTestSuite) TestTotalMinutesMethods(t *testing.T) {
 	// creates 10 timers one minute each
 	for i := 10; i < 20; i++ {
 		createdAt := utils.PT(fmt.Sprintf("2016 Sep %d 12:35:00", i))
-		s.repo.createTimer(&models.Timer{
+		s.repo.CreateTimer(&models.Timer{
 			ID:         bson.NewObjectId(),
 			TeamID:     "team",
 			ProjectID:  "project",
@@ -175,7 +175,7 @@ func (s *TimerRepositoryTestSuite) TestTotalMinutesMethods(t *testing.T) {
 	}
 
 	// let's add a few more task for different users and tasks
-	s.repo.createTimer(&models.Timer{
+	s.repo.CreateTimer(&models.Timer{
 		ID:         bson.NewObjectId(),
 		TeamID:     "team",
 		ProjectID:  "project",
@@ -186,7 +186,7 @@ func (s *TimerRepositoryTestSuite) TestTotalMinutesMethods(t *testing.T) {
 		Minutes:    1,
 	})
 
-	s.repo.createTimer(&models.Timer{
+	s.repo.CreateTimer(&models.Timer{
 		ID:         bson.NewObjectId(),
 		TeamID:     "team",
 		ProjectID:  "project",
@@ -197,7 +197,7 @@ func (s *TimerRepositoryTestSuite) TestTotalMinutesMethods(t *testing.T) {
 		Minutes:    1,
 	})
 
-	s.repo.createTimer(&models.Timer{
+	s.repo.CreateTimer(&models.Timer{
 		ID:         bson.NewObjectId(),
 		TeamID:     "team",
 		ProjectID:  "project",
@@ -234,7 +234,7 @@ func (s *TimerRepositoryTestSuite) TestCompletedTasksForUser(t *testing.T) {
 
 	now := time.Now()
 
-	s.repo.createTimer(&models.Timer{
+	s.repo.CreateTimer(&models.Timer{
 		ID:         bson.NewObjectId(),
 		TeamID:     "team",
 		ProjectID:  "project",
@@ -246,7 +246,7 @@ func (s *TimerRepositoryTestSuite) TestCompletedTasksForUser(t *testing.T) {
 		Minutes:    5,
 	})
 
-	s.repo.createTimer(&models.Timer{
+	s.repo.CreateTimer(&models.Timer{
 		ID:         bson.NewObjectId(),
 		TeamID:     "team",
 		ProjectID:  "project",
@@ -258,7 +258,7 @@ func (s *TimerRepositoryTestSuite) TestCompletedTasksForUser(t *testing.T) {
 		Minutes:    10,
 	})
 
-	s.repo.createTimer(&models.Timer{
+	s.repo.CreateTimer(&models.Timer{
 		ID:         bson.NewObjectId(),
 		TeamID:     "team",
 		ProjectID:  "project",
@@ -288,21 +288,21 @@ func (s *TimerRepositoryTestSuite) TestCompletedTasksForUser(t *testing.T) {
 }
 
 func (s *TimerRepositoryTestSuite) TestFindActiveByTimezoneOffset(t *testing.T) {
-	s.repo.createTimer(&models.Timer{
+	s.repo.CreateTimer(&models.Timer{
 		ID:               bson.NewObjectId(),
 		FinishedAt:       nil,
 		DeletedAt:        nil,
 		TeamUserTZOffset: 10,
 		TaskHash:         "match",
 	})
-	s.repo.createTimer(&models.Timer{
+	s.repo.CreateTimer(&models.Timer{
 		ID:               bson.NewObjectId(),
 		FinishedAt:       nil,
 		DeletedAt:        nil,
 		TeamUserTZOffset: 10,
 		TaskHash:         "match",
 	})
-	s.repo.createTimer(&models.Timer{
+	s.repo.CreateTimer(&models.Timer{
 		ID:               bson.NewObjectId(),
 		FinishedAt:       nil,
 		DeletedAt:        nil,
@@ -311,7 +311,7 @@ func (s *TimerRepositoryTestSuite) TestFindActiveByTimezoneOffset(t *testing.T) 
 	})
 
 	now := time.Now()
-	s.repo.createTimer(&models.Timer{
+	s.repo.CreateTimer(&models.Timer{
 		ID:               bson.NewObjectId(),
 		FinishedAt:       &now,
 		DeletedAt:        nil,
@@ -326,6 +326,74 @@ func (s *TimerRepositoryTestSuite) TestFindActiveByTimezoneOffset(t *testing.T) 
 	for _, timer := range timers {
 		s.Equal(timer.TaskHash, "match")
 	}
+}
+
+func (s *TimerRepositoryTestSuite) TestFindUserTasksByRange(t *testing.T) {
+	firstUserID := bson.NewObjectId().Hex()
+	secondUserID := bson.NewObjectId().Hex()
+
+	startDate := utils.PT("2016 Dec 20 00:00:00")
+	endDate := utils.PT("2016 Dec 21 23:59:59")
+
+	//Create timers for first user
+	s.repo.CreateTimer(&models.Timer{
+		ID:         bson.NewObjectId(),
+		TeamID:     "team",
+		ProjectID:  "project",
+		TeamUserID: firstUserID,
+		CreatedAt:  startDate.Add(time.Second * 3600 * 8),
+		Minutes:    20,
+	})
+	s.repo.CreateTimer(&models.Timer{
+		ID:         bson.NewObjectId(),
+		TeamID:     "team",
+		ProjectID:  "project",
+		TeamUserID: firstUserID,
+		CreatedAt:  startDate.Add(time.Second * 3600 * 24),
+		Minutes:    20,
+	})
+
+	//Create timer for second user
+	s.repo.CreateTimer(&models.Timer{
+		ID:         bson.NewObjectId(),
+		TeamID:     "team",
+		ProjectID:  "project",
+		TeamUserID: secondUserID,
+		CreatedAt:  startDate.Add(time.Second * 3600 * 8),
+		Minutes:    1,
+	})
+
+	//Check first user timers
+	timers, err := s.repo.findUserTasksByRange(firstUserID, startDate, endDate)
+	s.Nil(err)
+	s.Len(timers, 2)
+	for _, timer := range timers {
+		s.Equal(timer.TeamUserID, firstUserID)
+		s.NotEqual(timer.TeamUserID, secondUserID)
+	}
+
+	//Try to find timers out of range
+	timers, err = s.repo.findUserTasksByRange(
+		firstUserID,
+		startDate.Add(time.Second * 3600 * -24),
+		endDate.Add(time.Second * 3600 * -48))
+
+	s.Nil(err)
+	s.Len(timers, 0)
+
+	//Check second user timers
+	timers, err = s.repo.findUserTasksByRange(secondUserID, startDate, endDate)
+	s.Nil(err)
+	s.Len(timers, 1)
+	for _, timer := range timers {
+		s.Equal(timer.TeamUserID, secondUserID)
+		s.NotEqual(timer.TeamUserID, firstUserID)
+	}
+
+	//Should return no timers, no error
+	timers, err = s.repo.findUserTasksByRange(bson.NewObjectId().Hex(), startDate, endDate)
+	s.Nil(err)
+	s.Len(timers, 0)
 }
 
 func (s *TimerRepositoryTestSuite) SetUpSuite() {

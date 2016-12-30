@@ -61,7 +61,7 @@ func (s *TeamService) EnsureTeamSetUp(slackCommand *models.SlackCustomCommand) (
 
 	existingProject := s.findProject(team, slackCommand.ChannelID)
 	if existingProject == nil {
-		err = s.repository.addProject(team, slackCommand.ChannelID, slackCommand.ChannelName)
+		err = s.repository.AddProject(team, slackCommand.ChannelID, slackCommand.ChannelName)
 		if err != nil {
 			return nil, nil, err
 		}

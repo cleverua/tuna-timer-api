@@ -94,7 +94,7 @@ func (r *TimerRepository) create(teamID string, project *models.Project, user *m
 		ModelVersion:        models.ModelVersionTimer,
 	}
 
-	return r.createTimer(timer)
+	return r.CreateTimer(timer)
 }
 
 /*
@@ -230,7 +230,7 @@ func (r *TimerRepository) completedTasksForUser(userID string, startDate, endDat
 	return results, nil
 }
 
-func (r *TimerRepository) createTimer(timer *models.Timer) (*models.Timer, error) {
+func (r *TimerRepository) CreateTimer(timer *models.Timer) (*models.Timer, error) {
 	err := r.collection.Insert(timer)
 	return timer, err
 }
@@ -243,4 +243,18 @@ func (r *TimerRepository) update(timer *models.Timer) error {
 func taskSHA256(teamID, projectID, taskName string) string {
 	hashSeed := fmt.Sprintf("%s%s%s", teamID, projectID, taskName)
 	return fmt.Sprintf("%x", sha256.Sum256([]byte(hashSeed)))[0:6]
+}
+
+func (r *TimerRepository) findUserTasksByRange(userID string, startDate, endDate time.Time) ([]*models.Timer, error) {
+	var results []*models.Timer
+
+	err := r.collection.Find(bson.M{
+		"team_user_id": userID,
+		"created_at":  	bson.M{
+			"$gte": startDate,
+			"$lte": endDate,
+		},
+	}).All(&results)
+
+	return results, err
 }
