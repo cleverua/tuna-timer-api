@@ -26,8 +26,8 @@ type JwtResponseBody struct {
 // Response with task data
 type TaskResponseBody struct {
 	ResponseBody
-	ResponseData models.TaskAggregation `json:"data"`
-	TaskErrors   map[string]string      `json:"errors"`
+	ResponseData models.Timer	`json:"data"`
+	TaskErrors   map[string]string  `json:"errors"`
 }
 
 // Response with array of tasks data

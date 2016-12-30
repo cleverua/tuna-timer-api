@@ -9,6 +9,8 @@ import (
 	"strings"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/cleverua/tuna-timer-api/models"
+	"fmt"
+	"github.com/gorilla/mux"
 )
 
 const (
@@ -181,6 +183,39 @@ func(h *FrontendHandlers) UserProjectsData(w http.ResponseWriter, r *http.Reques
 	}else {
 		response.ResponseData = team.Projects
 	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
+}
+
+func(h *FrontendHandlers) CreateUserTimer(w http.ResponseWriter, r *http.Request) {
+	//TODO implement action
+}
+
+func(h *FrontendHandlers) UpdateUserTimer(w http.ResponseWriter, r *http.Request) {
+	response := TaskResponseBody{
+		ResponseBody: ResponseBody{
+			ResponseStatus: &ResponseStatus{ Status: statusOK },
+			AppInfo: h.status,
+		},
+		TaskErrors: map[string]string{},
+	}
+
+	session := h.mongoSession.Clone()
+	defer session.Close()
+
+	user, ok := h.getUserFromJWT(r.Header.Get("Authorization"), session, response.ResponseStatus)
+	if !ok {
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(response)
+		return
+	}
+
+	fmt.Println(user)
+	timerID := mux.Vars(r)["id"]
+	fmt.Println(timerID)
+
+	//timerService := data.NewTimerService(session)
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(response)

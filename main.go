@@ -64,6 +64,8 @@ func main() {
 	router.Handle("/api/v1/frontend/auth/validate", secure.ThenFunc(handlers.ValidateAuthToken)).Methods("GET", "OPTIONS")
 	router.Handle("/api/v1/frontend/timers", secure.ThenFunc(frontendHandlers.UserTimersData)).Methods("GET", "OPTIONS")
 	router.Handle("/api/v1/frontend/projects", secure.ThenFunc(frontendHandlers.UserProjectsData)).Methods("GET", "OPTIONS")
+	router.Handle("/api/v1/frontend/timers", secure.ThenFunc(frontendHandlers.CreateUserTimer)).Methods("POST", "OPTIONS")
+	router.Handle("/api/v1/frontend/timers/{id}", secure.ThenFunc(frontendHandlers.UpdateUserTimer)).Methods("PUT", "OPTIONS")
 
 	// Temporary stuff, remove eventually
 	router.Handle("/api/v1/temporary/clear_data", public.ThenFunc(handlers.ClearAllData)).Methods("GET")
