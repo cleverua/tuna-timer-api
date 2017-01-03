@@ -393,7 +393,7 @@ func (s *TimerServiceTestSuite) TestGetUserTasksByRange(t *testing.T) {
 		Minutes:    20,
 	})
 
-	timers, err := s.service.GetUserTasksByRange("2016-12-20", "2016-12-21", user)
+	timers, err := s.service.GetUserTimersByRange("2016-12-20", "2016-12-21", user)
 	s.Nil(err)
 	s.Len(timers, 2)
 	for _, timer := range timers {
@@ -414,7 +414,7 @@ func (s *TimerServiceTestSuite) TestGetUserTasksByRangeFail(t *testing.T) {
 	startDate := "2016/12/20"
 	endDate := "2016-12-21"
 
-	timers, err := s.service.GetUserTasksByRange(startDate, endDate, user)
+	timers, err := s.service.GetUserTimersByRange(startDate, endDate, user)
 	s.Err(err)
 	s.Len(timers, 0)
 
@@ -422,7 +422,7 @@ func (s *TimerServiceTestSuite) TestGetUserTasksByRangeFail(t *testing.T) {
 	startDate = "2016-12-20"
 	endDate = "2016:12:21"
 
-	timers, err = s.service.GetUserTasksByRange(startDate, endDate, user)
+	timers, err = s.service.GetUserTimersByRange(startDate, endDate, user)
 	s.Err(err)
 	s.Len(timers, 0)
 
@@ -430,7 +430,7 @@ func (s *TimerServiceTestSuite) TestGetUserTasksByRangeFail(t *testing.T) {
 	startDate = "2016-11-30"
 	endDate = "2016-12-31"
 
-	timers, err = s.service.GetUserTasksByRange(startDate, endDate, user)
+	timers, err = s.service.GetUserTimersByRange(startDate, endDate, user)
 	s.Err(err)
 	s.Equal(err.Error(), "Too much days in range")
 	s.Len(timers, 0)

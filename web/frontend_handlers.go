@@ -9,8 +9,6 @@ import (
 	"strings"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/cleverua/tuna-timer-api/models"
-	"fmt"
-	"github.com/gorilla/mux"
 )
 
 const (
@@ -27,9 +25,15 @@ type FrontendHandlers struct {
 	status                map[string]string
 }
 
-func (h *FrontendHandlers) jsonDecode(data *map[string]string, r *http.Request) error {
+func (h *FrontendHandlers) jsonDecode(data interface{}, r *http.Request, status *ResponseStatus) bool {
 	decoder := json.NewDecoder(r.Body)
-	return decoder.Decode(data)
+	err := decoder.Decode(data)
+	if err != nil {
+		status.Status = statusInternalServerError
+		status.DeveloperMessage = err.Error()
+		return false
+	}
+	return true
 }
 
 func (h *FrontendHandlers) getUserFromJWT(token string, session *mgo.Session, status *ResponseStatus) (*models.TeamUser, bool) {
@@ -85,10 +89,8 @@ func (h *FrontendHandlers) UserAuthentication(w http.ResponseWriter, r *http.Req
 	}
 
 	requestData := map[string]string{}
-	err := h.jsonDecode(&requestData, r)
-	if err != nil {
-		response.ResponseStatus.Status = statusInternalServerError
-		response.ResponseStatus.DeveloperMessage = err.Error()
+	ok := h.jsonDecode(&requestData, r, response.ResponseStatus)
+	if !ok {
 		json.NewEncoder(w).Encode(response)
 		return
 	}
@@ -145,7 +147,7 @@ func(h *FrontendHandlers) UserTimersData(w http.ResponseWriter, r *http.Request)
 	}
 
 	timersService := data.NewTimerService(session)
-	tasks, err := timersService.GetUserTasksByRange(startDate, endDate, user)
+	tasks, err := timersService.GetUserTimersByRange(startDate, endDate, user)
 	if err != nil {
 		response.ResponseStatus.Status = statusInternalServerError
 		response.ResponseStatus.DeveloperMessage = err.Error()
@@ -211,12 +213,42 @@ func(h *FrontendHandlers) UpdateUserTimer(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	fmt.Println(user)
-	timerID := mux.Vars(r)["id"]
-	fmt.Println(timerID)
+	// Decode response data
+	newTimerData := &models.Timer{}
+	ok = h.jsonDecode(&newTimerData, r, response.ResponseStatus)
+	if !ok {
+		json.NewEncoder(w).Encode(response)
+		return
+	}
 
-	//timerService := data.NewTimerService(session)
+	//Get timer for update
+	timerService := data.NewTimerService(session)
+	var timer *models.Timer
+	var err error
 
+	if r.URL.Query().Get("stop_timer") != "" {
+		timer, err = timerService.GetActiveTimer(user.TeamID, user.ID.Hex())
+		if err != nil {
+			response.ResponseStatus.Status = statusInternalServerError
+			response.ResponseStatus.DeveloperMessage = err.Error()
+			json.NewEncoder(w).Encode(response)
+			return
+		} else {
+			timerService.StopTimer(timer)
+		}
+	} else {
+		timer, _ = timerService.FindByID(newTimerData.ID.Hex())
+		err = timerService.UpdateUserTimer(user, timer, newTimerData)
+
+		if err != nil {
+			response.ResponseStatus.Status = statusInternalServerError
+			response.ResponseStatus.DeveloperMessage = err.Error()
+			json.NewEncoder(w).Encode(response)
+			return
+		}
+	}
+
+	response.ResponseData = *timer
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(response)
 }
