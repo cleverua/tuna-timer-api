@@ -30,6 +30,16 @@ type TaskResponseBody struct {
 	TaskErrors   map[string]string  `json:"errors"`
 }
 
+func NewTaskResponseBody(info map[string]string) *TaskResponseBody {
+	return &TaskResponseBody{
+		ResponseBody: ResponseBody{
+			ResponseStatus: &ResponseStatus{ Status: statusOK },
+			AppInfo: info,
+		},
+		TaskErrors: map[string]string{},
+	}
+}
+
 // Response with array of tasks data
 type TasksResponseBody struct {
 	ResponseBody

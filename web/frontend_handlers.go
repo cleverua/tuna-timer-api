@@ -6,9 +6,8 @@ import (
 	"encoding/json"
 	"github.com/cleverua/tuna-timer-api/utils"
 	"gopkg.in/mgo.v2"
-	"strings"
-	"github.com/dgrijalva/jwt-go"
 	"github.com/cleverua/tuna-timer-api/models"
+	"github.com/gorilla/context"
 )
 
 const (
@@ -34,37 +33,6 @@ func (h *FrontendHandlers) jsonDecode(data interface{}, r *http.Request, status 
 		return false
 	}
 	return true
-}
-
-func (h *FrontendHandlers) getUserFromJWT(token string, session *mgo.Session, status *ResponseStatus) (*models.TeamUser, bool) {
-	jwtPayload := strings.Split(token, ".")[1]
-
-	setErrors := func(err error) {
-		status.Status = statusBadRequest
-		status.UserMessage = userLoginMessage
-		status.DeveloperMessage = err.Error()
-	}
-
-	decodedPayload, err := jwt.DecodeSegment(jwtPayload)
-	if err != nil {
-		setErrors(err)
-		return nil, false
-	}
-
-	var userData struct { UserID string `json:"user_id"` }
-	err = json.Unmarshal(decodedPayload, &userData)
-	if err != nil {
-		setErrors(err)
-		return nil, false
-	}
-
-	userService := data.NewUserService(session)
-	user, err := userService.FindByID(userData.UserID)
-	if err != nil {
-		setErrors(err)
-		return nil, false
-	}
-	return user, true
 }
 
 // NewHandlers constructs a FrontendHandler collection
@@ -139,12 +107,7 @@ func(h *FrontendHandlers) UserTimersData(w http.ResponseWriter, r *http.Request)
 	session := h.mongoSession.Clone()
 	defer session.Close()
 
-	user, ok := h.getUserFromJWT(r.Header.Get("Authorization"), session, response.ResponseStatus)
-	if !ok {
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(response)
-		return
-	}
+	user := context.Get(r, "user").(*models.TeamUser)
 
 	timersService := data.NewTimerService(session)
 	tasks, err := timersService.GetUserTimersByRange(startDate, endDate, user)
@@ -170,12 +133,7 @@ func(h *FrontendHandlers) UserProjectsData(w http.ResponseWriter, r *http.Reques
 	session := h.mongoSession.Clone()
 	defer session.Close()
 
-	user, ok := h.getUserFromJWT(r.Header.Get("Authorization"), session, response.ResponseStatus)
-	if !ok {
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(response)
-		return
-	}
+	user := context.Get(r, "user").(*models.TeamUser)
 
 	teamsService := data.NewTeamService(session)
 	team, err := teamsService.FindByID(user.TeamID)
@@ -191,31 +149,61 @@ func(h *FrontendHandlers) UserProjectsData(w http.ResponseWriter, r *http.Reques
 }
 
 func(h *FrontendHandlers) CreateUserTimer(w http.ResponseWriter, r *http.Request) {
-	//TODO implement action
-}
-
-func(h *FrontendHandlers) UpdateUserTimer(w http.ResponseWriter, r *http.Request) {
-	response := TaskResponseBody{
-		ResponseBody: ResponseBody{
-			ResponseStatus: &ResponseStatus{ Status: statusOK },
-			AppInfo: h.status,
-		},
-		TaskErrors: map[string]string{},
-	}
-
 	session := h.mongoSession.Clone()
 	defer session.Close()
+	user := context.Get(r, "user").(*models.TeamUser)
+	response := NewTaskResponseBody(h.status)
 
-	user, ok := h.getUserFromJWT(r.Header.Get("Authorization"), session, response.ResponseStatus)
+	//Decode response data
+	newTimerData := &models.Timer{}
+	ok := h.jsonDecode(&newTimerData, r, response.ResponseStatus)
 	if !ok {
-		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(response)
 		return
 	}
 
+	timerService := data.NewTimerService(session)
+	project := &models.Project{
+		ID:                  newTimerData.ID,
+		ExternalProjectName: newTimerData.ProjectExternalName,
+		ExternalProjectID:   newTimerData.ProjectExternalID,
+	}
+
+	//Find and stop previous timer
+	timerToStop, _ := timerService.GetActiveTimer(user.TeamID, user.ID.Hex())
+	if timerToStop != nil {
+		err := timerService.StopTimer(timerToStop)
+		if err != nil {
+			response.ResponseStatus.Status = statusInternalServerError
+			response.ResponseStatus.DeveloperMessage = err.Error()
+			json.NewEncoder(w).Encode(response)
+			return
+		}
+	}
+
+	timer, err := timerService.StartTimer(user.TeamID, project, user, newTimerData.TaskName)
+	if err != nil {
+		response.ResponseStatus.Status = statusInternalServerError
+		response.ResponseStatus.DeveloperMessage = err.Error()
+		json.NewEncoder(w).Encode(response)
+		return
+	}
+
+	// TODO return all user timers for current day
+	response.ResponseData = *timer
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
+}
+
+func(h *FrontendHandlers) UpdateUserTimer(w http.ResponseWriter, r *http.Request) {
+	session := h.mongoSession.Clone()
+	defer session.Close()
+	response := NewTaskResponseBody(h.status)
+	user := context.Get(r, "user").(*models.TeamUser)
+
 	// Decode response data
 	newTimerData := &models.Timer{}
-	ok = h.jsonDecode(&newTimerData, r, response.ResponseStatus)
+	ok := h.jsonDecode(&newTimerData, r, response.ResponseStatus)
 	if !ok {
 		json.NewEncoder(w).Encode(response)
 		return
