@@ -16,7 +16,7 @@ import (
 	"net/http/httptest"
 	"encoding/json"
 	"time"
-	"strings"
+	"github.com/justinas/alice"
 	"github.com/dgrijalva/jwt-go"
 )
 
@@ -79,8 +79,7 @@ func (s *FrontendHandlersTestSuite) TestUserTimersData(t *testing.T)  {
 
 	h := NewFrontendHandlers(s.env, s.session)
 	recorder := httptest.NewRecorder()
-	handler := http.HandlerFunc(h.UserTimersData)
-	handler.ServeHTTP(recorder, req)
+	s.middlewareChain.ThenFunc(h.UserTimersData).ServeHTTP(recorder, req)
 
 	resp := TasksResponseBody{}
 	err = json.Unmarshal(recorder.Body.Bytes(), &resp)
@@ -99,8 +98,7 @@ func (s *FrontendHandlersTestSuite) TestUserTimersDataWithoutDateRange(t *testin
 
 	h := NewFrontendHandlers(s.env, s.session)
 	recorder := httptest.NewRecorder()
-	handler := http.HandlerFunc(h.UserTimersData)
-	handler.ServeHTTP(recorder, req)
+	s.middlewareChain.ThenFunc(h.UserTimersData).ServeHTTP(recorder, req)
 
 	resp := TasksResponseBody{}
 	err = json.Unmarshal(recorder.Body.Bytes(), &resp)
@@ -130,8 +128,7 @@ func (s *FrontendHandlersTestSuite) TestUserTimersDataWithNoExistingUser(t *test
 
 	h := NewFrontendHandlers(s.env, s.session)
 	recorder := httptest.NewRecorder()
-	handler := http.HandlerFunc(h.UserTimersData)
-	handler.ServeHTTP(recorder, req)
+	s.middlewareChain.ThenFunc(h.UserTimersData).ServeHTTP(recorder, req)
 
 	resp := TasksResponseBody{}
 	err = json.Unmarshal(recorder.Body.Bytes(), &resp)
@@ -150,8 +147,7 @@ func (s *FrontendHandlersTestSuite) TestUserProjectsData(t *testing.T)  {
 
 	h := NewFrontendHandlers(s.env, s.session)
 	recorder := httptest.NewRecorder()
-	handler := http.HandlerFunc(h.UserProjectsData)
-	handler.ServeHTTP(recorder, req)
+	s.middlewareChain.ThenFunc(h.UserProjectsData).ServeHTTP(recorder, req)
 
 	resp := ProjectsResponseBody{}
 	err = json.Unmarshal(recorder.Body.Bytes(), &resp)
@@ -183,9 +179,7 @@ func (s *FrontendHandlersTestSuite) TestUserProjectsDataWithNoExistedUser(t *tes
 
 	h := NewFrontendHandlers(s.env, s.session)
 	recorder := httptest.NewRecorder()
-	handler := http.HandlerFunc(h.UserProjectsData)
-	handler.ServeHTTP(recorder, req)
-
+	s.middlewareChain.ThenFunc(h.UserProjectsData).ServeHTTP(recorder, req)
 	resp := ProjectsResponseBody{}
 	err = json.Unmarshal(recorder.Body.Bytes(), &resp)
 
@@ -206,6 +200,8 @@ type FrontendHandlersTestSuite struct {
 	team    *models.Team
 	timer 	*models.Timer
 	userJwt string
+	secureCTX *SecureContext
+	middlewareChain alice.Chain
 }
 
 func (s *FrontendHandlersTestSuite) SetUpSuite() {
@@ -219,6 +215,16 @@ func (s *FrontendHandlersTestSuite) SetUpSuite() {
 	s.session = session.Clone()
 	e.MigrateDatabase(session)
 	s.env = e
+
+	s.secureCTX = &SecureContext{
+		Origin:  s.env.Config.UString("origin.url"),
+		Session: s.session,
+		Env: 	 s.env,
+	}
+	s.middlewareChain = alice.New(
+		s.secureCTX.CorsMiddleware,
+		JWTMiddleware,
+		s.secureCTX.CurrentUserMiddleware)
 }
 
 func (s *FrontendHandlersTestSuite) TearDownSuite() {

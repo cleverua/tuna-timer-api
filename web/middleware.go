@@ -11,6 +11,7 @@ import (
 	"encoding/json"
 	"github.com/cleverua/tuna-timer-api/data"
 	"github.com/gorilla/context"
+	"github.com/cleverua/tuna-timer-api/utils"
 )
 
 func LoggingMiddleware(h http.Handler) http.Handler {
@@ -33,6 +34,7 @@ func JWTMiddleware(h http.Handler) http.Handler {
 type SecureContext struct {
 	Origin	string
 	Session *mgo.Session
+	Env 	*utils.Environment
 }
 
 func (c *SecureContext) CorsMiddleware(h http.Handler) http.Handler {
@@ -59,8 +61,15 @@ func (c *SecureContext) CurrentUserMiddleware(h http.Handler) http.Handler {
 
 		userService := data.NewUserService(c.Session)
 		user, err := userService.FindByID(userData["user_id"].(string))
+
 		if err != nil {
-			response := ResponseBody{}
+			response := ResponseBody{
+				ResponseStatus: &ResponseStatus{},
+				AppInfo: map[string]string{
+					"env": c.Env.Name,
+					"version": c.Env.AppVersion,
+				},
+			}
 			response.ResponseStatus.Status = statusBadRequest
 			response.ResponseStatus.UserMessage = userLoginMessage
 			response.ResponseStatus.DeveloperMessage = err.Error()

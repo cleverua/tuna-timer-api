@@ -41,6 +41,7 @@ func main() {
 	secureCTX := web.SecureContext{
 		Origin:  environment.Config.UString("origin.url"),
 		Session: session,
+		Env: 	 environment,
 	}
 
 	public := alice.New(web.LoggingMiddleware, web.RecoveryMiddleware, secureCTX.CorsMiddleware)
@@ -71,9 +72,9 @@ func main() {
 	// reads JWT from header and returns a 200 if it is okay and not expired
 	router.Handle("/api/v1/frontend/auth/validate", secure.ThenFunc(handlers.ValidateAuthToken)).Methods("GET", "OPTIONS")
 	router.Handle("/api/v1/frontend/timers", secure.ThenFunc(frontendHandlers.UserTimersData)).Methods("GET", "OPTIONS")
-	router.Handle("/api/v1/frontend/projects", secure.ThenFunc(frontendHandlers.UserProjectsData)).Methods("GET", "OPTIONS")
 	router.Handle("/api/v1/frontend/timers", secure.ThenFunc(frontendHandlers.CreateUserTimer)).Methods("POST", "OPTIONS")
 	router.Handle("/api/v1/frontend/timers/{id}", secure.ThenFunc(frontendHandlers.UpdateUserTimer)).Methods("PUT", "OPTIONS")
+	router.Handle("/api/v1/frontend/projects", secure.ThenFunc(frontendHandlers.UserProjectsData)).Methods("GET", "OPTIONS")
 
 	// Temporary stuff, remove eventually
 	router.Handle("/api/v1/temporary/clear_data", public.ThenFunc(handlers.ClearAllData)).Methods("GET")
