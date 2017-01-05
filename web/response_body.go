@@ -46,6 +46,15 @@ type TasksResponseBody struct {
 	ResponseData []*models.Timer `json:"data"`
 }
 
+func NewTasksResponseBody(info map[string]string) *TasksResponseBody {
+	return &TasksResponseBody{
+		ResponseBody: ResponseBody{
+			ResponseStatus: &ResponseStatus{ Status: statusOK },
+			AppInfo: info,
+		},
+	}
+}
+
 // Response with array of projects data
 type ProjectsResponseBody struct {
 	ResponseBody

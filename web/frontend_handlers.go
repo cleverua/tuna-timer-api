@@ -8,6 +8,7 @@ import (
 	"gopkg.in/mgo.v2"
 	"github.com/cleverua/tuna-timer-api/models"
 	"github.com/gorilla/context"
+	"time"
 )
 
 const (
@@ -96,13 +97,7 @@ func(h *FrontendHandlers) UserTimersData(w http.ResponseWriter, r *http.Request)
 	//Get Query params (start and end date)
 	startDate := r.FormValue("startDate")
 	endDate := r.FormValue("endDate")
-
-	response := TasksResponseBody{
-		ResponseBody: ResponseBody{
-			ResponseStatus: &ResponseStatus{ Status: statusOK },
-			AppInfo: h.status,
-		},
-	}
+	response := NewTasksResponseBody(h.status)
 
 	session := h.mongoSession.Clone()
 	defer session.Close()
@@ -152,7 +147,7 @@ func(h *FrontendHandlers) CreateUserTimer(w http.ResponseWriter, r *http.Request
 	session := h.mongoSession.Clone()
 	defer session.Close()
 	user := context.Get(r, "user").(*models.TeamUser)
-	response := NewTaskResponseBody(h.status)
+	response := NewTasksResponseBody(h.status)
 
 	//Decode response data
 	newTimerData := &models.Timer{}
@@ -181,7 +176,7 @@ func(h *FrontendHandlers) CreateUserTimer(w http.ResponseWriter, r *http.Request
 		}
 	}
 
-	timer, err := timerService.StartTimer(user.TeamID, project, user, newTimerData.TaskName)
+	_, err := timerService.StartTimer(user.TeamID, project, user, newTimerData.TaskName)
 	if err != nil {
 		response.ResponseStatus.Status = statusInternalServerError
 		response.ResponseStatus.DeveloperMessage = err.Error()
@@ -189,8 +184,10 @@ func(h *FrontendHandlers) CreateUserTimer(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	// TODO return all user timers for current day
-	response.ResponseData = *timer
+	date := time.Now().Format("2006-1-2")
+	timers, _ := timerService.GetUserTimersByRange(date, date, user)
+
+	response.ResponseData = timers
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(response)
 }
