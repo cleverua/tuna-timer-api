@@ -24,7 +24,7 @@ func TestFrontendHandlers(t *testing.T) {
 	gosuite.Run(t, &FrontendHandlersTestSuite{Is: is.New(t)})
 }
 
-func (s *FrontendHandlersTestSuite) TestUserAuthentication(t *testing.T) {
+func (s *FrontendHandlersTestSuite) TestAuthenticate(t *testing.T) {
 	reqData := map[string]string{ "pid": "pass-for-jwt-generation" }
 	body := new(bytes.Buffer)
 	json.NewEncoder(body).Encode(reqData)
@@ -35,10 +35,10 @@ func (s *FrontendHandlersTestSuite) TestUserAuthentication(t *testing.T) {
 
 	h := NewFrontendHandlers(s.env, s.session)
 	recorder := httptest.NewRecorder()
-	handler := http.HandlerFunc(h.UserAuthentication)
+	handler := http.HandlerFunc(h.Authenticate)
 	handler.ServeHTTP(recorder, req)
 
-	resp := JwtResponseBody{ResponseData: JwtToken{}}
+	resp := JWTResponseBody{ResponseData: JwtToken{}}
 	err = json.Unmarshal(recorder.Body.Bytes(), &resp)
 	s.Nil(err)
 
@@ -48,7 +48,7 @@ func (s *FrontendHandlersTestSuite) TestUserAuthentication(t *testing.T) {
 	s.Equal(resp.ResponseData.Token, verificationToken)
 }
 
-func (s *FrontendHandlersTestSuite) TestUserAuthenticationWithWrongPid(t *testing.T) {
+func (s *FrontendHandlersTestSuite) TestAuthenticateWithWrongPid(t *testing.T) {
 	reqData := map[string]string{ "pid": "gIkuvaNzQIHg97ATvDxqgjtO" }
 	body := new(bytes.Buffer)
 	json.NewEncoder(body).Encode(reqData)
@@ -59,10 +59,10 @@ func (s *FrontendHandlersTestSuite) TestUserAuthenticationWithWrongPid(t *testin
 
 	h := NewFrontendHandlers(s.env, s.session)
 	recorder := httptest.NewRecorder()
-	handler := http.HandlerFunc(h.UserAuthentication)
+	handler := http.HandlerFunc(h.Authenticate)
 	handler.ServeHTTP(recorder, req)
 
-	resp := JwtResponseBody{}
+	resp := JWTResponseBody{}
 	err = json.Unmarshal(recorder.Body.Bytes(), &resp)
 	s.Nil(err)
 	s.Equal(resp.ResponseStatus.UserMessage, "please login from slack application")
@@ -72,14 +72,14 @@ func (s *FrontendHandlersTestSuite) TestUserAuthenticationWithWrongPid(t *testin
 	s.Equal(resp.AppInfo["version"], s.env.AppVersion)
 }
 
-func (s *FrontendHandlersTestSuite) TestUserTimersData(t *testing.T)  {
+func (s *FrontendHandlersTestSuite) TestTimersData(t *testing.T)  {
 	req, err := http.NewRequest("GET", "/api/v1/frontend/timers?startDate=2016-12-20&endDate=2016-12-22", nil)
 	req.Header.Set("Authorization", "Bearer " + s.userJwt)
 	s.Nil(err)
 
 	h := NewFrontendHandlers(s.env, s.session)
 	recorder := httptest.NewRecorder()
-	s.middlewareChain.ThenFunc(h.UserTimersData).ServeHTTP(recorder, req)
+	s.middlewareChain.ThenFunc(h.TimersData).ServeHTTP(recorder, req)
 
 	resp := TasksResponseBody{}
 	err = json.Unmarshal(recorder.Body.Bytes(), &resp)
@@ -91,14 +91,14 @@ func (s *FrontendHandlersTestSuite) TestUserTimersData(t *testing.T)  {
 	s.Equal(resp.ResponseData[0].ID, s.timer.ID)
 }
 
-func (s *FrontendHandlersTestSuite) TestUserTimersDataWithoutDateRange(t *testing.T)  {
+func (s *FrontendHandlersTestSuite) TestTimersDataWithoutDateRange(t *testing.T)  {
 	req, err := http.NewRequest("GET", "/api/v1/frontend/timers", nil)
 	req.Header.Set("Authorization", "Bearer " + s.userJwt)
 	s.Nil(err)
 
 	h := NewFrontendHandlers(s.env, s.session)
 	recorder := httptest.NewRecorder()
-	s.middlewareChain.ThenFunc(h.UserTimersData).ServeHTTP(recorder, req)
+	s.middlewareChain.ThenFunc(h.TimersData).ServeHTTP(recorder, req)
 
 	resp := TasksResponseBody{}
 	err = json.Unmarshal(recorder.Body.Bytes(), &resp)
@@ -110,7 +110,7 @@ func (s *FrontendHandlersTestSuite) TestUserTimersDataWithoutDateRange(t *testin
 	s.Len(resp.ResponseData, 0)
 }
 
-func (s *FrontendHandlersTestSuite) TestUserTimersDataWithNoExistingUser(t *testing.T)  {
+func (s *FrontendHandlersTestSuite) TestTimersDataWithNoExistingUser(t *testing.T)  {
 	req, err := http.NewRequest("GET", "/api/v1/frontend/timers?startDate=2016-12-20&endDate=2016-12-22", nil)
 	newToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"user_id":	 bson.NewObjectId(),
@@ -128,7 +128,7 @@ func (s *FrontendHandlersTestSuite) TestUserTimersDataWithNoExistingUser(t *test
 
 	h := NewFrontendHandlers(s.env, s.session)
 	recorder := httptest.NewRecorder()
-	s.middlewareChain.ThenFunc(h.UserTimersData).ServeHTTP(recorder, req)
+	s.middlewareChain.ThenFunc(h.TimersData).ServeHTTP(recorder, req)
 
 	resp := TasksResponseBody{}
 	err = json.Unmarshal(recorder.Body.Bytes(), &resp)
@@ -140,14 +140,14 @@ func (s *FrontendHandlersTestSuite) TestUserTimersDataWithNoExistingUser(t *test
 	s.Len(resp.ResponseData, 0)
 }
 
-func (s *FrontendHandlersTestSuite) TestUserProjectsData(t *testing.T)  {
+func (s *FrontendHandlersTestSuite) TestProjectsData(t *testing.T)  {
 	req, err := http.NewRequest("GET", "/api/v1/frontend/projects", nil)
 	req.Header.Set("Authorization", "Bearer " + s.userJwt)
 	s.Nil(err)
 
 	h := NewFrontendHandlers(s.env, s.session)
 	recorder := httptest.NewRecorder()
-	s.middlewareChain.ThenFunc(h.UserProjectsData).ServeHTTP(recorder, req)
+	s.middlewareChain.ThenFunc(h.ProjectsData).ServeHTTP(recorder, req)
 
 	resp := ProjectsResponseBody{}
 	err = json.Unmarshal(recorder.Body.Bytes(), &resp)
@@ -161,7 +161,7 @@ func (s *FrontendHandlersTestSuite) TestUserProjectsData(t *testing.T)  {
 	s.Equal(resp.ResponseData[0].ExternalProjectName, s.team.Projects[0].ExternalProjectName)
 }
 
-func (s *FrontendHandlersTestSuite) TestUserProjectsDataWithNoExistedUser(t *testing.T)  {
+func (s *FrontendHandlersTestSuite) TestProjectsDataWithNoExistedUser(t *testing.T)  {
 	req, err := http.NewRequest("GET", "/api/v1/frontend/projects", nil)
 	newToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"user_id":	 bson.NewObjectId(),
@@ -179,7 +179,7 @@ func (s *FrontendHandlersTestSuite) TestUserProjectsDataWithNoExistedUser(t *tes
 
 	h := NewFrontendHandlers(s.env, s.session)
 	recorder := httptest.NewRecorder()
-	s.middlewareChain.ThenFunc(h.UserProjectsData).ServeHTTP(recorder, req)
+	s.middlewareChain.ThenFunc(h.ProjectsData).ServeHTTP(recorder, req)
 	resp := ProjectsResponseBody{}
 	err = json.Unmarshal(recorder.Body.Bytes(), &resp)
 

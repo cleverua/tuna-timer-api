@@ -18,9 +18,19 @@ type ResponseStatus struct {
 }
 
 // Response with jwt token
-type JwtResponseBody struct {
+type JWTResponseBody struct {
 	ResponseBody
 	ResponseData JwtToken `json:"data"`
+}
+
+func NewJWTResponseBody(info map[string]string) *JWTResponseBody{
+	return &JWTResponseBody{
+		ResponseData: JwtToken{},
+		ResponseBody: ResponseBody{
+			ResponseStatus: &ResponseStatus{ Status: statusOK },
+			AppInfo: info,
+		},
+	}
 }
 
 // Response with task data
@@ -59,4 +69,13 @@ func NewTasksResponseBody(info map[string]string) *TasksResponseBody {
 type ProjectsResponseBody struct {
 	ResponseBody
 	ResponseData []*models.Project `json:"data"`
+}
+
+func NewProjectsResponseBody (info map[string]string) *ProjectsResponseBody {
+	return &ProjectsResponseBody{
+		ResponseBody: ResponseBody{
+			ResponseStatus: &ResponseStatus{ Status: statusOK },
+			AppInfo: info,
+		},
+	}
 }

@@ -49,9 +49,9 @@ func (c *SecureContext) CorsMiddleware(h http.Handler) http.Handler {
 		if r.Method == "OPTIONS" {
 			w.WriteHeader(http.StatusOK)
 			return
-		} else {
-			h.ServeHTTP(w, r)
 		}
+
+		h.ServeHTTP(w, r)
 	})
 }
 

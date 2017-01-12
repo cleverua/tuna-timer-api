@@ -25,17 +25,6 @@ type FrontendHandlers struct {
 	status                map[string]string
 }
 
-func (h *FrontendHandlers) jsonDecode(data interface{}, r *http.Request, status *ResponseStatus) bool {
-	decoder := json.NewDecoder(r.Body)
-	err := decoder.Decode(data)
-	if err != nil {
-		status.Status = statusInternalServerError
-		status.DeveloperMessage = err.Error()
-		return false
-	}
-	return true
-}
-
 // NewHandlers constructs a FrontendHandler collection
 func NewFrontendHandlers(env *utils.Environment, mongoSession *mgo.Session) *FrontendHandlers {
 	return &FrontendHandlers{
@@ -48,112 +37,107 @@ func NewFrontendHandlers(env *utils.Environment, mongoSession *mgo.Session) *Fro
 	}
 }
 
-func (h *FrontendHandlers) UserAuthentication(w http.ResponseWriter, r *http.Request) {
-	response := JwtResponseBody{
-		ResponseData: JwtToken{},
-		ResponseBody: ResponseBody{
-			ResponseStatus: &ResponseStatus{},
-			AppInfo: h.status,
-		},
+// jsonDecode decodes json request body
+func jsonDecode(data interface{}, r *http.Request, status *ResponseStatus) bool {
+	decoder := json.NewDecoder(r.Body)
+	if err := decoder.Decode(data); err != nil {
+		writeError(status, statusInternalServerError, err.Error(), "")
+		return false
 	}
+	return true
+}
+
+// writeError write error messages to the response body
+// code - status code, dm - developer message, um - user message
+func writeError(rs *ResponseStatus, code, dm, um string ) {
+	rs.DeveloperMessage = dm
+	rs.UserMessage = um
+	rs.Status = code
+}
+
+// encodeResponse encodes response body to JSON
+func encodeResponse(w http.ResponseWriter, resp interface{}) {
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(resp)
+}
+
+func (h *FrontendHandlers) Authenticate(w http.ResponseWriter, r *http.Request) {
+	session := h.mongoSession.Clone()
+	defer session.Close()
+	resp := NewJWTResponseBody(h.status)
+	defer encodeResponse(w, resp)
 
 	requestData := map[string]string{}
-	ok := h.jsonDecode(&requestData, r, response.ResponseStatus)
-	if !ok {
-		json.NewEncoder(w).Encode(response)
+	if ok := jsonDecode(&requestData, r, resp.ResponseStatus); !ok {
 		return
 	}
 
 	pid := requestData["pid"] // TODO: sanitize pid
 
-	session := h.mongoSession.Clone()
-	defer session.Close()
-
 	passService := data.NewPassService(session)
 	pass, err := passService.FindPassByToken(pid)
 
 	if err == nil && pass == nil {
-		response.ResponseStatus.Status = statusBadRequest
-		response.ResponseStatus.UserMessage = userLoginMessage
+		writeError(resp.ResponseStatus, statusBadRequest, "", userLoginMessage)
 	} else if err != nil {
-		response.ResponseStatus.Status = statusInternalServerError
-		response.ResponseStatus.DeveloperMessage = err.Error()
+		writeError(resp.ResponseStatus, statusInternalServerError, err.Error(), "")
 	} else {
-		jwtToken, jwtErr := NewUserToken(pass.TeamUserID, session)
-		if jwtErr != nil {
-			response.ResponseStatus.Status = statusInternalServerError
-			response.ResponseStatus.DeveloperMessage = jwtErr.Error()
-		} else {
-			response.ResponseStatus.Status = statusOK
-			response.ResponseData.Token = jwtToken
+		jwtToken, err := NewUserToken(pass.TeamUserID, session)
+		if err != nil {
+			writeError(resp.ResponseStatus, statusInternalServerError, err.Error(), "")
 		}
+		resp.ResponseData.Token = jwtToken
 	}
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
 }
 
-func(h *FrontendHandlers) UserTimersData(w http.ResponseWriter, r *http.Request) {
+func(h *FrontendHandlers) TimersData(w http.ResponseWriter, r *http.Request) {
+	session := h.mongoSession.Clone()
+	defer session.Close()
+	user := context.Get(r, "user").(*models.TeamUser)
+	resp := NewTasksResponseBody(h.status)
+	defer encodeResponse(w, resp)
+
 	//Get Query params (start and end date)
 	startDate := r.FormValue("startDate")
 	endDate := r.FormValue("endDate")
-	response := NewTasksResponseBody(h.status)
-
-	session := h.mongoSession.Clone()
-	defer session.Close()
-
-	user := context.Get(r, "user").(*models.TeamUser)
 
 	timersService := data.NewTimerService(session)
 	tasks, err := timersService.GetUserTimersByRange(startDate, endDate, user)
 	if err != nil {
-		response.ResponseStatus.Status = statusInternalServerError
-		response.ResponseStatus.DeveloperMessage = err.Error()
-	} else {
-		response.ResponseData = tasks
+		writeError(resp.ResponseStatus, statusInternalServerError, err.Error(), "")
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
+	resp.ResponseData = tasks
 }
 
-func(h *FrontendHandlers) UserProjectsData(w http.ResponseWriter, r *http.Request) {
-	response := ProjectsResponseBody{
-		ResponseBody: ResponseBody{
-			ResponseStatus: &ResponseStatus{ Status: statusOK },
-			AppInfo: h.status,
-		},
-	}
-
+func(h *FrontendHandlers) ProjectsData(w http.ResponseWriter, r *http.Request) {
 	session := h.mongoSession.Clone()
 	defer session.Close()
-
 	user := context.Get(r, "user").(*models.TeamUser)
+
+	resp := NewProjectsResponseBody(h.status)
+	defer encodeResponse(w, resp)
 
 	teamsService := data.NewTeamService(session)
 	team, err := teamsService.FindByID(user.TeamID)
 	if err != nil {
-		response.ResponseStatus.Status = statusInternalServerError
-		response.ResponseStatus.DeveloperMessage = err.Error()
-	}else {
-		response.ResponseData = team.Projects
+		writeError(resp.ResponseStatus, statusInternalServerError, err.Error(), "")
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
+	resp.ResponseData = team.Projects
 }
 
-func(h *FrontendHandlers) CreateUserTimer(w http.ResponseWriter, r *http.Request) {
+func(h *FrontendHandlers) CreateTimer(w http.ResponseWriter, r *http.Request) {
 	session := h.mongoSession.Clone()
 	defer session.Close()
 	user := context.Get(r, "user").(*models.TeamUser)
-	response := NewTasksResponseBody(h.status)
+
+	resp := NewTasksResponseBody(h.status)
+	defer encodeResponse(w, resp)
 
 	//Decode response data
 	newTimerData := &models.Timer{}
-	ok := h.jsonDecode(&newTimerData, r, response.ResponseStatus)
-	if !ok {
-		json.NewEncoder(w).Encode(response)
+	if ok := jsonDecode(&newTimerData, r, resp.ResponseStatus); !ok {
 		return
 	}
 
@@ -165,75 +149,58 @@ func(h *FrontendHandlers) CreateUserTimer(w http.ResponseWriter, r *http.Request
 	}
 
 	//Find and stop previous timer
-	timerToStop, _ := timerService.GetActiveTimer(user.TeamID, user.ID.Hex())
-	if timerToStop != nil {
-		err := timerService.StopTimer(timerToStop)
-		if err != nil {
-			response.ResponseStatus.Status = statusInternalServerError
-			response.ResponseStatus.DeveloperMessage = err.Error()
-			json.NewEncoder(w).Encode(response)
+	if timerToStop, _ := timerService.GetActiveTimer(user.TeamID, user.ID.Hex()); timerToStop != nil {
+		if err := timerService.StopTimer(timerToStop); err != nil {
+			writeError(resp.ResponseStatus, statusInternalServerError, err.Error(), "")
 			return
 		}
 	}
 
-	_, err := timerService.StartTimer(user.TeamID, project, user, newTimerData.TaskName)
-	if err != nil {
-		response.ResponseStatus.Status = statusInternalServerError
-		response.ResponseStatus.DeveloperMessage = err.Error()
-		json.NewEncoder(w).Encode(response)
+	if _, err := timerService.StartTimer(user.TeamID, project, user, newTimerData.TaskName); err != nil {
+		writeError(resp.ResponseStatus, statusInternalServerError, err.Error(), "")
 		return
 	}
 
 	date := time.Now().Format("2006-1-2")
 	timers, _ := timerService.GetUserTimersByRange(date, date, user)
 
-	response.ResponseData = timers
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
+	resp.ResponseData = timers
 }
 
-func(h *FrontendHandlers) UpdateUserTimer(w http.ResponseWriter, r *http.Request) {
+func(h *FrontendHandlers) UpdateTimer(w http.ResponseWriter, r *http.Request) {
 	session := h.mongoSession.Clone()
 	defer session.Close()
-	response := NewTaskResponseBody(h.status)
 	user := context.Get(r, "user").(*models.TeamUser)
+
+	resp := NewTaskResponseBody(h.status)
+	defer encodeResponse(w, resp)
 
 	// Decode response data
 	newTimerData := &models.Timer{}
-	ok := h.jsonDecode(&newTimerData, r, response.ResponseStatus)
-	if !ok {
-		json.NewEncoder(w).Encode(response)
+	if ok := jsonDecode(&newTimerData, r, resp.ResponseStatus); !ok {
 		return
 	}
 
-	//Get timer for update
+	// STOP or update timer
 	timerService := data.NewTimerService(session)
 	var timer *models.Timer
 	var err error
-
 	if r.URL.Query().Get("stop_timer") != "" {
 		timer, err = timerService.GetActiveTimer(user.TeamID, user.ID.Hex())
 		if err != nil {
-			response.ResponseStatus.Status = statusInternalServerError
-			response.ResponseStatus.DeveloperMessage = err.Error()
-			json.NewEncoder(w).Encode(response)
+			writeError(resp.ResponseStatus, statusInternalServerError, err.Error(), "")
 			return
-		} else {
-			timerService.StopTimer(timer)
 		}
+
+		timerService.StopTimer(timer)
 	} else {
 		timer, _ = timerService.FindByID(newTimerData.ID.Hex())
-		err = timerService.UpdateUserTimer(user, timer, newTimerData)
 
-		if err != nil {
-			response.ResponseStatus.Status = statusInternalServerError
-			response.ResponseStatus.DeveloperMessage = err.Error()
-			json.NewEncoder(w).Encode(response)
+		if err = timerService.UpdateUserTimer(user, timer, newTimerData); err != nil {
+			writeError(resp.ResponseStatus, statusInternalServerError, err.Error(), "")
 			return
 		}
 	}
 
-	response.ResponseData = *timer
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
+	resp.ResponseData = *timer
 }
