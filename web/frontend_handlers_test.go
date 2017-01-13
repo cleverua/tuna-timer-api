@@ -73,7 +73,10 @@ func (s *FrontendHandlersTestSuite) TestAuthenticateWithWrongPid(t *testing.T) {
 }
 
 func (s *FrontendHandlersTestSuite) TestTimersData(t *testing.T)  {
-	req, err := http.NewRequest("GET", "/api/v1/frontend/timers?startDate=2016-12-20&endDate=2016-12-22", nil)
+	date := time.Now().Format("2006-1-2")
+	url := "/api/v1/frontend/timers?startDate=" + date + "&endDate=" + date
+
+	req, err := http.NewRequest("GET", url, nil)
 	req.Header.Set("Authorization", "Bearer " + s.userJwt)
 	s.Nil(err)
 
@@ -81,13 +84,14 @@ func (s *FrontendHandlersTestSuite) TestTimersData(t *testing.T)  {
 	recorder := httptest.NewRecorder()
 	s.middlewareChain.ThenFunc(h.TimersData).ServeHTTP(recorder, req)
 
-	resp := TasksResponseBody{}
+	resp := TimersResponseBody{}
 	err = json.Unmarshal(recorder.Body.Bytes(), &resp)
 
 	s.Nil(err)
 	s.Equal(resp.ResponseStatus.Status, "200")
 	s.Equal(resp.AppInfo["env"], utils.TestEnv)
 	s.Equal(resp.AppInfo["version"], s.env.AppVersion)
+	s.Equal(len(resp.ResponseData), 1)
 	s.Equal(resp.ResponseData[0].ID, s.timer.ID)
 }
 
@@ -100,7 +104,7 @@ func (s *FrontendHandlersTestSuite) TestTimersDataWithoutDateRange(t *testing.T)
 	recorder := httptest.NewRecorder()
 	s.middlewareChain.ThenFunc(h.TimersData).ServeHTTP(recorder, req)
 
-	resp := TasksResponseBody{}
+	resp := TimersResponseBody{}
 	err = json.Unmarshal(recorder.Body.Bytes(), &resp)
 
 	s.Nil(err)
@@ -130,7 +134,7 @@ func (s *FrontendHandlersTestSuite) TestTimersDataWithNoExistingUser(t *testing.
 	recorder := httptest.NewRecorder()
 	s.middlewareChain.ThenFunc(h.TimersData).ServeHTTP(recorder, req)
 
-	resp := TasksResponseBody{}
+	resp := TimersResponseBody{}
 	err = json.Unmarshal(recorder.Body.Bytes(), &resp)
 	s.Nil(err)
 
@@ -188,6 +192,173 @@ func (s *FrontendHandlersTestSuite) TestProjectsDataWithNoExistedUser(t *testing
 	s.Equal(resp.ResponseStatus.DeveloperMessage, mgo.ErrNotFound.Error())
 	s.Equal(resp.AppInfo["env"], utils.TestEnv)
 	s.Equal(resp.AppInfo["version"], s.env.AppVersion)
+}
+
+func (s *FrontendHandlersTestSuite) TestCreateTimer(t *testing.T)  {
+	// It should create new timer, stop active timer and return current day Timers for User
+	newTimer := models.Timer{
+		TaskName:   "New task name",
+		TeamUserID: s.user.ID.Hex(),
+		TeamID:     s.team.ID.Hex(),
+		ProjectID:  bson.NewObjectId().Hex(),
+		ProjectExternalID:  "external-project-id",
+		ProjectExternalName: "external-project-name",
+		Minutes: 30,
+	}
+	body := new(bytes.Buffer)
+	json.NewEncoder(body).Encode(newTimer)
+
+	req, err := http.NewRequest("POST", "/api/v1/frontend/timers", body)
+	s.Nil(err)
+	req.Header.Set("Authorization", "Bearer " + s.userJwt)
+	req.Header.Set("Content-Type", "application/json")
+
+	h := NewFrontendHandlers(s.env, s.session)
+	recorder := httptest.NewRecorder()
+	s.middlewareChain.ThenFunc(h.CreateTimer).ServeHTTP(recorder, req)
+
+	resp := TimersResponseBody{}
+	err = json.Unmarshal(recorder.Body.Bytes(), &resp)
+
+	s.Nil(err)
+	s.Equal(resp.ResponseStatus.Status, "200")
+	s.Equal(resp.AppInfo["env"], utils.TestEnv)
+	s.Equal(resp.AppInfo["version"], s.env.AppVersion)
+
+	// Check response timers data
+	s.Len(resp.ResponseData, 2)
+
+	// Check for first timer completed
+	s.Equal(resp.ResponseData[0].ID, s.timer.ID)
+	s.Equal(resp.ResponseData[0].Minutes, 20)
+	s.NotNil(resp.ResponseData[0])
+
+	// Check new timers data
+	s.Equal(resp.ResponseData[1].TaskName, newTimer.TaskName)
+	s.Equal(resp.ResponseData[1].TeamUserID, newTimer.TeamUserID)
+	s.Equal(resp.ResponseData[1].ProjectID, newTimer.ProjectID)
+	s.Equal(resp.ResponseData[1].ProjectExternalID, newTimer.ProjectExternalID)
+	s.Equal(resp.ResponseData[1].ProjectExternalName, newTimer.ProjectExternalName)
+	s.Equal(resp.ResponseData[1].Minutes, 0)
+	s.Equal(resp.ResponseData[1].TeamID, s.user.TeamID)
+}
+
+func (s *FrontendHandlersTestSuite) TestUpdateTimer(t *testing.T)  {
+	timersData := models.Timer{
+		ID: s.timer.ID,
+		TaskName:   "New task name",
+		ProjectID:  bson.NewObjectId().Hex(),
+		ProjectExternalID:  "external-project-id",
+		ProjectExternalName: "external-project-name",
+	}
+	body := new(bytes.Buffer)
+	json.NewEncoder(body).Encode(timersData)
+
+	req, err := http.NewRequest("PUT", "/api/v1/frontend/timers", body)
+	s.Nil(err)
+	req.Header.Set("Authorization", "Bearer " + s.userJwt)
+	req.Header.Set("Content-Type", "application/json")
+
+	h := NewFrontendHandlers(s.env, s.session)
+	recorder := httptest.NewRecorder()
+	s.middlewareChain.ThenFunc(h.UpdateTimer).ServeHTTP(recorder, req)
+
+	resp := TimerResponseBody{}
+	err = json.Unmarshal(recorder.Body.Bytes(), &resp)
+
+	s.Nil(err)
+	s.Equal(resp.ResponseStatus.Status, "200")
+	s.Equal(resp.AppInfo["env"], utils.TestEnv)
+	s.Equal(resp.AppInfo["version"], s.env.AppVersion)
+	s.Equal(resp.ResponseData.ID, s.timer.ID)
+	s.Equal(resp.ResponseData.TaskName, timersData.TaskName)
+	s.Equal(resp.ResponseData.TeamUserID, s.timer.TeamUserID)
+	s.Equal(resp.ResponseData.ProjectID, timersData.ProjectID)
+	s.Equal(resp.ResponseData.ProjectExternalID, timersData.ProjectExternalID)
+	s.Equal(resp.ResponseData.ProjectExternalName, timersData.ProjectExternalName)
+	s.Equal(resp.ResponseData.Minutes, 20)
+	s.Equal(resp.ResponseData.TeamID, s.user.TeamID)
+}
+
+func (s *FrontendHandlersTestSuite) TestUpdateTimerWithNoExistingTimer(t *testing.T)  {
+	timersData := models.Timer{
+		ID: bson.NewObjectId(),
+		TaskName:   "New task name",
+		ProjectID:  bson.NewObjectId().Hex(),
+		ProjectExternalID:  "external-project-id",
+		ProjectExternalName: "external-project-name",
+	}
+	body := new(bytes.Buffer)
+	json.NewEncoder(body).Encode(timersData)
+
+	req, err := http.NewRequest("PUT", "/api/v1/frontend/timers", body)
+	s.Nil(err)
+	req.Header.Set("Authorization", "Bearer " + s.userJwt)
+	req.Header.Set("Content-Type", "application/json")
+
+	h := NewFrontendHandlers(s.env, s.session)
+	recorder := httptest.NewRecorder()
+	s.middlewareChain.ThenFunc(h.UpdateTimer).ServeHTTP(recorder, req)
+
+	resp := TimerResponseBody{}
+	err = json.Unmarshal(recorder.Body.Bytes(), &resp)
+
+	s.Nil(err)
+	s.Equal(resp.ResponseStatus.Status, "500")
+	s.Equal(resp.AppInfo["env"], utils.TestEnv)
+	s.Equal(resp.AppInfo["version"], s.env.AppVersion)
+	s.Equal(resp.ResponseStatus.DeveloperMessage, mgo.ErrNotFound.Error())
+}
+
+func (s *FrontendHandlersTestSuite) TestUpdateTimerStopAction(t *testing.T)  {
+	body := new(bytes.Buffer)
+	json.NewEncoder(body).Encode(models.Timer{})
+
+	req, err := http.NewRequest("PUT", "/api/v1/frontend/timers?stop_timer=true", body)
+	s.Nil(err)
+	req.Header.Set("Authorization", "Bearer " + s.userJwt)
+	req.Header.Set("Content-Type", "application/json")
+
+	h := NewFrontendHandlers(s.env, s.session)
+	recorder := httptest.NewRecorder()
+	s.middlewareChain.ThenFunc(h.UpdateTimer).ServeHTTP(recorder, req)
+
+	resp := TimerResponseBody{}
+	err = json.Unmarshal(recorder.Body.Bytes(), &resp)
+
+	s.Nil(err)
+	s.Equal(resp.ResponseStatus.Status, "200")
+	s.Equal(resp.AppInfo["env"], utils.TestEnv)
+	s.Equal(resp.AppInfo["version"], s.env.AppVersion)
+	s.Equal(resp.ResponseData.ID, s.timer.ID)
+	s.Equal(resp.ResponseData.Minutes, 20)
+	s.NotNil(resp.ResponseData.FinishedAt)
+}
+
+func (s *FrontendHandlersTestSuite) TestUpdateTimerStopAlreadyStoppedTimer(t *testing.T)  {
+	timerService := data.NewTimerService(s.session)
+	err := timerService.StopTimer(s.timer)
+	s.Nil(err)
+
+	body := new(bytes.Buffer)
+	json.NewEncoder(body).Encode(models.Timer{})
+
+	req, err := http.NewRequest("PUT", "/api/v1/frontend/timers?stop_timer=true", body)
+	s.Nil(err)
+	req.Header.Set("Authorization", "Bearer " + s.userJwt)
+	req.Header.Set("Content-Type", "application/json")
+
+	h := NewFrontendHandlers(s.env, s.session)
+	recorder := httptest.NewRecorder()
+	s.middlewareChain.ThenFunc(h.UpdateTimer).ServeHTTP(recorder, req)
+
+	resp := TimerResponseBody{}
+	err = json.Unmarshal(recorder.Body.Bytes(), &resp)
+
+	s.Nil(err)
+	s.Equal(resp.ResponseStatus.Status, "400")
+	s.Equal(resp.ResponseStatus.DeveloperMessage, mgo.ErrNotFound.Error())
+	s.Equal(resp.ResponseStatus.UserMessage, "already stopped")
 }
 
 // =================== TEST setup =================== //
@@ -279,7 +450,7 @@ func (s *FrontendHandlersTestSuite) SetUp() {
 			TeamID:     s.team.ID.Hex(),
 			ProjectID:  "project",
 			TeamUserID: s.user.ID.Hex(),
-			CreatedAt:  utils.PT("2016 Dec 21 00:00:00"),
+			CreatedAt:  time.Now().Add(-20 * time.Minute),
 			Minutes:    20,
 	})
 	s.Nil(err)

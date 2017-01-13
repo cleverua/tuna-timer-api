@@ -254,7 +254,7 @@ func (r *TimerRepository) findUserTasksByRange(userID string, startDate, endDate
 			"$gte": startDate,
 			"$lte": endDate,
 		},
-	}).All(&results)
+	}).Sort("created_at").All(&results)
 
 	return results, err
 }

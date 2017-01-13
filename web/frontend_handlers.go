@@ -9,6 +9,7 @@ import (
 	"github.com/cleverua/tuna-timer-api/models"
 	"github.com/gorilla/context"
 	"time"
+	"gopkg.in/mgo.v2/bson"
 )
 
 const (
@@ -94,7 +95,7 @@ func(h *FrontendHandlers) TimersData(w http.ResponseWriter, r *http.Request) {
 	session := h.mongoSession.Clone()
 	defer session.Close()
 	user := context.Get(r, "user").(*models.TeamUser)
-	resp := NewTasksResponseBody(h.status)
+	resp := NewTimersResponseBody(h.status)
 	defer encodeResponse(w, resp)
 
 	//Get Query params (start and end date)
@@ -132,31 +133,31 @@ func(h *FrontendHandlers) CreateTimer(w http.ResponseWriter, r *http.Request) {
 	defer session.Close()
 	user := context.Get(r, "user").(*models.TeamUser)
 
-	resp := NewTasksResponseBody(h.status)
+	resp := NewTimersResponseBody(h.status)
 	defer encodeResponse(w, resp)
 
 	//Decode response data
-	newTimerData := &models.Timer{}
-	if ok := jsonDecode(&newTimerData, r, resp.ResponseStatus); !ok {
+	newTimer := &models.Timer{}
+	if ok := jsonDecode(&newTimer, r, resp.ResponseStatus); !ok {
 		return
 	}
 
 	timerService := data.NewTimerService(session)
 	project := &models.Project{
-		ID:                  newTimerData.ID,
-		ExternalProjectName: newTimerData.ProjectExternalName,
-		ExternalProjectID:   newTimerData.ProjectExternalID,
+		ID:                  bson.ObjectIdHex(newTimer.ProjectID),
+		ExternalProjectName: newTimer.ProjectExternalName,
+		ExternalProjectID:   newTimer.ProjectExternalID,
 	}
 
 	//Find and stop previous timer
-	if timerToStop, _ := timerService.GetActiveTimer(user.TeamID, user.ID.Hex()); timerToStop != nil {
-		if err := timerService.StopTimer(timerToStop); err != nil {
+	if activeTimer, _ := timerService.GetActiveTimer(user.TeamID, user.ID.Hex()); activeTimer != nil {
+		if err := timerService.StopTimer(activeTimer); err != nil {
 			writeError(resp.ResponseStatus, statusInternalServerError, err.Error(), "")
 			return
 		}
 	}
 
-	if _, err := timerService.StartTimer(user.TeamID, project, user, newTimerData.TaskName); err != nil {
+	if _, err := timerService.StartTimer(user.TeamID, project, user, newTimer.TaskName); err != nil {
 		writeError(resp.ResponseStatus, statusInternalServerError, err.Error(), "")
 		return
 	}
@@ -172,7 +173,7 @@ func(h *FrontendHandlers) UpdateTimer(w http.ResponseWriter, r *http.Request) {
 	defer session.Close()
 	user := context.Get(r, "user").(*models.TeamUser)
 
-	resp := NewTaskResponseBody(h.status)
+	resp := NewTimerResponseBody(h.status)
 	defer encodeResponse(w, resp)
 
 	// Decode response data
@@ -192,6 +193,10 @@ func(h *FrontendHandlers) UpdateTimer(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		if timer == nil {
+			writeError(resp.ResponseStatus, statusBadRequest, mgo.ErrNotFound.Error(), "already stopped")
+			return
+		}
 		timerService.StopTimer(timer)
 	} else {
 		timer, _ = timerService.FindByID(newTimerData.ID.Hex())

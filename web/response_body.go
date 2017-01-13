@@ -34,14 +34,14 @@ func NewJWTResponseBody(info map[string]string) *JWTResponseBody{
 }
 
 // Response with task data
-type TaskResponseBody struct {
+type TimerResponseBody struct {
 	ResponseBody
 	ResponseData models.Timer	`json:"data"`
 	TaskErrors   map[string]string  `json:"errors"`
 }
 
-func NewTaskResponseBody(info map[string]string) *TaskResponseBody {
-	return &TaskResponseBody{
+func NewTimerResponseBody(info map[string]string) *TimerResponseBody {
+	return &TimerResponseBody{
 		ResponseBody: ResponseBody{
 			ResponseStatus: &ResponseStatus{ Status: statusOK },
 			AppInfo: info,
@@ -51,13 +51,13 @@ func NewTaskResponseBody(info map[string]string) *TaskResponseBody {
 }
 
 // Response with array of tasks data
-type TasksResponseBody struct {
+type TimersResponseBody struct {
 	ResponseBody
 	ResponseData []*models.Timer `json:"data"`
 }
 
-func NewTasksResponseBody(info map[string]string) *TasksResponseBody {
-	return &TasksResponseBody{
+func NewTimersResponseBody(info map[string]string) *TimersResponseBody {
+	return &TimersResponseBody{
 		ResponseBody: ResponseBody{
 			ResponseStatus: &ResponseStatus{ Status: statusOK },
 			AppInfo: info,

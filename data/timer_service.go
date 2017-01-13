@@ -132,7 +132,7 @@ func (s *TimerService) CalculateMinutesForActiveTimer(timer *models.Timer) int {
 // Returns all user tasks for range(startDate...endDate).
 // Range couldn't be more than 31 day
 func (s *TimerService) GetUserTimersByRange(startDate, endDate string, user *models.TeamUser) ([]*models.Timer, error) {
-	// What timezone to use: user or tz from frontend request?
+	// Decide what timezone to use: user or tz from frontend request? todo
 	tzOffset := user.SlackUserInfo.TZOffset
 	layout := "2006-1-2 15:04:05"
 
