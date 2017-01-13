@@ -18,26 +18,64 @@ type ResponseStatus struct {
 }
 
 // Response with jwt token
-type JwtResponseBody struct {
+type JWTResponseBody struct {
 	ResponseBody
 	ResponseData JwtToken `json:"data"`
 }
 
+func NewJWTResponseBody(info map[string]string) *JWTResponseBody{
+	return &JWTResponseBody{
+		ResponseData: JwtToken{},
+		ResponseBody: ResponseBody{
+			ResponseStatus: &ResponseStatus{ Status: statusOK },
+			AppInfo: info,
+		},
+	}
+}
+
 // Response with task data
-type TaskResponseBody struct {
+type TimerResponseBody struct {
 	ResponseBody
-	ResponseData models.TaskAggregation `json:"data"`
-	TaskErrors   map[string]string      `json:"errors"`
+	ResponseData models.Timer	`json:"data"`
+	TaskErrors   map[string]string  `json:"errors"`
+}
+
+func NewTimerResponseBody(info map[string]string) *TimerResponseBody {
+	return &TimerResponseBody{
+		ResponseBody: ResponseBody{
+			ResponseStatus: &ResponseStatus{ Status: statusOK },
+			AppInfo: info,
+		},
+		TaskErrors: map[string]string{},
+	}
 }
 
 // Response with array of tasks data
-type TasksResponseBody struct {
+type TimersResponseBody struct {
 	ResponseBody
 	ResponseData []*models.Timer `json:"data"`
+}
+
+func NewTimersResponseBody(info map[string]string) *TimersResponseBody {
+	return &TimersResponseBody{
+		ResponseBody: ResponseBody{
+			ResponseStatus: &ResponseStatus{ Status: statusOK },
+			AppInfo: info,
+		},
+	}
 }
 
 // Response with array of projects data
 type ProjectsResponseBody struct {
 	ResponseBody
 	ResponseData []*models.Project `json:"data"`
+}
+
+func NewProjectsResponseBody (info map[string]string) *ProjectsResponseBody {
+	return &ProjectsResponseBody{
+		ResponseBody: ResponseBody{
+			ResponseStatus: &ResponseStatus{ Status: statusOK },
+			AppInfo: info,
+		},
+	}
 }

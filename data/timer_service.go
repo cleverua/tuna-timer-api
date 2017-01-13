@@ -29,6 +29,10 @@ func (s *TimerService) GetActiveTimer(teamID, userID string) (*models.Timer, err
 	return timer, err
 }
 
+func (s *TimerService) FindByID(id string)  (*models.Timer, error) {
+	return s.repository.findByID(id)
+}
+
 // StopTimer stops the timer and updates its Minutes field
 func (s *TimerService) StopTimer(timer *models.Timer) error {
 	now := time.Now()
@@ -127,8 +131,8 @@ func (s *TimerService) CalculateMinutesForActiveTimer(timer *models.Timer) int {
 
 // Returns all user tasks for range(startDate...endDate).
 // Range couldn't be more than 31 day
-func (s *TimerService)GetUserTasksByRange(startDate, endDate string, user *models.TeamUser) ([]*models.Timer, error) {
-	// What timezone to use: user or tz from frontend request?
+func (s *TimerService) GetUserTimersByRange(startDate, endDate string, user *models.TeamUser) ([]*models.Timer, error) {
+	// Decide what timezone to use: user or tz from frontend request? todo
 	tzOffset := user.SlackUserInfo.TZOffset
 	layout := "2006-1-2 15:04:05"
 
@@ -150,4 +154,20 @@ func (s *TimerService)GetUserTasksByRange(startDate, endDate string, user *model
 	}
 
 	return s.repository.findUserTasksByRange(user.ID.Hex(), startTime, endTime)
+}
+
+func (s *TimerService) UpdateUserTimer(user *models.TeamUser, timer *models.Timer, newTimerData *models.Timer) error {
+	if user.ID.Hex() != timer.TeamUserID {
+		return mgo.ErrNotFound
+	}
+
+	// Update timer data.
+	// Allowed parameters: taskName, projectID, ProjectExternalID, ProjectExternalName, minutes: map[string]string
+	// TODO update minutes data. Array of objects {updateID string: minutes int}
+	timer.TaskName = newTimerData.TaskName
+	timer.ProjectID = newTimerData.ProjectID
+	timer.ProjectExternalID = newTimerData.ProjectExternalID
+	timer.ProjectExternalName = newTimerData.ProjectExternalName
+
+	return s.repository.update(timer)
 }

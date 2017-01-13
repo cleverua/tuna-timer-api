@@ -37,11 +37,20 @@ func main() {
 
 	environment.MigrateDatabase(session)
 	handlers := web.NewHandlers(environment, session)
-	frontendHandlers := web.NewFrontendHandlers(environment, session)
-	cors := web.Cors{Origin: environment.Config.UString("origin.url")}
+	fh := web.NewFrontendHandlers(environment, session)
+	secureCTX := web.SecureContext{
+		Origin:  environment.Config.UString("origin.url"),
+		Session: session,
+		Env: 	 environment,
+	}
 
-	public := alice.New(web.LoggingMiddleware, web.RecoveryMiddleware, cors.CorsMiddleware)
-	secure := alice.New(web.LoggingMiddleware, web.RecoveryMiddleware, cors.CorsMiddleware, web.JWTMiddleware)
+	public := alice.New(web.LoggingMiddleware, web.RecoveryMiddleware, secureCTX.CorsMiddleware)
+	secure := alice.New(
+		web.LoggingMiddleware,
+		web.RecoveryMiddleware,
+		secureCTX.CorsMiddleware,
+		web.JWTMiddleware,
+		secureCTX.CurrentUserMiddleware)
 
 	router := mux.NewRouter().StrictSlash(true)
 
@@ -59,13 +68,15 @@ func main() {
 
 	// ===== Routes for frontend application
 	// Activates the pass and returns back a JWT token, it essentially logs the user in
-	router.Handle("/api/v1/frontend/session", public.ThenFunc(frontendHandlers.UserAuthentication)).Methods("POST", "OPTIONS")
-	// reads JWT from header and returns a 200 if it is okay and not expired
-	router.Handle("/api/v1/frontend/auth/validate", secure.ThenFunc(handlers.ValidateAuthToken)).Methods("GET", "OPTIONS")
-	router.Handle("/api/v1/frontend/timers", secure.ThenFunc(frontendHandlers.UserTimersData)).Methods("GET", "OPTIONS")
-	router.Handle("/api/v1/frontend/projects", secure.ThenFunc(frontendHandlers.UserProjectsData)).Methods("GET", "OPTIONS")
+	router.Handle("/api/v1/frontend/session", public.ThenFunc(fh.Authenticate)).Methods("POST", "OPTIONS")
+	// Routes for user data CRUD
+	router.Handle("/api/v1/frontend/timers", secure.ThenFunc(fh.TimersData)).Methods("GET", "OPTIONS")
+	router.Handle("/api/v1/frontend/timers", secure.ThenFunc(fh.CreateTimer)).Methods("POST", "OPTIONS")
+	router.Handle("/api/v1/frontend/timers/{id}", secure.ThenFunc(fh.UpdateTimer)).Methods("PUT", "OPTIONS")
+	router.Handle("/api/v1/frontend/projects", secure.ThenFunc(fh.ProjectsData)).Methods("GET", "OPTIONS")
 
 	// Temporary stuff, remove eventually
+	router.Handle("/api/v1/frontend/auth/validate", secure.ThenFunc(handlers.ValidateAuthToken)).Methods("GET", "OPTIONS")
 	router.Handle("/api/v1/temporary/clear_data", public.ThenFunc(handlers.ClearAllData)).Methods("GET")
 	router.Handle("/api/v1/temporary/send_message", public.ThenFunc(handlers.SendSampleMessageFromBot)).Methods("GET")
 
