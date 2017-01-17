@@ -64,8 +64,16 @@ type Timer struct {
 	CreatedAt           time.Time     `json:"created_at" bson:"created_at"`
 	FinishedAt          *time.Time    `json:"finished_at" bson:"finished_at"`
 	Minutes             int           `json:"minutes" bson:"minutes"`
+	ActualMinutes	    int		  `json:"actual_minutes" bson:"actual_minutes"`
+	Edits		    []*TimeEdit   `json:"edits" bson:"edits"`
 	DeletedAt           *time.Time    `json:"deleted_at" bson:"deleted_at"`
 	ModelVersion        int           `json:"ver" bson:"ver"`
+}
+
+type TimeEdit struct {
+	TeamUserID          string        `json:"team_user_id" bson:"team_user_id"`
+	CreatedAt           time.Time     `json:"created_at" bson:"created_at"`
+	Minutes             int           `json:"minutes" bson:"minutes"`
 }
 
 // Pass - a one time login token that is used by frontend to get JWT from the backend

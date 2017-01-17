@@ -36,7 +36,8 @@ func (s *TimerService) FindByID(id string)  (*models.Timer, error) {
 // StopTimer stops the timer and updates its Minutes field
 func (s *TimerService) StopTimer(timer *models.Timer) error {
 	now := time.Now()
-	timer.Minutes = s.CalculateMinutesForActiveTimer(timer)
+	timer.ActualMinutes = s.CalculateMinutesForActiveTimer(timer)
+	timer.Minutes = timer.ActualMinutes
 	timer.FinishedAt = &now
 	return s.repository.update(timer)
 }
@@ -156,18 +157,24 @@ func (s *TimerService) GetUserTimersByRange(startDate, endDate string, user *mod
 	return s.repository.findUserTasksByRange(user.ID.Hex(), startTime, endTime)
 }
 
-func (s *TimerService) UpdateUserTimer(user *models.TeamUser, timer *models.Timer, newTimerData *models.Timer) error {
-	if user.ID.Hex() != timer.TeamUserID {
-		return mgo.ErrNotFound
+func (s *TimerService) UpdateUserTimer(user *models.TeamUser, timer *models.Timer, newData *models.Timer) error {
+	if user.ID.Hex() != timer.TeamUserID && !(user.SlackUserInfo.IsOwner && user.TeamID == timer.TeamID) {
+		//TODO move all errors into separate struct
+		return errors.New("update forbidden")
 	}
 
-	// Update timer data.
-	// Allowed parameters: taskName, projectID, ProjectExternalID, ProjectExternalName, minutes: map[string]string
-	// TODO update minutes data. Array of objects {updateID string: minutes int}
-	timer.TaskName = newTimerData.TaskName
-	timer.ProjectID = newTimerData.ProjectID
-	timer.ProjectExternalID = newTimerData.ProjectExternalID
-	timer.ProjectExternalName = newTimerData.ProjectExternalName
+	// Allowed parameters: TaskName, ProjectID, ProjectExternalID, ProjectExternalName, Edits
+	timer.TaskName = newData.TaskName
+	timer.ProjectID = newData.ProjectID
+	timer.ProjectExternalID = newData.ProjectExternalID
+	timer.ProjectExternalName = newData.ProjectExternalName
+	timer.Edits = newData.Edits
+
+	var count int = 0
+	for _, te := range newData.Edits {
+		count += te.Minutes
+	}
+	timer.Minutes = timer.ActualMinutes + count
 
 	return s.repository.update(timer)
 }

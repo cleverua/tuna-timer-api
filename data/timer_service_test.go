@@ -79,6 +79,7 @@ func (s *TimerServiceTestSuite) TeststopTimer(t *testing.T) {
 	s.Nil(err)
 
 	s.Equal(loadedTimer.Minutes, 20)
+	s.Equal(loadedTimer.ActualMinutes, 20)
 	s.NotNil(loadedTimer.FinishedAt)
 }
 
@@ -434,6 +435,153 @@ func (s *TimerServiceTestSuite) TestGetUserTasksByRangeFail(t *testing.T) {
 	s.Err(err)
 	s.Equal(err.Error(), "Too much days in range")
 	s.Len(timers, 0)
+}
+
+func (s *TimerServiceTestSuite) TestUpdateUserTimer(t *testing.T) {
+	user := &models.TeamUser{
+		ID:             bson.NewObjectId(),
+		ExternalUserID: "user",
+		TeamID:		"team",
+		SlackUserInfo: &slack.User{
+			TZOffset: 10800,
+		},
+	}
+
+	timer := &models.Timer{
+		ID:			bson.NewObjectId(),
+		TaskName:		"task-name",
+		TeamID:			"team",
+		ProjectID:		"project-id",
+		ProjectExternalID:	"project-external-id",
+		ProjectExternalName:	"project-external-name",
+		TeamUserID:		user.ID.Hex(),
+		CreatedAt:		utils.PT("2016 Dec 20 10:35:00"),
+		Minutes:		20,
+		ActualMinutes:		20,
+	}
+	s.repo.CreateTimer(timer)
+
+	newTimerData := &models.Timer{
+		ID:			bson.NewObjectId(),
+		TaskName:		"new-task-name",
+		TeamID:			"new-team-id",
+		ProjectID:		"new-project-id",
+		ProjectExternalID:	"new-project-external-id",
+		ProjectExternalName:	"new-project-external-name",
+		TeamUserID:		bson.NewObjectId().Hex(),
+		CreatedAt:		utils.PT("2016 Dec 20 12:50:00"),
+		Minutes:		40,
+		ActualMinutes:		40,
+		Edits:	[]*models.TimeEdit{
+			{TeamUserID: user.ID.Hex(), CreatedAt: time.Now(), Minutes: 10},
+		},
+	}
+
+	err := s.service.UpdateUserTimer(user, timer, newTimerData)
+	s.Nil(err)
+
+	// Check permit parameters: Edits, TaskName, ProjectID, ProjectExternalID, ProjectExternalName
+	s.Equal(timer.Edits, newTimerData.Edits)
+	s.Equal(timer.TaskName, newTimerData.TaskName)
+	s.Equal(timer.ProjectID, newTimerData.ProjectID)
+	s.Equal(timer.ProjectExternalID, newTimerData.ProjectExternalID)
+	s.Equal(timer.ProjectExternalName, newTimerData.ProjectExternalName)
+	// Check calculated params
+	s.Equal(timer.Minutes, 30)
+	s.Equal(timer.ActualMinutes, 20)
+	// Check for other parameters didn't change
+	s.NotEqual(timer.ID, newTimerData.ID)
+	s.NotEqual(timer.TeamID, newTimerData.TeamID)
+	s.NotEqual(timer.TeamUserID, newTimerData.TeamUserID)
+	s.NotEqual(timer.Minutes, newTimerData.Minutes)
+	s.NotEqual(timer.Minutes, newTimerData.Minutes)
+	s.NotEqual(timer.ActualMinutes, newTimerData.ActualMinutes)
+	s.NotEqual(timer.CreatedAt, newTimerData.CreatedAt)
+}
+
+func (s *TimerServiceTestSuite) TestUpdateUserTimerWithWrongUserID(t *testing.T) {
+	user := &models.TeamUser{
+		ID:             bson.NewObjectId(),
+		ExternalUserID: "user",
+		SlackUserInfo: &slack.User{
+			TZOffset: 10800,
+		},
+	}
+
+	timer := &models.Timer{
+		TaskName:		"task-name",
+		ProjectID:		"project-id",
+		ProjectExternalID:	"project-external-id",
+		ProjectExternalName:	"project-external-name",
+		TeamUserID:		 bson.NewObjectId().Hex(),
+		TeamID:			"team",
+	}
+	s.repo.CreateTimer(timer)
+
+	newTimerData := &models.Timer{
+		TaskName:		"new-task-name",
+		ProjectID:		"new-project-id",
+		ProjectExternalID:	"new-project-external-id",
+		ProjectExternalName:	"new-project-external-name",
+	}
+
+	err := s.service.UpdateUserTimer(user, timer, newTimerData)
+	// Should return error, and didn't change timer
+	s.NotNil(err)
+	s.Equal(err.Error(), "update forbidden")
+	s.NotEqual(timer.TaskName, newTimerData.TaskName)
+	s.NotEqual(timer.ProjectID, newTimerData.ProjectID)
+	s.NotEqual(timer.ProjectExternalID, newTimerData.ProjectExternalID)
+	s.NotEqual(timer.ProjectExternalName, newTimerData.ProjectExternalName)
+}
+
+func (s *TimerServiceTestSuite) TestUpdateUserTimerForSlackOwner(t *testing.T) {
+	user := &models.TeamUser{
+		ID:             bson.NewObjectId(),
+		ExternalUserID: "user",
+		TeamID:		"team",
+		SlackUserInfo: &slack.User{
+			TZOffset: 10800,
+			IsOwner:  true,
+		},
+	}
+
+	timer := &models.Timer{
+		ID:			bson.NewObjectId(),
+		TaskName:		"task-name",
+		TeamID:			"team",
+		ProjectID:		"project-id",
+		ProjectExternalID:	"project-external-id",
+		ProjectExternalName:	"project-external-name",
+		TeamUserID:		bson.NewObjectId().Hex(),
+		CreatedAt:		utils.PT("2016 Dec 20 10:35:00"),
+		Minutes:		20,
+		ActualMinutes:		20,
+	}
+	s.repo.CreateTimer(timer)
+
+	newTimerData := &models.Timer{
+		ID:			bson.NewObjectId(),
+		TaskName:		"new-task-name",
+		TeamID:			"new-team-id",
+		ProjectID:		"new-project-id",
+		ProjectExternalID:	"new-project-external-id",
+		ProjectExternalName:	"new-project-external-name",
+		TeamUserID:		bson.NewObjectId().Hex(),
+		CreatedAt:		utils.PT("2016 Dec 20 12:50:00"),
+		Minutes:		40,
+		ActualMinutes:		40,
+		Edits:	[]*models.TimeEdit{
+			{TeamUserID: user.ID.Hex(), CreatedAt: time.Now(), Minutes: 10},
+		},
+	}
+
+	err := s.service.UpdateUserTimer(user, timer, newTimerData)
+	s.Nil(err)
+	s.Equal(timer.TaskName, newTimerData.TaskName)
+	s.Equal(timer.ProjectID, newTimerData.ProjectID)
+	s.Equal(timer.ProjectExternalID, newTimerData.ProjectExternalID)
+	s.Equal(timer.ProjectExternalName, newTimerData.ProjectExternalName)
 }
 
 func (s *TimerServiceTestSuite) SetUpSuite() {
