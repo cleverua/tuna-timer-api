@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"gopkg.in/mgo.v2"
-
 	"github.com/olebedev/config"
 )
 
@@ -19,8 +18,7 @@ const (
 )
 
 const (
-	//PassExpiresInMinutes          = 5
-	PassExpiresInMinutes          = 30
+	PassExpiresInMinutes          = 5
 	ClaimedPassesToPurgeAfterDays = 7
 )
 
@@ -74,7 +72,6 @@ func (env *Environment) MigrateDatabase(session *mgo.Session) error {
 	timers.EnsureIndex(mgo.Index{Key: []string{"project_id"}})
 	timers.EnsureIndex(mgo.Index{Key: []string{"team_user_id"}})
 	timers.EnsureIndex(mgo.Index{Key: []string{"hash"}})
-	timers.EnsureIndex(mgo.Index{Key: []string{"created_at"}})
 	timers.EnsureIndex(mgo.Index{Key: []string{"created_at"}})
 	timers.EnsureIndex(mgo.Index{Key: []string{"finished_at"}})
 	timers.EnsureIndex(mgo.Index{Key: []string{"deleted_at"}})

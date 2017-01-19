@@ -240,6 +240,7 @@ func (s *FrontendHandlersTestSuite) TestCreateTimer(t *testing.T)  {
 	s.Equal(resp.ResponseData[1].ProjectExternalID, newTimer.ProjectExternalID)
 	s.Equal(resp.ResponseData[1].ProjectExternalName, newTimer.ProjectExternalName)
 	s.Equal(resp.ResponseData[1].Minutes, 0)
+	s.Equal(resp.ResponseData[1].ActualMinutes, 0)
 	s.Equal(resp.ResponseData[1].TeamID, s.user.TeamID)
 }
 
@@ -250,6 +251,10 @@ func (s *FrontendHandlersTestSuite) TestUpdateTimer(t *testing.T)  {
 		ProjectID:  bson.NewObjectId().Hex(),
 		ProjectExternalID:  "external-project-id",
 		ProjectExternalName: "external-project-name",
+		Minutes: 25,
+		Edits: []*models.TimeEdit{
+			{TeamUserID: s.user.ID.Hex(), CreatedAt: time.Now(), Minutes: 10},
+		},
 	}
 	body := new(bytes.Buffer)
 	json.NewEncoder(body).Encode(timersData)
@@ -276,8 +281,10 @@ func (s *FrontendHandlersTestSuite) TestUpdateTimer(t *testing.T)  {
 	s.Equal(resp.ResponseData.ProjectID, timersData.ProjectID)
 	s.Equal(resp.ResponseData.ProjectExternalID, timersData.ProjectExternalID)
 	s.Equal(resp.ResponseData.ProjectExternalName, timersData.ProjectExternalName)
-	s.Equal(resp.ResponseData.Minutes, 20)
 	s.Equal(resp.ResponseData.TeamID, s.user.TeamID)
+	// Check calculation of timers edits
+	s.NotEqual(resp.ResponseData.Minutes, 25)
+	s.Equal(resp.ResponseData.Minutes, 30)
 }
 
 func (s *FrontendHandlersTestSuite) TestUpdateTimerWithNoExistingTimer(t *testing.T)  {
@@ -307,7 +314,7 @@ func (s *FrontendHandlersTestSuite) TestUpdateTimerWithNoExistingTimer(t *testin
 	s.Equal(resp.ResponseStatus.Status, "500")
 	s.Equal(resp.AppInfo["env"], utils.TestEnv)
 	s.Equal(resp.AppInfo["version"], s.env.AppVersion)
-	s.Equal(resp.ResponseStatus.DeveloperMessage, mgo.ErrNotFound.Error())
+	s.Equal(resp.ResponseStatus.DeveloperMessage, "update forbidden")
 }
 
 func (s *FrontendHandlersTestSuite) TestUpdateTimerStopAction(t *testing.T)  {
@@ -446,12 +453,13 @@ func (s *FrontendHandlersTestSuite) SetUp() {
 	//Create timer
 	s.timer, err = timerRepository.CreateTimer(
 		&models.Timer{
-			ID:         bson.NewObjectId(),
-			TeamID:     s.team.ID.Hex(),
-			ProjectID:  "project",
-			TeamUserID: s.user.ID.Hex(),
-			CreatedAt:  time.Now().Add(-20 * time.Minute),
-			Minutes:    20,
+			ID:         	bson.NewObjectId(),
+			TeamID:     	s.team.ID.Hex(),
+			ProjectID:  	"project",
+			TeamUserID: 	s.user.ID.Hex(),
+			CreatedAt:  	time.Now().Add(-20 * time.Minute),
+			Minutes:    	20,
+			ActualMinutes:  20,
 	})
 	s.Nil(err)
 
