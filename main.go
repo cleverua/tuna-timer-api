@@ -73,6 +73,7 @@ func main() {
 	router.Handle("/api/v1/frontend/timers", secure.ThenFunc(fh.TimersData)).Methods("GET", "OPTIONS")
 	router.Handle("/api/v1/frontend/timers", secure.ThenFunc(fh.CreateTimer)).Methods("POST", "OPTIONS")
 	router.Handle("/api/v1/frontend/timers/{id}", secure.ThenFunc(fh.UpdateTimer)).Methods("PUT", "OPTIONS")
+	router.Handle("/api/v1/frontend/timers/{id}", secure.ThenFunc(fh.DeleteTimer)).Methods("DELETE", "OPTIONS")
 	router.Handle("/api/v1/frontend/projects", secure.ThenFunc(fh.ProjectsData)).Methods("GET", "OPTIONS")
 
 	// Temporary stuff, remove eventually

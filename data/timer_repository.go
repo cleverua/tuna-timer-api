@@ -129,6 +129,7 @@ func (r *TimerRepository) totalMinutesForTaskAndUser(taskHash, userID string, st
 					"$gte": startDate,
 					"$lte": endDate,
 				},
+				"deleted_at": nil,
 			},
 		},
 		{
@@ -162,6 +163,7 @@ func (r *TimerRepository) totalMinutesForUser(userID string, startDate, endDate 
 					"$gte": startDate,
 					"$lte": endDate,
 				},
+				"deleted_at": nil,
 			},
 		},
 		{
@@ -254,6 +256,7 @@ func (r *TimerRepository) findUserTasksByRange(userID string, startDate, endDate
 			"$gte": startDate,
 			"$lte": endDate,
 		},
+		"deleted_at": nil,
 	}).Sort("created_at").All(&results)
 
 	return results, err
