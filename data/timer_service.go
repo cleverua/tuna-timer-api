@@ -159,7 +159,7 @@ func (s *TimerService) GetUserTimersByRange(startDate, endDate string, user *mod
 
 func (s *TimerService) UpdateUserTimer(user *models.TeamUser, timer *models.Timer, newData *models.Timer) error {
 	if user.ID.Hex() != timer.TeamUserID && !(user.SlackUserInfo.IsOwner && user.TeamID == timer.TeamID) {
-		//TODO move all errors into separate struct
+		//TODO move all errors into separate package
 		return errors.New("update forbidden")
 	}
 
@@ -176,5 +176,20 @@ func (s *TimerService) UpdateUserTimer(user *models.TeamUser, timer *models.Time
 	}
 	timer.Minutes = timer.ActualMinutes + count
 
+	return s.repository.update(timer)
+}
+
+func (s *TimerService) DeleteUserTimer(user *models.TeamUser, timer *models.Timer) error {
+	if user.ID.Hex() != timer.TeamUserID {
+		//TODO move all errors into separate package
+		return errors.New("delete forbidden")
+	}
+
+	now := time.Now()
+	timer.DeletedAt = &now
+
+	if timer.FinishedAt == nil {
+		return s.StopTimer(timer)
+	}
 	return s.repository.update(timer)
 }

@@ -584,6 +584,95 @@ func (s *TimerServiceTestSuite) TestUpdateUserTimerForSlackOwner(t *testing.T) {
 	s.Equal(timer.ProjectExternalName, newTimerData.ProjectExternalName)
 }
 
+func (s *TimerServiceTestSuite) TestDeleteUserTimer(t *testing.T) {
+	user := &models.TeamUser{
+		ID:             bson.NewObjectId(),
+		ExternalUserID: "user",
+		TeamID:		"team",
+		SlackUserInfo: &slack.User{
+			TZOffset: 10800,
+		},
+	}
+
+	timerMinutes := 10
+	timer := &models.Timer{
+		ID:			bson.NewObjectId(),
+		TaskName:		"task-name",
+		TeamID:			"team",
+		ProjectID:		"project-id",
+		ProjectExternalID:	"project-external-id",
+		ProjectExternalName:	"project-external-name",
+		TeamUserID:		user.ID.Hex(),
+		CreatedAt:		time.Now().Add(time.Duration(-timerMinutes) * time.Minute),
+		Minutes:		timerMinutes,
+	}
+	s.repo.CreateTimer(timer)
+
+	err := s.service.DeleteUserTimer(user, timer)
+	s.Nil(err)
+
+	s.NotNil(timer.DeletedAt)
+}
+
+func (s *TimerServiceTestSuite) TestDeleteUserActiveTimer(t *testing.T) {
+	user := &models.TeamUser{
+		ID:             bson.NewObjectId(),
+		ExternalUserID: "user",
+		TeamID:		"team",
+		SlackUserInfo: &slack.User{
+			TZOffset: 10800,
+		},
+	}
+
+	timerMinutes := 10
+	timer := &models.Timer{
+		ID:			bson.NewObjectId(),
+		TaskName:		"task-name",
+		TeamID:			"team",
+		ProjectID:		"project-id",
+		ProjectExternalID:	"project-external-id",
+		ProjectExternalName:	"project-external-name",
+		TeamUserID:		user.ID.Hex(),
+		CreatedAt:		time.Now().Add(time.Duration(-timerMinutes) * time.Minute),
+	}
+	s.repo.CreateTimer(timer)
+
+	err := s.service.DeleteUserTimer(user, timer)
+	s.Nil(err)
+
+	s.NotNil(timer.DeletedAt)
+	s.Equal(timer.Minutes, timerMinutes)
+	s.Equal(timer.ActualMinutes, timerMinutes)
+}
+
+func (s *TimerServiceTestSuite) TestDeleteUserTimerWithWrongUserID(t *testing.T) {
+	user := &models.TeamUser{
+		ID:             bson.NewObjectId(),
+		ExternalUserID: "user",
+		TeamID:		"team",
+		SlackUserInfo: &slack.User{
+			TZOffset: 10800,
+		},
+	}
+
+	timerMinutes := 10
+	timer := &models.Timer{
+		ID:			bson.NewObjectId(),
+		TaskName:		"task-name",
+		TeamID:			"team",
+		ProjectID:		"project-id",
+		ProjectExternalID:	"project-external-id",
+		ProjectExternalName:	"project-external-name",
+		TeamUserID:		bson.NewObjectId().Hex(),
+		CreatedAt:		time.Now().Add(time.Duration(-timerMinutes) * time.Minute),
+	}
+	s.repo.CreateTimer(timer)
+
+	err := s.service.DeleteUserTimer(user, timer)
+	s.NotNil(err)
+	s.Equal(err.Error(), "delete forbidden")
+}
+
 func (s *TimerServiceTestSuite) SetUpSuite() {
 	e := utils.NewEnvironment(utils.TestEnv, "1.0.0")
 

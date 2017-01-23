@@ -11,6 +11,13 @@ type ResponseBody struct {
 	ResponseData   map[string]string `json:"data"`
 }
 
+func NewResponseBody(info map[string]string) *ResponseBody{
+	return &ResponseBody{
+		ResponseStatus: &ResponseStatus{ Status: statusOK },
+		AppInfo: info,
+	}
+}
+
 type ResponseStatus struct {
 	Status		 string `json:"status"`
 	DeveloperMessage string `json:"developerMessage"`

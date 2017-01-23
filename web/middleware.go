@@ -63,13 +63,11 @@ func (c *SecureContext) CurrentUserMiddleware(h http.Handler) http.Handler {
 		user, err := userService.FindByID(userData["user_id"].(string))
 
 		if err != nil {
-			response := ResponseBody{
-				ResponseStatus: &ResponseStatus{},
-				AppInfo: map[string]string{
-					"env": c.Env.Name,
-					"version": c.Env.AppVersion,
-				},
-			}
+			response := NewResponseBody(map[string]string{
+				"env": c.Env.Name,
+				"version": c.Env.AppVersion,
+			})
+
 			response.ResponseStatus.Status = statusBadRequest
 			response.ResponseStatus.UserMessage = userLoginMessage
 			response.ResponseStatus.DeveloperMessage = err.Error()
