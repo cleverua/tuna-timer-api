@@ -217,6 +217,7 @@ func (h *FrontendHandlers) DeleteTimer(w http.ResponseWriter, r *http.Request)  
 	user := context.Get(r, "user").(*models.TeamUser)
 
 	resp := NewResponseBody(h.status)
+	resp.ResponseStatus.UserMessage = "successfully deleted"
 	defer encodeResponse(w, resp)
 
 	timerID := mux.Vars(r)["id"]

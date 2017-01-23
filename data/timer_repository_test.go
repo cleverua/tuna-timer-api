@@ -208,6 +208,19 @@ func (s *TimerRepositoryTestSuite) TestTotalMinutesMethods(t *testing.T) {
 		Minutes:    1,
 	})
 
+	// Deleted task should not to be in results
+	s.repo.CreateTimer(&models.Timer{
+		ID:         bson.NewObjectId(),
+		TeamID:     "team",
+		ProjectID:  "project",
+		TeamUserID: "user",
+		TaskHash:   "task",
+		CreatedAt:  utils.PT("2016 Sep 12 19:35:00"),
+		FinishedAt: &now,
+		Minutes:    10,
+		DeletedAt:  &now,
+	})
+
 	// all tasks
 	m := s.repo.totalMinutesForTaskAndUser("task", "user", utils.PT("2016 Sep 09 12:35:00"), utils.PT("2016 Sep 21 12:35:00"))
 	s.Equal(m, 10)
@@ -268,6 +281,19 @@ func (s *TimerRepositoryTestSuite) TestCompletedTasksForUser(t *testing.T) {
 		CreatedAt:  utils.PT("2016 Sep 25 12:50:00"),
 		FinishedAt: &now,
 		Minutes:    20,
+	})
+
+	// Deleted task should not to be in results
+	s.repo.CreateTimer(&models.Timer{
+		ID:         bson.NewObjectId(),
+		TeamID:     "team",
+		ProjectID:  "project",
+		TeamUserID: "user",
+		TaskHash:   "task",
+		CreatedAt:  utils.PT("2016 Sep 25 12:37:00"),
+		FinishedAt: &now,
+		Minutes:    2,
+		DeletedAt:  &now,
 	})
 
 	m, err := s.repo.completedTasksForUser("user", utils.PT("2016 Sep 25 12:35:00"), utils.PT("2016 Sep 25 12:45:00"))
@@ -351,6 +377,18 @@ func (s *TimerRepositoryTestSuite) TestFindUserTasksByRange(t *testing.T) {
 		TeamUserID: firstUserID,
 		CreatedAt:  startDate.Add(time.Second * 3600 * 24),
 		Minutes:    20,
+	})
+
+	// Deleted task should not to be in results
+	deleted := startDate.Add(time.Minute * 2)
+	s.repo.CreateTimer(&models.Timer{
+		ID:         bson.NewObjectId(),
+		TeamID:     "team",
+		ProjectID:  "project",
+		TeamUserID: firstUserID,
+		CreatedAt:  startDate.Add(time.Second * 3600 * 8),
+		Minutes:    2,
+		DeletedAt:  &deleted,
 	})
 
 	//Create timer for second user

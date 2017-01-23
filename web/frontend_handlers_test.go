@@ -18,6 +18,7 @@ import (
 	"time"
 	"github.com/justinas/alice"
 	"github.com/dgrijalva/jwt-go"
+	"github.com/gorilla/mux"
 )
 
 func TestFrontendHandlers(t *testing.T) {
@@ -366,6 +367,81 @@ func (s *FrontendHandlersTestSuite) TestUpdateTimerStopAlreadyStoppedTimer(t *te
 	s.Equal(resp.ResponseStatus.Status, "400")
 	s.Equal(resp.ResponseStatus.DeveloperMessage, mgo.ErrNotFound.Error())
 	s.Equal(resp.ResponseStatus.UserMessage, "already stopped")
+}
+
+func (s *FrontendHandlersTestSuite) TestDeleteTimer(t *testing.T) {
+	router := mux.NewRouter()
+	h := NewFrontendHandlers(s.env, s.session)
+	router.Handle("/api/v1/frontend/timers/{id}", s.middlewareChain.ThenFunc(h.DeleteTimer)).Methods("DELETE")
+	ts := httptest.NewServer(router)
+	defer ts.Close()
+
+	req, _ := http.NewRequest("DELETE", ts.URL + "/api/v1/frontend/timers/" + s.timer.ID.Hex(), nil)
+	req.Header.Set("Authorization", "Bearer " + s.userJwt)
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := http.DefaultClient.Do(req)
+	s.Nil(err)
+
+	respBody := ResponseBody{}
+	err = json.NewDecoder(resp.Body).Decode(&respBody)
+	s.Nil(err)
+	s.Equal(respBody.ResponseStatus.Status, "200")
+	s.Zero(respBody.ResponseStatus.DeveloperMessage)
+	s.Equal(respBody.ResponseStatus.UserMessage, "successfully deleted")
+
+	// Test with not existing timer id
+	req, _ = http.NewRequest("DELETE", ts.URL + "/api/v1/frontend/timers/" + bson.NewObjectId().Hex(), nil)
+	req.Header.Set("Authorization", "Bearer " + s.userJwt)
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err = http.DefaultClient.Do(req)
+	s.Nil(err)
+
+	respBody = ResponseBody{}
+	err = json.NewDecoder(resp.Body).Decode(&respBody)
+	s.Nil(err)
+	s.Equal(respBody.ResponseStatus.Status, "500")
+	s.Equal(respBody.ResponseStatus.DeveloperMessage, "not found")
+	s.Zero(respBody.ResponseStatus.UserMessage)
+}
+
+func (s *FrontendHandlersTestSuite) TestDeleteTimerWithForeignUser(t *testing.T) {
+	router := mux.NewRouter()
+	h := NewFrontendHandlers(s.env, s.session)
+	router.Handle("/api/v1/frontend/timers/{id}", s.middlewareChain.ThenFunc(h.DeleteTimer)).Methods("DELETE")
+	ts := httptest.NewServer(router)
+	defer ts.Close()
+
+	userRepository := data.NewUserRepository(s.session)
+	user := &models.TeamUser{
+		TeamID:           s.team.ID.Hex(),
+		ExternalUserID:   "user-id",
+		ExternalUserName: "name",
+		SlackUserInfo:    &slack.User{
+			IsAdmin:  false,
+		},
+	}
+
+	_, err := userRepository.Save(user)
+	s.Nil(err)
+
+	userJwt, err := NewUserToken(user.ID.Hex(), s.session)
+	s.Nil(err)
+
+	req, _ := http.NewRequest("DELETE", ts.URL + "/api/v1/frontend/timers/" + s.timer.ID.Hex(), nil)
+	req.Header.Set("Authorization", "Bearer " + userJwt)
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := http.DefaultClient.Do(req)
+	s.Nil(err)
+
+	respBody := ResponseBody{}
+	err = json.NewDecoder(resp.Body).Decode(&respBody)
+	s.Nil(err)
+	s.Equal(respBody.ResponseStatus.Status, "500")
+	s.Equal(respBody.ResponseStatus.DeveloperMessage, "delete forbidden")
+	s.Zero(respBody.ResponseStatus.UserMessage)
 }
 
 // =================== TEST setup =================== //
