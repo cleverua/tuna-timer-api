@@ -7,3 +7,9 @@ type TaskAggregation struct {
 	Name                string `bson:"task_name"`
 	Minutes             int    `bson:"minutes"`
 }
+
+type UserReportAggregation struct {
+	Day		int8	 `bson:"day"`
+	Projects	[]string `bson:"projects_names"`
+	total		int	 `bson:"total"`
+}

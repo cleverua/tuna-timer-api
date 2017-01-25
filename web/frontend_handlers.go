@@ -233,3 +233,6 @@ func (h *FrontendHandlers) DeleteTimer(w http.ResponseWriter, r *http.Request)  
 		writeError(resp.ResponseStatus, statusInternalServerError, err.Error(), "")
 	}
 }
+
+func (h *FrontendHandlers) MonthStatistic(w http.ResponseWriter, r *http.Request) {
+}

@@ -261,3 +261,48 @@ func (r *TimerRepository) findUserTasksByRange(userID string, startDate, endDate
 
 	return results, err
 }
+
+func (r *TimerRepository) userMonthStatistics(userID string, startDate, endDate time.Time) ([]*models.Timer, error) {
+	pipeConfig := []bson.M{
+		{
+			"$match": bson.M{
+				"team_user_id": userID,
+				"created_at": bson.M{
+					"$gte": startDate,
+					"$lte": endDate,
+				},
+				"finished_at": bson.M{"$ne": nil},
+				"deleted_at":  nil,
+			},
+		},
+		{
+			"$group": {
+				"_id": bson.M{"$dayOfMonth": "$created_at"},
+				"minutes": bson.M{"$sum": "$minutes"},
+				"projects": bson.M{"$addToSet": "$project_ext_name"},
+			},
+		},
+		{
+			"$project": bson.M{
+				"_id":      0,
+				"day":      "$_id",
+				"total":  "$minutes",
+				"projects": "$projects",
+			},
+		},
+		{
+			"$sort": bson.M{"day": 1},
+		},
+	}
+
+	results := models.UserReportAggregation{}
+	err := r.collection.Pipe(pipeConfig).All(&results)
+	if err != nil && err != mgo.ErrNotFound {
+		return nil, err
+	}
+
+	fmt.Println("AGGREGATION", results)
+	fmt.Println("ERROR", err)
+
+	return results, nil
+}
