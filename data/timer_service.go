@@ -195,16 +195,13 @@ func (s *TimerService) DeleteUserTimer(user *models.TeamUser, timer *models.Time
 }
 
 func (s *TimerService) UserMonthStatistics(user *models.TeamUser, date string) ([]*models.UserStatisticsAggregation, error) {
-	tzOffset := user.SlackUserInfo.TZOffset
 	layout := "2006-1-2 15:04:05"
 
-	pd, err := time.Parse(layout, date + " 00:00:00")
+	startOfMonth, err := time.Parse(layout, date + " 00:00:00")
 	if err != nil {
 		return nil, err
 	}
-
-	startOfMonth := pd.Add(time.Duration(-tzOffset) * time.Second)
 	endOfMonth := startOfMonth.AddDate(0, 1, 0).Add(-1 * time.Second)
 
-	return s.repository.userStatistics(user.ID.Hex(), startOfMonth, endOfMonth)
+	return s.repository.userStatistics(user, startOfMonth, endOfMonth)
 }

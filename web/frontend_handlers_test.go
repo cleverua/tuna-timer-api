@@ -444,6 +444,44 @@ func (s *FrontendHandlersTestSuite) TestDeleteTimerWithForeignUser(t *testing.T)
 	s.Zero(respBody.ResponseStatus.UserMessage)
 }
 
+func (s *FrontendHandlersTestSuite) TestMonthStatistic(t *testing.T)  {
+	startDate := utils.PT("2016 Dec 01 00:00:00")
+	finished := startDate.Add(time.Minute * 30)
+	timerRepository := data.NewTimerRepository(s.session)
+	timerRepository.CreateTimer(&models.Timer{
+		ID:			bson.NewObjectId(),
+		TeamID:			"team",
+		ProjectID:		"project",
+		ProjectExternalName:	"project_name",
+		TeamUserID:		s.user.ID.Hex(),
+		CreatedAt:		startDate.Add(time.Hour * 1),
+		Minutes:		30,
+		FinishedAt:		&finished,
+	})
+
+	req, err := http.NewRequest("GET", "/api/v1/frontend/month_statistics?date=2016-12-1", nil)
+	s.Nil(err)
+	req.Header.Set("Authorization", "Bearer " + s.userJwt)
+	req.Header.Set("Content-Type", "application/json")
+
+	h := NewFrontendHandlers(s.env, s.session)
+	recorder := httptest.NewRecorder()
+	s.middlewareChain.ThenFunc(h.MonthStatistics).ServeHTTP(recorder, req)
+
+	resp := UserStatisticsResponse{}
+	err = json.Unmarshal(recorder.Body.Bytes(), &resp)
+
+	s.Nil(err)
+	s.Equal(resp.ResponseStatus.Status, "200")
+	s.Equal(resp.AppInfo["env"], utils.TestEnv)
+	s.Equal(resp.AppInfo["version"], s.env.AppVersion)
+	s.NotNil(resp.ResponseData[0])
+	s.Equal(resp.ResponseData[0].Day, 1)
+	s.Equal(resp.ResponseData[0].Minutes, 30)
+	s.Equal(resp.ResponseData[0].ProjectsNames[0], "project_name")
+	s.Len(resp.ResponseData, 1)
+}
+
 // =================== TEST setup =================== //
 type FrontendHandlersTestSuite struct {
 	*is.Is

@@ -234,7 +234,7 @@ func (h *FrontendHandlers) DeleteTimer(w http.ResponseWriter, r *http.Request)  
 	}
 }
 
-func (h *FrontendHandlers) MonthStatistic(w http.ResponseWriter, r *http.Request) {
+func (h *FrontendHandlers) MonthStatistics(w http.ResponseWriter, r *http.Request) {
 	session := h.mongoSession.Clone()
 	defer session.Close()
 	user := context.Get(r, "user").(*models.TeamUser)
