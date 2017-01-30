@@ -66,7 +66,7 @@ func encodeResponse(w http.ResponseWriter, resp interface{}) {
 func (h *FrontendHandlers) Authenticate(w http.ResponseWriter, r *http.Request) {
 	session := h.mongoSession.Clone()
 	defer session.Close()
-	resp := NewJWTResponseBody(h.status)
+	resp := NewJWTResponse(h.status)
 	defer encodeResponse(w, resp)
 
 	requestData := map[string]string{}
@@ -96,7 +96,7 @@ func(h *FrontendHandlers) TimersData(w http.ResponseWriter, r *http.Request) {
 	session := h.mongoSession.Clone()
 	defer session.Close()
 	user := context.Get(r, "user").(*models.TeamUser)
-	resp := NewTimersResponseBody(h.status)
+	resp := NewTimersResponse(h.status)
 	defer encodeResponse(w, resp)
 
 	//Get Query params (start and end date)
@@ -117,7 +117,7 @@ func(h *FrontendHandlers) ProjectsData(w http.ResponseWriter, r *http.Request) {
 	defer session.Close()
 	user := context.Get(r, "user").(*models.TeamUser)
 
-	resp := NewProjectsResponseBody(h.status)
+	resp := NewProjectsResponse(h.status)
 	defer encodeResponse(w, resp)
 
 	teamsService := data.NewTeamService(session)
@@ -134,7 +134,7 @@ func(h *FrontendHandlers) CreateTimer(w http.ResponseWriter, r *http.Request) {
 	defer session.Close()
 	user := context.Get(r, "user").(*models.TeamUser)
 
-	resp := NewTimersResponseBody(h.status)
+	resp := NewTimersResponse(h.status)
 	defer encodeResponse(w, resp)
 
 	//Decode response data
@@ -174,7 +174,7 @@ func(h *FrontendHandlers) UpdateTimer(w http.ResponseWriter, r *http.Request) {
 	defer session.Close()
 	user := context.Get(r, "user").(*models.TeamUser)
 
-	resp := NewTimerResponseBody(h.status)
+	resp := NewTimerResponse(h.status)
 	defer encodeResponse(w, resp)
 
 	// Decode response data
@@ -232,4 +232,23 @@ func (h *FrontendHandlers) DeleteTimer(w http.ResponseWriter, r *http.Request)  
 	if err = timerService.DeleteUserTimer(user, timer); err != nil {
 		writeError(resp.ResponseStatus, statusInternalServerError, err.Error(), "")
 	}
+}
+
+func (h *FrontendHandlers) MonthStatistics(w http.ResponseWriter, r *http.Request) {
+	session := h.mongoSession.Clone()
+	defer session.Close()
+	user := context.Get(r, "user").(*models.TeamUser)
+
+	resp := NewUserStatisticsResponse(h.status)
+	defer encodeResponse(w, resp)
+
+	date := r.URL.Query().Get("date")
+
+	timerService := data.NewTimerService(session)
+	monthStatistic, err := timerService.UserMonthStatistics(user, date)
+	if err != nil {
+		writeError(resp.ResponseStatus, statusInternalServerError, err.Error(), "")
+		return
+	}
+	resp.ResponseData = monthStatistic
 }

@@ -434,6 +434,72 @@ func (s *TimerRepositoryTestSuite) TestFindUserTasksByRange(t *testing.T) {
 	s.Len(timers, 0)
 }
 
+func (s *TimerRepositoryTestSuite) TestUserStatistics(t *testing.T) {
+	user := &models.TeamUser{
+		ID:             bson.NewObjectId(),
+		ExternalUserID: "user",
+		TeamID:		"team",
+		SlackUserInfo: &slack.User{},
+	}
+	startDate := utils.PT("2016 Dec 01 00:00:00")
+	endDate := utils.PT("2016 Dec 15 23:59:59")
+	minutes := 10
+	days := 15
+
+	// Create timers including timers with range offset
+	for i := 0; i < days + 2; i++ {
+		m := minutes + i
+		finished := startDate.AddDate(0, 0, i).Add(time.Minute * time.Duration(m))
+		s.repo.CreateTimer(&models.Timer{
+			ID:			bson.NewObjectId(),
+			TeamID:			"team",
+			ProjectID:		"project",
+			ProjectExternalName:	"project_name",
+			TeamUserID:		user.ID.Hex(),
+			CreatedAt:		startDate.AddDate(0, 0, i),
+			FinishedAt:		&finished,
+			Minutes:		m,
+			ActualMinutes:		m,
+		})
+
+		s.repo.CreateTimer(&models.Timer{
+			ID:			bson.NewObjectId(),
+			TeamID:			"team",
+			ProjectID:		"project",
+			ProjectExternalName:	"second_project_name",
+			TeamUserID:		user.ID.Hex(),
+			CreatedAt:		startDate.AddDate(0, 0, i).Add(4 * time.Hour),
+			FinishedAt:		&finished,
+			Minutes:		m,
+			ActualMinutes:		m,
+		})
+	}
+
+	// Deleted task should not to be in results
+	deleted := startDate.Add(time.Minute * 30)
+	s.repo.CreateTimer(&models.Timer{
+		ID:			bson.NewObjectId(),
+		TeamID:			"team",
+		ProjectID:		"project",
+		ProjectExternalName:	"project_name",
+		TeamUserID:		user.ID.Hex(),
+		CreatedAt:		startDate.Add(time.Hour * 30),
+		Minutes:		2,
+		FinishedAt:		&deleted,
+		DeletedAt:		&deleted,
+	})
+
+	data, err := s.repo.userStatistics(user, startDate, endDate)
+	s.Nil(err)
+	s.Len(data, days)
+
+	for i, stat := range data {
+		s.Equal(stat.Day, 1 + i)
+		s.Equal(stat.Minutes, (minutes + i) * 2)
+		s.Len(stat.ProjectsNames, 2)
+	}
+}
+
 func (s *TimerRepositoryTestSuite) SetUpSuite() {
 	e := utils.NewEnvironment(utils.TestEnv, "1.0.0")
 

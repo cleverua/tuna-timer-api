@@ -75,6 +75,7 @@ func main() {
 	router.Handle("/api/v1/frontend/timers/{id}", secure.ThenFunc(fh.UpdateTimer)).Methods("PUT", "OPTIONS")
 	router.Handle("/api/v1/frontend/timers/{id}", secure.ThenFunc(fh.DeleteTimer)).Methods("DELETE", "OPTIONS")
 	router.Handle("/api/v1/frontend/projects", secure.ThenFunc(fh.ProjectsData)).Methods("GET", "OPTIONS")
+	router.Handle("/api/v1/frontend/month_statistics", secure.ThenFunc(fh.MonthStatistics)).Methods("GET", "OPTIONS")
 
 	// Temporary stuff, remove eventually
 	router.Handle("/api/v1/frontend/auth/validate", secure.ThenFunc(handlers.ValidateAuthToken)).Methods("GET", "OPTIONS")

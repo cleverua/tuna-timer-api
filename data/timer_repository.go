@@ -261,3 +261,47 @@ func (r *TimerRepository) findUserTasksByRange(userID string, startDate, endDate
 
 	return results, err
 }
+
+func (r *TimerRepository) userStatistics(user *models.TeamUser, startDate, endDate time.Time) ([]*models.UserStatisticsAggregation, error) {
+	pipeConfig := []bson.M{
+		{
+			"$match": bson.M{
+				"team_user_id": user.ID.Hex(),
+				"created_at": bson.M{
+					"$gte": startDate,
+					"$lte": endDate,
+				},
+				"finished_at": bson.M{"$ne": nil},
+				"deleted_at":  nil,
+			},
+		},
+		{
+			"$group": bson.M{
+				// Converts created_at timestamp to user's timezone and gets it's day
+				"_id": bson.M{
+					"$dayOfMonth": bson.M{
+						"$add": []interface{}{"$created_at", user.SlackUserInfo.TZOffset},
+					},
+				},
+				"minutes": bson.M{"$sum": "$minutes"},
+				"projects_names": bson.M{"$addToSet": "$project_ext_name"},
+			},
+		},
+		{
+			"$project": bson.M{
+				"_id":      0,
+				"day":      "$_id",
+				"minutes":  "$minutes",
+				"projects_names": "$projects_names",
+			},
+		},
+		{
+			"$sort": bson.M{"day": 1},
+		},
+	}
+
+	var results []*models.UserStatisticsAggregation
+	err := r.collection.Pipe(pipeConfig).All(&results)
+
+	return results, err
+}

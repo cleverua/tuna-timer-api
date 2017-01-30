@@ -193,3 +193,15 @@ func (s *TimerService) DeleteUserTimer(user *models.TeamUser, timer *models.Time
 	}
 	return s.repository.update(timer)
 }
+
+func (s *TimerService) UserMonthStatistics(user *models.TeamUser, date string) ([]*models.UserStatisticsAggregation, error) {
+	layout := "2006-1-2 15:04:05"
+
+	startOfMonth, err := time.Parse(layout, date + " 00:00:00")
+	if err != nil {
+		return nil, err
+	}
+	endOfMonth := startOfMonth.AddDate(0, 1, 0).Add(-1 * time.Second)
+
+	return s.repository.userStatistics(user, startOfMonth, endOfMonth)
+}

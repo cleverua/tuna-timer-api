@@ -39,7 +39,7 @@ func (s *FrontendHandlersTestSuite) TestAuthenticate(t *testing.T) {
 	handler := http.HandlerFunc(h.Authenticate)
 	handler.ServeHTTP(recorder, req)
 
-	resp := JWTResponseBody{ResponseData: JwtToken{}}
+	resp := JWTResponse{ResponseData: JwtToken{}}
 	err = json.Unmarshal(recorder.Body.Bytes(), &resp)
 	s.Nil(err)
 
@@ -63,7 +63,7 @@ func (s *FrontendHandlersTestSuite) TestAuthenticateWithWrongPid(t *testing.T) {
 	handler := http.HandlerFunc(h.Authenticate)
 	handler.ServeHTTP(recorder, req)
 
-	resp := JWTResponseBody{}
+	resp := JWTResponse{}
 	err = json.Unmarshal(recorder.Body.Bytes(), &resp)
 	s.Nil(err)
 	s.Equal(resp.ResponseStatus.UserMessage, "please login from slack application")
@@ -85,7 +85,7 @@ func (s *FrontendHandlersTestSuite) TestTimersData(t *testing.T)  {
 	recorder := httptest.NewRecorder()
 	s.middlewareChain.ThenFunc(h.TimersData).ServeHTTP(recorder, req)
 
-	resp := TimersResponseBody{}
+	resp := TimersResponse{}
 	err = json.Unmarshal(recorder.Body.Bytes(), &resp)
 
 	s.Nil(err)
@@ -105,7 +105,7 @@ func (s *FrontendHandlersTestSuite) TestTimersDataWithoutDateRange(t *testing.T)
 	recorder := httptest.NewRecorder()
 	s.middlewareChain.ThenFunc(h.TimersData).ServeHTTP(recorder, req)
 
-	resp := TimersResponseBody{}
+	resp := TimersResponse{}
 	err = json.Unmarshal(recorder.Body.Bytes(), &resp)
 
 	s.Nil(err)
@@ -135,7 +135,7 @@ func (s *FrontendHandlersTestSuite) TestTimersDataWithNoExistingUser(t *testing.
 	recorder := httptest.NewRecorder()
 	s.middlewareChain.ThenFunc(h.TimersData).ServeHTTP(recorder, req)
 
-	resp := TimersResponseBody{}
+	resp := TimersResponse{}
 	err = json.Unmarshal(recorder.Body.Bytes(), &resp)
 	s.Nil(err)
 
@@ -154,7 +154,7 @@ func (s *FrontendHandlersTestSuite) TestProjectsData(t *testing.T)  {
 	recorder := httptest.NewRecorder()
 	s.middlewareChain.ThenFunc(h.ProjectsData).ServeHTTP(recorder, req)
 
-	resp := ProjectsResponseBody{}
+	resp := ProjectsResponse{}
 	err = json.Unmarshal(recorder.Body.Bytes(), &resp)
 
 	s.Nil(err)
@@ -185,7 +185,7 @@ func (s *FrontendHandlersTestSuite) TestProjectsDataWithNoExistedUser(t *testing
 	h := NewFrontendHandlers(s.env, s.session)
 	recorder := httptest.NewRecorder()
 	s.middlewareChain.ThenFunc(h.ProjectsData).ServeHTTP(recorder, req)
-	resp := ProjectsResponseBody{}
+	resp := ProjectsResponse{}
 	err = json.Unmarshal(recorder.Body.Bytes(), &resp)
 
 	s.Nil(err)
@@ -218,7 +218,7 @@ func (s *FrontendHandlersTestSuite) TestCreateTimer(t *testing.T)  {
 	recorder := httptest.NewRecorder()
 	s.middlewareChain.ThenFunc(h.CreateTimer).ServeHTTP(recorder, req)
 
-	resp := TimersResponseBody{}
+	resp := TimersResponse{}
 	err = json.Unmarshal(recorder.Body.Bytes(), &resp)
 
 	s.Nil(err)
@@ -269,7 +269,7 @@ func (s *FrontendHandlersTestSuite) TestUpdateTimer(t *testing.T)  {
 	recorder := httptest.NewRecorder()
 	s.middlewareChain.ThenFunc(h.UpdateTimer).ServeHTTP(recorder, req)
 
-	resp := TimerResponseBody{}
+	resp := TimerResponse{}
 	err = json.Unmarshal(recorder.Body.Bytes(), &resp)
 
 	s.Nil(err)
@@ -308,7 +308,7 @@ func (s *FrontendHandlersTestSuite) TestUpdateTimerWithNoExistingTimer(t *testin
 	recorder := httptest.NewRecorder()
 	s.middlewareChain.ThenFunc(h.UpdateTimer).ServeHTTP(recorder, req)
 
-	resp := TimerResponseBody{}
+	resp := TimerResponse{}
 	err = json.Unmarshal(recorder.Body.Bytes(), &resp)
 
 	s.Nil(err)
@@ -331,7 +331,7 @@ func (s *FrontendHandlersTestSuite) TestUpdateTimerStopAction(t *testing.T)  {
 	recorder := httptest.NewRecorder()
 	s.middlewareChain.ThenFunc(h.UpdateTimer).ServeHTTP(recorder, req)
 
-	resp := TimerResponseBody{}
+	resp := TimerResponse{}
 	err = json.Unmarshal(recorder.Body.Bytes(), &resp)
 
 	s.Nil(err)
@@ -360,7 +360,7 @@ func (s *FrontendHandlersTestSuite) TestUpdateTimerStopAlreadyStoppedTimer(t *te
 	recorder := httptest.NewRecorder()
 	s.middlewareChain.ThenFunc(h.UpdateTimer).ServeHTTP(recorder, req)
 
-	resp := TimerResponseBody{}
+	resp := TimerResponse{}
 	err = json.Unmarshal(recorder.Body.Bytes(), &resp)
 
 	s.Nil(err)
@@ -442,6 +442,44 @@ func (s *FrontendHandlersTestSuite) TestDeleteTimerWithForeignUser(t *testing.T)
 	s.Equal(respBody.ResponseStatus.Status, "500")
 	s.Equal(respBody.ResponseStatus.DeveloperMessage, "delete forbidden")
 	s.Zero(respBody.ResponseStatus.UserMessage)
+}
+
+func (s *FrontendHandlersTestSuite) TestMonthStatistic(t *testing.T)  {
+	startDate := utils.PT("2016 Dec 01 00:00:00")
+	finished := startDate.Add(time.Minute * 30)
+	timerRepository := data.NewTimerRepository(s.session)
+	timerRepository.CreateTimer(&models.Timer{
+		ID:			bson.NewObjectId(),
+		TeamID:			"team",
+		ProjectID:		"project",
+		ProjectExternalName:	"project_name",
+		TeamUserID:		s.user.ID.Hex(),
+		CreatedAt:		startDate.Add(time.Hour * 1),
+		Minutes:		30,
+		FinishedAt:		&finished,
+	})
+
+	req, err := http.NewRequest("GET", "/api/v1/frontend/month_statistics?date=2016-12-1", nil)
+	s.Nil(err)
+	req.Header.Set("Authorization", "Bearer " + s.userJwt)
+	req.Header.Set("Content-Type", "application/json")
+
+	h := NewFrontendHandlers(s.env, s.session)
+	recorder := httptest.NewRecorder()
+	s.middlewareChain.ThenFunc(h.MonthStatistics).ServeHTTP(recorder, req)
+
+	resp := UserStatisticsResponse{}
+	err = json.Unmarshal(recorder.Body.Bytes(), &resp)
+
+	s.Nil(err)
+	s.Equal(resp.ResponseStatus.Status, "200")
+	s.Equal(resp.AppInfo["env"], utils.TestEnv)
+	s.Equal(resp.AppInfo["version"], s.env.AppVersion)
+	s.NotNil(resp.ResponseData[0])
+	s.Equal(resp.ResponseData[0].Day, 1)
+	s.Equal(resp.ResponseData[0].Minutes, 30)
+	s.Equal(resp.ResponseData[0].ProjectsNames[0], "project_name")
+	s.Len(resp.ResponseData, 1)
 }
 
 // =================== TEST setup =================== //

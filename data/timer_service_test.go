@@ -673,6 +673,58 @@ func (s *TimerServiceTestSuite) TestDeleteUserTimerWithWrongUserID(t *testing.T)
 	s.Equal(err.Error(), "delete forbidden")
 }
 
+func (s *TimerServiceTestSuite) TestUserMonthStatistics(t *testing.T) {
+	user := &models.TeamUser{
+		ID:             bson.NewObjectId(),
+		ExternalUserID: "user",
+		TeamID:		"team",
+		SlackUserInfo: &slack.User{},
+	}
+	startDate := utils.PT("2016 Dec 01 00:00:00")
+	minutes := 10
+	days := 31
+	date := "2016-12-1"
+
+	for i := 0; i < days + 1; i++ {
+		m := minutes + i
+		finished := startDate.AddDate(0, 0, i).Add(time.Minute * time.Duration(m))
+		s.repo.CreateTimer(&models.Timer{
+			ID:			bson.NewObjectId(),
+			TeamID:			"team",
+			ProjectID:		"project",
+			ProjectExternalName:	"project_name",
+			TeamUserID:		user.ID.Hex(),
+			CreatedAt:		startDate.AddDate(0, 0, i),
+			FinishedAt:		&finished,
+			TeamUserTZOffset:	user.SlackUserInfo.TZOffset,
+			Minutes:		m,
+			ActualMinutes:		m,
+		})
+	}
+
+	result, err := s.service.UserMonthStatistics(user, date)
+	s.Nil(err)
+	s.Len(result, days)
+	s.Equal(result[0].Minutes, 10)
+	s.Equal(result[days - 1].Minutes, 40)
+}
+
+func (s *TimerServiceTestSuite) TestUserMonthStatisticsWithWrongDate(t *testing.T) {
+	user := &models.TeamUser{
+		ID:             bson.NewObjectId(),
+		ExternalUserID: "user",
+		TeamID:		"team",
+		SlackUserInfo: &slack.User{},
+	}
+	dates := [...]string{"", "2016-12-", "2016/12/1", "not a date"}
+
+	for _, date := range dates {
+		result, err := s.service.UserMonthStatistics(user, date)
+		s.Nil(result)
+		s.NotNil(err)
+	}
+}
+
 func (s *TimerServiceTestSuite) SetUpSuite() {
 	e := utils.NewEnvironment(utils.TestEnv, "1.0.0")
 
